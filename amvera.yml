@@ -1,0 +1,19 @@
+---
+version: null
+meta:
+  environment: node
+  toolchain:
+    name: npm
+    version: 18
+build:
+  skip: false
+  additionalCommands: "rm -rf node_modules package-lock.json"
+  artifacts:
+    "*": /
+run:
+  scriptName: null
+  scriptArguments: null
+  nodeArguments: null
+  command: npm install && npm run start:all
+  persistenceMount: /data
+  containerPort: 8080

@@ -1,0 +1,486 @@
+/******************************************************************************
+ * app.js
+ * ----------------------------------------------------------------------------
+ * Полный серверный код Tinder‑приложения.
+ * Структура:
+ *  1. Импорты модулей
+ *  2. Конфигурация окружения и путей
+ *  3. Инициализация Express
+ *  4. Настройка View Engine (EJS)
+ *  5. Настройка CORS
+ *  6. Инициализация сервисов (логгер, Vision API)
+ *  7. Middleware (парсеры, логгер запросов)
+ *  8. Rate Limiter
+ *  9. Монтирование API-маршрутов
+ * 10. Раздача статических файлов
+ * 11. Корневой маршрут и SPA Fallback
+ * 12. Обработчики ошибок
+ * 13. Cron-задачи
+ * 14. Экспорт приложения
+ ******************************************************************************/
+
+// 1. Импорты модулей
+const express = require('express');
+const path = require('path');
+const fs = require('fs');
+const cors = require('cors');
+const vision = require('@google-cloud/vision');
+const cron = require('node-cron');
+const dotenv = require('dotenv');
+const rateLimit = require('express-rate-limit');
+const helmet = require('helmet');
+const hashMap = require('./public/hash-map.json');
+
+// Маршруты
+const usersRouter = require('./routes/users');
+const statsRouter = require('./routes/stats');
+const likesRouter = require('./routes/likes.js');
+const matchesRouter = require('./routes/matches.js');
+const photosRouter = require('./routes/photos');
+const goalsRouter = require('./routes/goals');
+const giftsRouter = require('./routes/gifts');
+const pushRouter = require('./routes/push');
+const proRouter = require('./routes/pro');
+const adminRouter = require('./routes/admin');
+
+// База данных
+const { db, giftDb } = require('./db');
+
+// 2. Конфигурация окружения и путей
+dotenv.config();
+console.log('▶ ENV.LOCAL =', process.env.LOCAL);
+
+const {
+  LOG_LEVEL = 'info',
+} = process.env;
+
+// Удалить переменные и создание папок с относительными путями:
+// const LOG_DIR_PATH = path.join(process.cwd(), 'log');
+// const IMG_DIR_PATH = path.join(process.cwd(), 'img');
+// const GIFT_IMG_PATH = path.join(process.cwd(), 'giftimg');
+// [LOG_DIR_PATH, IMG_DIR_PATH, GIFT_IMG_PATH].forEach(...)
+// console.log('📦 Загружены пути:', { LOG_DIR_PATH, IMG_DIR_PATH, GIFT_IMG_PATH });
+
+// === ЭТАЛОННЫЕ ПУТИ ДЛЯ ДАННЫХ ===
+const DB_PATH = '/data/tinder.db'; // путь к базе данных
+const IMAGES_DIR = '/data/img';    // путь для изображений (для каждого пользователя – поддиректория)
+const LOG_DIR = '/data/log';       // путь для логов
+const GIFT_DB_PATH = '/data/gift.bd';     // путь к базе данных подарков
+const GIFT_IMAGES_DIR = '/data/giftimg';  // папка для изображений подарков
+
+console.log(`Путь к БД: ${DB_PATH}`);
+console.log(`Путь для изображений: ${IMAGES_DIR}`);
+console.log(`Путь для логов: ${LOG_DIR}`);
+
+// Проверяем и создаём папку для изображений, если не существует
+try {
+if (!fs.existsSync(IMAGES_DIR)) {
+  fs.mkdirSync(IMAGES_DIR, { recursive: true });
+  console.log(`✅ Папка для фото создана: ${IMAGES_DIR}`);
+  } else {
+    console.log(`✅ Папка для фото уже существует: ${IMAGES_DIR}`);
+  }
+} catch (err) {
+  console.warn(`⚠️ Не удалось создать папку для фото ${IMAGES_DIR}: ${err.message}`);
+}
+
+// Проверяем и создаём папку для логов, если не существует
+try {
+if (!fs.existsSync(LOG_DIR)) {
+  fs.mkdirSync(LOG_DIR, { recursive: true });
+  console.log(`✅ Папка для логов создана: ${LOG_DIR}`);
+  } else {
+    console.log(`✅ Папка для логов уже существует: ${LOG_DIR}`);
+  }
+} catch (err) {
+  console.warn(`⚠️ Не удалось создать папку для логов ${LOG_DIR}: ${err.message}`);
+}
+
+// Проверяем и создаём папку для изображений подарков, если не существует
+try {
+if (!fs.existsSync(GIFT_IMAGES_DIR)) {
+  fs.mkdirSync(GIFT_IMAGES_DIR, { recursive: true });
+  console.log(`✅ Папка для изображений подарков создана: ${GIFT_IMAGES_DIR}`);
+  } else {
+    console.log(`✅ Папка для изображений подарков уже существует: ${GIFT_IMAGES_DIR}`);
+  }
+} catch (err) {
+  console.warn(`⚠️ Не удалось создать папку для подарков ${GIFT_IMAGES_DIR}: ${err.message}`);
+}
+
+// 3. Инициализация Express
+const app = express();
+app.set('etag', false); // Отключаем ETag глобально для всего приложения
+// Логгер для статических изображений
+app.use('/data/img', (req, res, next) => {
+  console.log('[STATIC IMG]', req.method, req.url, 'from', req.ip);
+  next();
+});
+
+// Глобальный логгер всех запросов
+app.use((req, res, next) => {
+  console.log(`[ALL REQUESTS] ${req.method} ${req.originalUrl} from ${req.ip}`);
+  next();
+});
+
+// 3.1. Безопасность
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://telegram.org"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "https://telegram.org", "https://web.telegram.org"],
+      imgSrc: ["'self'", "data:", "https:", "blob:"],
+              connectSrc: ["'self'", "https://telegram.org", "https://sta-black-dim.waw.amverum.cloud"],
+      frameSrc: ["'self'", "https://telegram.org"],
+    },
+  },
+  hsts: {
+    maxAge: 31536000,
+    includeSubDomains: true,
+    preload: true
+  },
+  noSniff: true,
+  xssFilter: true,
+  referrerPolicy: { policy: 'strict-origin-when-cross-origin' }
+}));
+
+// 4. Настройка View Engine (EJS)
+app.engine('ejs', require('ejs').renderFile);
+app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, 'views'));
+if (process.env.NODE_ENV === 'development') {
+  app.disable('view cache');
+}
+
+// 5. Настройка CORS
+const corsOrigins = [
+          'https://sta-black-dim.waw.amverum.cloud',
+  'https://seligertinder.ru',
+  'https://www.seligertinder.ru',
+  'https://seligertinder.vercel.app',
+  'https://*.vercel.app',
+  'https://web.telegram.org',
+  'https://localhost:8080',
+  'https://telegram.org',
+  'https://localhost:5173',
+  'http://localhost:5173',
+  'http://127.0.0.1:5173',
+  'capacitor://localhost',
+  'http://localhost',
+  'http://localhost:8080',
+  'http://localhost:8100',
+];
+
+const corsOptions = {
+  origin: (origin, callback) => {
+    if (process.env.LOCAL === 'true' || !origin || corsOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    return callback(new Error('Not allowed by CORS'));
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  optionsSuccessStatus: 200,
+};
+
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
+console.log('⚙️ CORS настроен. Локальный режим:', process.env.LOCAL === 'true');
+
+// 6. Инициализация сервисов
+// const logger = winston.createLogger({
+//   level: LOG_LEVEL,
+//   format: winston.format.combine(
+//     winston.format.timestamp(),
+//     winston.format.printf(({ timestamp, level, message }) => `[${timestamp}] ${level}: ${message}`)
+//   ),
+//   transports: [
+//     new winston.transports.Console(),
+//   ],
+// });
+
+// Добавляем файловые транспорты только если папка логов существует
+// try {
+//   if (fs.existsSync(LOG_DIR)) {
+//     logger.add(new winston.transports.File({ filename: path.join(LOG_DIR, 'error.log'), level: 'error' }));
+//     logger.add(new winston.transports.File({ filename: path.join(LOG_DIR, 'combined.log') }));
+//     console.log('✅ Файловые логи подключены');
+//   } else {
+//     console.warn('⚠️ Папка логов не существует, файловые логи отключены');
+//   }
+// } catch (err) {
+//   console.warn('⚠️ Не удалось подключить файловые логи:', err.message);
+// }
+
+// Инициализация Google Vision клиента с проверкой файла ключа
+let visionClient = null;
+const visionKeyPath = path.join(__dirname, 'Google Vision', 'vision-key.json');
+
+if (fs.existsSync(visionKeyPath)) {
+  try {
+    visionClient = new vision.ImageAnnotatorClient({
+      keyFilename: visionKeyPath,
+    });
+    console.log('✅ Google Vision API инициализирован успешно');
+  } catch (error) {
+    console.error('❌ Ошибка инициализации Google Vision API:', error.message);
+    visionClient = null;
+  }
+} else {
+  console.warn('⚠️ Файл Google Vision ключа не найден:', visionKeyPath);
+  console.warn('⚠️ Проверка пола на фото будет отключена');
+  visionClient = null;
+}
+
+// Делаем visionClient глобально доступным
+global.visionClient = visionClient;
+
+// Логируем количество пользователей в базе (только если таблица существует)
+db.all("SELECT userId FROM users", [], (err, rows) => {
+  if (err) {
+    console.log('📊 Таблица users еще не создана или пуста');
+  } else {
+    console.log(`👥 Всего пользователей в базе: ${rows.length}`);
+  }
+});
+
+// 7. Middleware
+app.set('trust proxy', 1);
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+
+app.use((req, res, next) => {
+  const start = Date.now();
+  const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+  const bodyLog = Object.keys(req.body).length > 0 ? `| body: ${JSON.stringify(req.body)}` : '';
+  console.log(`[REQUEST] ${ip} | ${req.method} ${req.originalUrl} ${bodyLog}`);
+  res.on('finish', () => {
+    const duration = Date.now() - start;
+    console.log(`[RESPONSE] ${ip} | ${req.method} ${req.originalUrl} → ${res.statusCode} [${duration}ms]`);
+  });
+  next();
+});
+
+// Отключить кэширование и ETag для всех API-ручек
+app.use('/api', (req, res, next) => {
+  res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.set('Pragma', 'no-cache');
+  res.set('Expires', '0');
+  res.set('Surrogate-Control', 'no-store');
+  res.removeHeader('ETag');
+  res.removeHeader('Last-Modified');
+  next();
+});
+
+// ДОБАВЛЯЮ МИДДЛВАР ДЛЯ ЛОГГИРОВАНИЯ ВСЕХ ЗАПРОСОВ НА /api/photos/checkPhotoUrl
+app.use('/api/photos/checkPhotoUrl', (req, res, next) => {
+  console.log('🟣 [APP] /api/photos/checkPhotoUrl middleware:', {
+    method: req.method,
+    url: req.originalUrl,
+    headers: req.headers,
+    body: req.body
+  });
+  next();
+});
+
+// 8. Rate Limiter
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // Limit each IP to 100 requests per windowMs
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, error: 'Слишком много запросов, попробуйте позже.' },
+  skip: (req) => {
+    // Пропускаем статические файлы и изображения
+    return req.path.startsWith('/css/') || 
+           req.path.startsWith('/js/') || 
+           req.path.startsWith('/img/') || 
+           req.path.startsWith('/data/img/') ||
+           req.path.startsWith('/giftimg/');
+  }
+});
+app.use('/api/', apiLimiter);
+console.log('🛡️ Rate limiter активирован для /api/');
+
+// 9. Монтирование API-маршрутов
+console.log('▶ API-маршруты инициализируются...');
+app.use('/api', likesRouter(db));
+app.use('/api', matchesRouter(db));
+app.use('/api', usersRouter(db));
+app.use('/api', photosRouter(db, null, IMAGES_DIR, process.env.BOT_TOKEN, visionClient));
+app.use('/api', goalsRouter(db));
+app.use('/api', giftsRouter(db, giftDb));
+app.use('/api', pushRouter(db));
+app.use('/api/pro', proRouter(db));
+app.use('/api', adminRouter(db));
+app.use('/api/stats', statsRouter(db));
+console.log('✅ API-маршруты успешно смонтированы.');
+
+// 10. Раздача статических файлов
+app.use(express.static(path.join(__dirname, 'public'), { 
+  index: false,
+  maxAge: '1y', // Кэширование на 1 год для статических файлов
+  etag: true,
+  lastModified: true,
+  setHeaders: (res, path) => {
+    // Специальные заголовки для Telegram Mini App
+    if (path.endsWith('.js') || path.endsWith('.css')) {
+      res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+      res.setHeader('X-Content-Type-Options', 'nosniff');
+    } else if (path.match(/\.(png|jpg|jpeg|gif|svg|ico)$/)) {
+      res.setHeader('Cache-Control', 'public, max-age=86400'); // 1 день для изображений
+    }
+  }
+}));
+// Для раздачи статики использовать только абсолютные пути:
+app.use('/data/img', express.static(IMAGES_DIR, {
+  maxAge: '1d', // Кэширование изображений на 1 день
+  etag: true,
+  lastModified: true,
+  setHeaders: (res, path) => {
+    // Кэширование фотографий пользователей
+    res.setHeader('Cache-Control', 'public, max-age=86400');
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+  }
+}));
+app.use('/giftimg', express.static(GIFT_IMAGES_DIR, {
+  maxAge: '1d', // Кэширование подарков на 1 день
+  etag: true,
+  lastModified: true,
+  setHeaders: (res, path) => {
+    res.setHeader('Cache-Control', 'public, max-age=86400');
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+  }
+}));
+console.log('🗂️ Настроена раздача статических файлов с кэшированием для Telegram Mini App.');
+
+// Функция для получения данных пользователя
+async function getUserData(userId) {
+  return new Promise((resolve, reject) => {
+    if (!userId) {
+      resolve(null);
+      return;
+    }
+    
+    db.get('SELECT * FROM users WHERE userId = ?', [userId], (err, row) => {
+      if (err) {
+        reject(err);
+        return;
+      }
+      
+      if (row) {
+        // Формируем массив фотографий для совместимости с шаблоном
+        const photos = [row.photo1, row.photo2, row.photo3].filter(p => p && String(p).trim() !== '');
+        
+        resolve({
+          ...row,
+          photos,
+          photoUrl: photos[0] || row.photoUrl || '/img/logo.svg'
+        });
+      } else {
+        resolve(null);
+      }
+    });
+  });
+}
+
+function getHashMap() {
+  const hashMapPath = path.join(__dirname, 'public', 'hash-map.json');
+  let hashMap = {};
+  if (fs.existsSync(hashMapPath)) {
+    try {
+      hashMap = JSON.parse(fs.readFileSync(hashMapPath, 'utf8'));
+    } catch (e) {
+      hashMap = {};
+    }
+  }
+  return hashMap;
+}
+
+// 11. Корневой маршрут и SPA Fallback
+app.get('/', async (req, res) => {
+  console.log('[GET /] Запрос на корневой маршрут. Загружаем подарки...');
+  
+  try {
+    // Получаем userId из query параметров или заголовков
+    const userId = req.query.userId || req.headers['x-user-id'];
+    let user = {};
+    
+    if (userId) {
+      user = await getUserData(userId) || {};
+    }
+    
+    giftDb.all('SELECT * FROM gifts ORDER BY PriceGift', [], (err, gifts) => {
+      if (err) {
+        console.error('!!! [GET /] КРИТИЧЕСКАЯ ОШИБКА при запросе к giftDb:', { error: err.message });
+        return res.render('index', { user, gifts: [], hashMap: getHashMap() });
+      }
+      res.render('index', { user, gifts: gifts || [], hashMap: getHashMap() });
+    });
+  } catch (error) {
+    console.error('[GET /] Ошибка при получении данных пользователя:', error);
+    giftDb.all('SELECT * FROM gifts ORDER BY PriceGift', [], (err, gifts) => {
+      if (err) {
+        console.error('!!! [GET /] КРИТИЧЕСКАЯ ОШИБКА при запросе к giftDb:', { error: err.message });
+        return res.render('index', { user: {}, gifts: [], hashMap: getHashMap() });
+      }
+      res.render('index', { user: {}, gifts: gifts || [], hashMap: getHashMap() });
+    });
+  }
+});
+
+app.get('*', async (req, res, next) => {
+  if (req.path.startsWith('/api/') || req.path.match(/\.(js|css|json|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot)$/)) {
+    return next();
+  }
+  
+  console.log(`[SPA Fallback] Рендерим index.ejs для пути: ${req.path}`);
+  
+  try {
+    // Получаем userId из query параметров или заголовков
+    const userId = req.query.userId || req.headers['x-user-id'];
+    let user = {};
+    
+    if (userId) {
+      user = await getUserData(userId) || {};
+    }
+    
+    res.render('index', { user, gifts: [], hashMap: getHashMap() });
+  } catch (error) {
+    console.error('[SPA Fallback] Ошибка при получении данных пользователя:', error);
+    res.render('index', { user: {}, gifts: [], hashMap: getHashMap() });
+  }
+});
+
+// 12. Обработчики ошибок
+app.use((err, req, res, next) => {
+  console.error(`Необработанная ошибка: ${err.message}`, { stack: err.stack, url: req.originalUrl });
+  if (err.message === 'Not allowed by CORS') {
+    return res.status(403).json({ success: false, error: 'Доступ запрещён политикой CORS.' });
+  }
+  res.status(err.status || 500).json({
+    success: false,
+    error: 'Внутренняя ошибка сервера.',
+  });
+});
+
+// 13. Cron-задачи
+cron.schedule('0 0 * * *', () => {
+  console.log('Выполняется ежедневная задача по очистке старых лайков...');
+  const oneWeekAgo = new Date();
+  oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+  const formattedDate = oneWeekAgo.toISOString();
+
+  db.run(`DELETE FROM likes WHERE timestamp < ?`, [formattedDate], function (err) {
+    if (err) {
+      console.error('Ошибка при удалении старых лайков:', err.message);
+    } else {
+      console.log(`Удалено старых лайков: ${this.changes}`);
+    }
+  });
+});
+
+// 14. Экспорт приложения
+module.exports = app;

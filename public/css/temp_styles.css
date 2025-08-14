@@ -1,0 +1,33 @@
+/* Стили для динамически созданных кнопок */
+
+.profile-actions {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  padding: 16px;
+}
+
+.delete-match-btn {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: rgba(40, 40, 40, 0.6);
+  color: white;
+  border: none;
+  border-radius: 25px;
+  padding: 8px 16px;
+  cursor: pointer;
+  z-index: 10;
+  display: flex !important; /* Важно для переопределения других стилей */
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+}
+
+.delete-match-btn img {
+  width: 20px;
+  height: 20px;
+}
