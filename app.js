@@ -286,13 +286,25 @@ app.use(express.static(path.join(__dirname, 'public'), {
   maxAge: '1y', // Кэширование на 1 год для статических файлов
   etag: true,
   lastModified: true,
-  setHeaders: (res, path) => {
+  setHeaders: (res, filePath) => {
     // Специальные заголовки для Telegram Mini App
-    if (path.endsWith('.js') || path.endsWith('.css')) {
+    if (filePath.endsWith('.js') || filePath.endsWith('.css')) {
       res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
       res.setHeader('X-Content-Type-Options', 'nosniff');
-    } else if (path.match(/\.(png|jpg|jpeg|gif|svg|ico)$/)) {
+      res.setHeader('Content-Type', filePath.endsWith('.js') ? 'application/javascript' : 'text/css');
+    } else if (filePath.match(/\.(png|jpg|jpeg|gif|svg|ico)$/)) {
       res.setHeader('Cache-Control', 'public, max-age=86400'); // 1 день для изображений
+    }
+    // Убеждаемся, что CORS заголовки установлены для статики
+    const origin = res.req.headers.origin;
+    if (origin && corsOrigins.some(allowed => {
+      if (allowed.includes('*')) {
+        return origin.includes(allowed.replace('*.', ''));
+      }
+      return origin === allowed;
+    })) {
+      res.setHeader('Access-Control-Allow-Origin', origin);
+      res.setHeader('Access-Control-Allow-Credentials', 'true');
     }
   }
 }));

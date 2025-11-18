@@ -28,6 +28,16 @@ body {
   overflow: hidden;
 }
 
+/* По умолчанию все экраны скрыты, кроме welcome */
+.screen:not(#screen-welcome) {
+  display: none;
+}
+
+/* Показываем экран когда у него есть класс active */
+.screen.active {
+  display: flex;
+}
+
 /* ========== THEME VARIABLES ========== */
 :root {
   --color-white:       #fff;
