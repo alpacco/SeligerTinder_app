@@ -179,6 +179,26 @@ document.addEventListener("DOMContentLoaded", () => {
   console.log("🔵 [MAIN.JS] Устанавливаем window.API_URL...");
   window.API_URL = API_URL;
   console.log("  ✅ window.API_URL установлен:", window.API_URL);
+  
+  // Обновляем экран приветствия сразу после установки currentUser
+  // (если экран уже виден)
+  setTimeout(() => {
+    const welcomeScreen = document.getElementById('screen-welcome');
+    if (welcomeScreen && welcomeScreen.classList.contains('active')) {
+      console.log("🔵 [MAIN.JS] Экран приветствия активен, обновляем имя...");
+      const welcomeUserName = document.querySelector('#screen-welcome .user-name');
+      if (welcomeUserName && currentUser && currentUser.name) {
+        welcomeUserName.textContent = currentUser.name;
+        console.log("  ✅ Имя пользователя обновлено (вручную):", currentUser.name);
+      } else {
+        console.warn("  ⚠️ Не удалось обновить имя:", {
+          welcomeUserName: !!welcomeUserName,
+          currentUser: !!currentUser,
+          userName: currentUser?.name
+        });
+      }
+    }
+  }, 100);
 
 // Импортируем handlePhotoAddition из user-actions.js
 import('./user-actions.js').then(module => {
