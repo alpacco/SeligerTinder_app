@@ -14,7 +14,7 @@ nixPkgs = [
 cmds = ["npm i"]
 
 [phases.build]
-cmds = ["npm install", "npm rebuild @u4/opencv4nodejs || echo 'OpenCV rebuild skipped'"]
+cmds = ["npm rebuild @u4/opencv4nodejs || echo 'OpenCV rebuild skipped - will continue without face detection'"]
 
 [start]
 cmd = "node start-all.js"
