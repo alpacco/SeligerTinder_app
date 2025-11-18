@@ -202,15 +202,91 @@ async def init_app():
     elif ADMIN_TOKEN:
         print("✅ Admin авторизация настроена через Bearer Token")
     
-    # Проверка наличия собранных файлов фронтенда
+    # Сборка фронтенда (если не собран)
     print("=" * 70)
-    print("📦 [INIT] Проверка собранных файлов фронтенда...")
+    print("📦 [INIT] Проверка и сборка фронтенда...")
     print(f"  - public_dir: {public_dir}")
     print(f"  - public_dir.exists(): {public_dir.exists()}")
     
+    frontend_dir = Path(__file__).parent.parent / "frontend"
+    hash_map_path = public_dir / "hash-map.json"
+    
+    # Проверяем, нужно ли собирать фронтенд
+    need_build = False
+    if not hash_map_path.exists():
+        print(f"  ⚠️ hash-map.json НЕ НАЙДЕН - нужна сборка фронтенда")
+        need_build = True
+    else:
+        # Проверяем наличие JS файлов
+        js_dir = public_dir / "js"
+        if not js_dir.exists() or not list(js_dir.glob("*.js")):
+            print(f"  ⚠️ JS файлы НЕ НАЙДЕНЫ - нужна сборка фронтенда")
+            need_build = True
+    
+    if need_build and frontend_dir.exists():
+        print("=" * 70)
+        print("📦 [BUILD] Запуск сборки фронтенда...")
+        print("=" * 70)
+        try:
+            import subprocess
+            import shutil
+            
+            # Проверяем наличие npm
+            npm_path = shutil.which("npm")
+            if not npm_path:
+                print("  ⚠️ npm не найден в PATH, пытаемся найти nodejs...")
+                # Пробуем найти npm через node
+                node_path = shutil.which("node")
+                if node_path:
+                    npm_path = node_path.replace("node", "npm")
+            
+            if npm_path:
+                print(f"  ✅ npm найден: {npm_path}")
+                print(f"  📦 Установка зависимостей...")
+                
+                # Устанавливаем зависимости
+                result = subprocess.run(
+                    ["npm", "install"],
+                    cwd=str(frontend_dir),
+                    capture_output=True,
+                    text=True,
+                    timeout=300
+                )
+                if result.returncode != 0:
+                    print(f"  ⚠️ Ошибка установки зависимостей: {result.stderr}")
+                else:
+                    print(f"  ✅ Зависимости установлены")
+                
+                print(f"  📦 Запуск сборки...")
+                # Собираем фронтенд
+                result = subprocess.run(
+                    ["npm", "run", "build"],
+                    cwd=str(frontend_dir),
+                    capture_output=True,
+                    text=True,
+                    timeout=300
+                )
+                if result.returncode != 0:
+                    print(f"  ❌ Ошибка сборки: {result.stderr}")
+                    print(f"  stdout: {result.stdout}")
+                else:
+                    print(f"  ✅ Фронтенд собран успешно")
+                    print(f"  stdout: {result.stdout[-500:]}")  # Последние 500 символов
+            else:
+                print("  ⚠️ npm не найден - пропускаем сборку фронтенда")
+        except subprocess.TimeoutExpired:
+            print("  ⚠️ Таймаут при сборке фронтенда (более 5 минут)")
+        except Exception as e:
+            print(f"  ⚠️ Ошибка при сборке фронтенда: {e}")
+            import traceback
+            traceback.print_exc()
+    
+    # Проверка наличия собранных файлов фронтенда
+    print("=" * 70)
+    print("📦 [INIT] Проверка собранных файлов фронтенда...")
+    
     if public_dir.exists():
         # Проверяем hash-map.json
-        hash_map_path = public_dir / "hash-map.json"
         if hash_map_path.exists():
             print(f"  ✅ hash-map.json найден: {hash_map_path}")
             try:
@@ -224,8 +300,6 @@ async def init_app():
                 print(f"  ❌ Ошибка загрузки hash-map.json: {e}")
         else:
             print(f"  ⚠️ hash-map.json НЕ НАЙДЕН: {hash_map_path}")
-            print(f"  ⚠️ Это означает, что сборка фронтенда еще не прошла на сервере")
-            print(f"  ⚠️ Проверьте логи Railway на этапе 'install' - должна быть команда 'npm run build'")
         
         # Проверяем JS файлы
         js_dir = public_dir / "js"
@@ -237,7 +311,6 @@ async def init_app():
                 print(f"  - Примеры файлов: {[f.name for f in js_files[:5]]}")
             else:
                 print(f"  ⚠️ JS файлы НЕ НАЙДЕНЫ в {js_dir}")
-                print(f"  ⚠️ Это означает, что сборка фронтенда не создала файлы")
         else:
             print(f"  ⚠️ Директория js/ НЕ НАЙДЕНА: {js_dir}")
         
@@ -253,7 +326,6 @@ async def init_app():
             print(f"  ⚠️ Директория css/ НЕ НАЙДЕНА: {css_dir}")
     else:
         print(f"  ⚠️ Директория public/ НЕ НАЙДЕНА: {public_dir}")
-        print(f"  ⚠️ Это критическая ошибка - фронтенд не может быть отдан")
     
     print("=" * 70)
     
