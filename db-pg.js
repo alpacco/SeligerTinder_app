@@ -98,11 +98,18 @@ const db = {
 
   // Метод all (SELECT с множественными результатами)
   all: (sql, params, callback) => {
-    pool.query(sql, params || [])
+    // Адаптируем SQL для PostgreSQL: добавляем кавычки к camelCase идентификаторам
+    let adaptedSql = sql;
+    // Простая замена userId на "userId" для основных случаев
+    adaptedSql = adaptedSql.replace(/\buserId\b/g, '"userId"');
+    
+    pool.query(adaptedSql, params || [])
       .then(result => {
         callback(null, result.rows);
       })
       .catch(err => {
+        console.error('❌ [db.all] Ошибка SQL:', err.message);
+        console.error('❌ [db.all] SQL запрос:', adaptedSql);
         callback(err, null);
       });
   },
