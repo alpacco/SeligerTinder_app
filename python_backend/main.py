@@ -17,6 +17,7 @@ from middleware.error_handler import validation_exception_handler, http_exceptio
 from fastapi.exceptions import RequestValidationError
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import Response
+from contextlib import asynccontextmanager
 import uvicorn
 
 # Добавляем текущую директорию в путь
@@ -32,8 +33,51 @@ from config import (
 
 load_dotenv()
 
-# Инициализация FastAPI
-app = FastAPI(title="SeligerTinder API", version="1.0.0")
+# Lifespan для запуска/остановки бота
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Управление жизненным циклом приложения: запуск и остановка бота"""
+    # Startup: инициализируем БД и запускаем бота
+    print("=" * 70)
+    print("🚀 FASTAPI STARTUP")
+    print("=" * 70)
+    
+    # Инициализация БД и проверки безопасности
+    await init_app()
+    
+    # Запуск бота
+    print("=" * 70)
+    print("🤖 Запуск Telegram бота...")
+    print("=" * 70)
+    
+    try:
+        from bot import start_bot
+        await start_bot()
+    except Exception as e:
+        print(f"⚠️ Ошибка при запуске бота: {e}")
+        import traceback
+        traceback.print_exc()
+    
+    yield  # Приложение работает
+    
+    # Shutdown: останавливаем бота
+    print("=" * 70)
+    print("🛑 FASTAPI SHUTDOWN: Остановка бота...")
+    print("=" * 70)
+    
+    try:
+        from bot import stop_bot
+        await stop_bot()
+    except Exception as e:
+        print(f"⚠️ Ошибка при остановке бота: {e}")
+
+
+# Инициализация FastAPI с lifespan
+app = FastAPI(
+    title="SeligerTinder API",
+    version="1.0.0",
+    lifespan=lifespan
+)
 
 # Rate Limiter (настраиваемые лимиты из переменных окружения)
 limiter = Limiter(
@@ -143,9 +187,9 @@ app.add_exception_handler(RequestValidationError, validation_exception_handler)
 app.add_exception_handler(HTTPException, http_exception_handler)
 app.add_exception_handler(Exception, general_exception_handler)
 
-@app.on_event("startup")
-async def startup_event():
-    """Инициализация при запуске"""
+# Инициализация БД и проверка безопасности (вызывается в lifespan)
+async def init_app():
+    """Инициализация приложения (БД, проверки безопасности)"""
     await init_database()
     
     # Проверка безопасности admin авторизации
