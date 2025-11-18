@@ -141,43 +141,39 @@ document.addEventListener("DOMContentLoaded", () => {
   let inMutualMatch = false;
   let viewingCandidate = null;
 
-function showScreen(screenId) {
-  console.log(`🔵 [MAIN.JS] showScreen вызвана с screenId: ${screenId}`);
-  if (showScreenImpl) {
-    console.log("  - showScreenImpl существует, вызываем его");
-    showScreenImpl(screenId);
-  } else {
-    console.warn("  ⚠️ showScreen вызвана до инициализации DOM");
-    // Fallback: переключаем экраны вручную
+  // ВРЕМЕННАЯ функция showScreen (будет заменена настоящей позже)
+  // Используем fallback для переключения экранов через классы
+  function showScreenFallback(screenId) {
+    console.log(`🔵 [MAIN.JS] showScreenFallback вызвана с screenId: ${screenId}`);
     const allScreens = document.querySelectorAll('.screen');
-    allScreens.forEach(screen => screen.classList.remove('active'));
+    allScreens.forEach(screen => {
+      screen.classList.remove('active');
+      screen.style.display = 'none';
+    });
     const targetScreen = document.getElementById(screenId);
     if (targetScreen) {
       targetScreen.classList.add('active');
-      console.log(`  ✅ Переключили на экран ${screenId} вручную`);
+      targetScreen.style.display = 'flex';
+      console.log(`  ✅ Переключили на экран ${screenId} (fallback)`);
     } else {
       console.error(`  ❌ Экран ${screenId} не найден!`);
     }
   }
-}
 
-// Делаем showScreen доступной глобально
-console.log("🔵 [MAIN.JS] Устанавливаем window.showScreen...");
-window.showScreen = showScreen;
-console.log("  ✅ window.showScreen установлен:", typeof window.showScreen);
+  // Устанавливаем временную функцию в window (будет заменена позже)
+  console.log("🔵 [MAIN.JS] Устанавливаем временный window.showScreen (fallback)...");
+  window.showScreen = showScreenFallback;
+  console.log("  ✅ window.showScreen установлен (временный):", typeof window.showScreen);
 
-// Экспортируем currentUser в глобальную область
-console.log("🔵 [MAIN.JS] Устанавливаем window.currentUser...");
-window.currentUser = currentUser;
-console.log("  ✅ window.currentUser установлен:", window.currentUser);
+  // Экспортируем currentUser в глобальную область СРАЗУ
+  console.log("🔵 [MAIN.JS] Устанавливаем window.currentUser...");
+  window.currentUser = currentUser;
+  console.log("  ✅ window.currentUser установлен:", window.currentUser);
 
-// Экспортируем API_URL в глобальную область
-console.log("🔵 [MAIN.JS] Устанавливаем window.API_URL...");
-window.API_URL = API_URL;
-console.log("  ✅ window.API_URL установлен:", window.API_URL);
-
-// Экспортируем showCandidate в глобальную область
-window.showCandidate = showCandidate;
+  // Экспортируем API_URL в глобальную область СРАЗУ
+  console.log("🔵 [MAIN.JS] Устанавливаем window.API_URL...");
+  window.API_URL = API_URL;
+  console.log("  ✅ window.API_URL установлен:", window.API_URL);
 
 // Импортируем handlePhotoAddition из user-actions.js
 import('./user-actions.js').then(module => {
