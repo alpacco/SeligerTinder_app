@@ -5,9 +5,8 @@ nixPkgs = [
   "python3",
   "python3Packages.pip",
   "pkg-config",
-  "opencv",
+  "opencv4",
   "gcc",
-  "make",
   "cmake"
 ]
 
@@ -19,6 +18,3 @@ cmds = ["npm install"]
 
 [start]
 cmd = "node start-all.js"
-
-[variables]
-PYTHON = "/nix/store/*/bin/python3"
