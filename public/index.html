@@ -377,9 +377,8 @@
           console.log('  - API_URL:', window.API_URL);
           console.log('  - API_BASE_URL:', window.API_BASE_URL);
           
-          // Проверяем обработчики событий
-          const handlers = getEventListeners ? getEventListeners(joinButton) : 'getEventListeners недоступен';
-          console.log('  - Обработчики событий:', handlers);
+          // Проверяем обработчики событий (getEventListeners доступен только в Chrome DevTools)
+          console.log('  - Обработчики событий: проверка через DevTools');
           
           // Добавляем логирующий обработчик
           joinButton.addEventListener('click', (e) => {
