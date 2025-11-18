@@ -12,7 +12,7 @@
     "start:bot": "node start-bot.js",
     "start:all": "node start-all.js",
     "build:prod": "vite build",
-    "postinstall": "npm rebuild sqlite3",
+    "postinstall": "npm rebuild sqlite3 && node -e \"console.log('🔍 === OpenCV Build Debug Info ==='); console.log('🔍 Python:', require('child_process').execSync('which python3', {encoding: 'utf8'}).trim()); console.log('🔍 Python version:', require('child_process').execSync('python3 --version', {encoding: 'utf8'}).trim()); console.log('🔍 GCC:', require('child_process').execSync('which gcc', {encoding: 'utf8'}).trim()); console.log('🔍 CMake:', require('child_process').execSync('which cmake', {encoding: 'utf8'}).trim()); console.log('🔍 pkg-config:', require('child_process').execSync('which pkg-config', {encoding: 'utf8'}).trim()); console.log('🔍 Checking OpenCV...'); try { console.log('OpenCV version:', require('child_process').execSync('pkg-config --modversion opencv4', {encoding: 'utf8'}).trim()); } catch(e) { console.log('⚠️ pkg-config opencv4 not found'); } try { console.log('OpenCV cflags:', require('child_process').execSync('pkg-config --cflags opencv4', {encoding: 'utf8'}).trim()); } catch(e) { console.log('⚠️ pkg-config opencv4 cflags not found'); } try { console.log('OpenCV libs:', require('child_process').execSync('pkg-config --libs opencv4', {encoding: 'utf8'}).trim()); } catch(e) { console.log('⚠️ pkg-config opencv4 libs not found'); }\" && npm rebuild @u4/opencv4nodejs --verbose 2>&1 | tail -50 || echo '⚠️ OpenCV rebuild failed'",
     "migrate": "node migrations/migrate.js"
   },
   "dependencies": {
