@@ -7,14 +7,15 @@ nixPkgs = [
   "pkg-config",
   "opencv4",
   "gcc",
-  "cmake"
+  "cmake",
+  "make"
 ]
 
 [phases.install]
 cmds = ["npm i"]
 
 [phases.build]
-cmds = ["npm install"]
+cmds = ["npm install", "npm rebuild @u4/opencv4nodejs || echo 'OpenCV rebuild skipped'"]
 
 [start]
 cmd = "node start-all.js"
