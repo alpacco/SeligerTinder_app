@@ -16,8 +16,10 @@ const USE_POSTGRES = process.env.USE_POSTGRES === 'true' || !!process.env.DATABA
 function dbGet(db, sql, params = []) {
   return new Promise((resolve, reject) => {
     if (USE_POSTGRES) {
-      // PostgreSQL - db это pool
-      db.query(sql, params)
+      // PostgreSQL - адаптируем SQL для camelCase полей
+      let adaptedSql = sql;
+      adaptedSql = adaptedSql.replace(/\b(userId|photoUrl|createdAt|needPhoto|pushSent|is_pro|pro_start|pro_end|last_login|super_likes_count|photo1|photo2|photo3|photoBot)\b/g, '"$1"');
+      db.query(adaptedSql, params)
         .then(result => resolve(result.rows[0] || null))
         .catch(reject);
     } else {
@@ -43,8 +45,10 @@ function dbGet(db, sql, params = []) {
 function dbAll(db, sql, params = []) {
   return new Promise((resolve, reject) => {
     if (USE_POSTGRES) {
-      // PostgreSQL - db имеет метод query (это обертка над pool)
-      db.query(sql, params)
+      // PostgreSQL - адаптируем SQL для camelCase полей
+      let adaptedSql = sql;
+      adaptedSql = adaptedSql.replace(/\b(userId|photoUrl|createdAt|needPhoto|pushSent|is_pro|pro_start|pro_end|last_login|super_likes_count|photo1|photo2|photo3|photoBot)\b/g, '"$1"');
+      db.query(adaptedSql, params)
         .then(result => resolve(result.rows || []))
         .catch(reject);
     } else {
@@ -70,8 +74,10 @@ function dbAll(db, sql, params = []) {
 function dbRun(db, sql, params = []) {
   return new Promise((resolve, reject) => {
     if (USE_POSTGRES) {
-      // PostgreSQL - db имеет метод query (это обертка над pool)
-      db.query(sql, params)
+      // PostgreSQL - адаптируем SQL для camelCase полей
+      let adaptedSql = sql;
+      adaptedSql = adaptedSql.replace(/\b(userId|photoUrl|createdAt|needPhoto|pushSent|is_pro|pro_start|pro_end|last_login|super_likes_count|photo1|photo2|photo3|photoBot)\b/g, '"$1"');
+      db.query(adaptedSql, params)
         .then(result => {
           resolve({
             lastID: result.rows[0]?.id || null,
