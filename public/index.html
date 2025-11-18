@@ -376,6 +376,8 @@
           console.log('  - Текст:', joinButton.textContent);
           console.log('  - API_URL:', window.API_URL);
           console.log('  - API_BASE_URL:', window.API_BASE_URL);
+          console.log('  - window.showScreen:', typeof window.showScreen);
+          console.log('  - window.currentUser:', window.currentUser);
           
           // Проверяем обработчики событий (getEventListeners доступен только в Chrome DevTools)
           console.log('  - Обработчики событий: проверка через DevTools');
@@ -390,6 +392,60 @@
             console.log('  - Telegram.WebApp:', window.Telegram?.WebApp);
             console.log('  - window.showScreen:', typeof window.showScreen);
             console.log('  - window.currentUser:', window.currentUser);
+            
+            // Если обработчик из main.js не установился, вызываем напрямую
+            if (typeof window.showScreen === 'function' && window.currentUser) {
+              console.log('✅ [BUTTON] Используем обработчик из main.js');
+            } else {
+              console.warn('⚠️ [BUTTON] Обработчик из main.js не установлен, пытаемся вызвать напрямую');
+              // Пробуем вызвать регистрацию напрямую
+              if (window.API_URL) {
+                const tg = window.Telegram?.WebApp;
+                let tgUser = {};
+                if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
+                  tgUser = tg.initDataUnsafe.user;
+                }
+                const registrationData = {
+                  userId: String(tgUser.id || "UserID"),
+                  name: tgUser.first_name || "Username",
+                  username: tgUser.username || "",
+                  photoUrl: (tgUser.photo_url && tgUser.photo_url.startsWith("http"))
+                            ? tgUser.photo_url
+                            : "/img/logo.svg",
+                  gender: "",
+                  bio: ""
+                };
+                console.log('🔵 [BUTTON] Отправка регистрации напрямую:', registrationData);
+                fetch(`${window.API_URL}/join`, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify(registrationData)
+                })
+                  .then(res => res.json())
+                  .then(data => {
+                    console.log('🔵 [BUTTON] Ответ от сервера:', data);
+                    if (data.success) {
+                      console.log('✅ [BUTTON] Регистрация успешна!');
+                      // Пробуем переключить экран
+                      const genderScreen = document.getElementById('screen-gender');
+                      const welcomeScreen = document.getElementById('screen-welcome');
+                      if (genderScreen && welcomeScreen) {
+                        welcomeScreen.classList.remove('active');
+                        genderScreen.classList.add('active');
+                        console.log('✅ [BUTTON] Переключили на экран выбора пола');
+                      } else {
+                        console.error('❌ [BUTTON] Не найдены экраны для переключения');
+                      }
+                    } else {
+                      alert('Ошибка регистрации: ' + (data.error || 'Неизвестная ошибка'));
+                    }
+                  })
+                  .catch(err => {
+                    console.error('❌ [BUTTON] Ошибка регистрации:', err);
+                    alert('Ошибка регистрации: ' + err.message);
+                  });
+              }
+            }
           }, { once: false });
         } else {
           console.error('❌ [DOM] Кнопка join-button НЕ найдена!');
@@ -406,6 +462,7 @@
       // Также проверяем после загрузки всех скриптов
       window.addEventListener('load', () => {
         setTimeout(checkJoinButton, 1000);
+        setTimeout(checkJoinButton, 2000); // Еще раз через 2 секунды
       });
       
       // Показываем контент после загрузки всех ресурсов
