@@ -313,7 +313,10 @@
     <script>
       // Передаем правильный API URL из сервера
       window.API_BASE_URL = '<%= apiBaseUrl %>';
+      window.API_URL = '<%= apiBaseUrl %>'; // Для совместимости со старым кодом
       window.WEB_APP_URL = '<%= webAppUrl %>';
+      console.log('🔧 [Config] API_BASE_URL:', window.API_BASE_URL);
+      console.log('🔧 [Config] WEB_APP_URL:', window.WEB_APP_URL);
     </script>
     <script type="module" src="/js/<%= hashMap['main'] %>"></script>
     <script type="module" src="/js/<%= hashMap['profile'] %>"></script>

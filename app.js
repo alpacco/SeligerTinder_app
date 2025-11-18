@@ -179,8 +179,12 @@ const corsOptions = {
       return callback(null, true);
     }
     
+    // Логируем origin для отладки
+    console.log(`[CORS] Проверка origin: ${origin}`);
+    
     // Проверяем точное совпадение
     if (corsOrigins.includes(origin)) {
+      console.log(`[CORS] ✅ Разрешен (точное совпадение): ${origin}`);
       return callback(null, true);
     }
     
@@ -189,11 +193,19 @@ const corsOptions = {
       if (allowed && typeof allowed === 'string' && allowed.includes('*')) {
         const pattern = allowed.replace('*.', '');
         if (origin.includes(pattern)) {
+          console.log(`[CORS] ✅ Разрешен (wildcard ${allowed}): ${origin}`);
           return callback(null, true);
         }
       }
     }
     
+    // Разрешаем все запросы с web.telegram.org (Telegram WebView)
+    if (origin.includes('web.telegram.org') || origin.includes('telegram.org')) {
+      console.log(`[CORS] ✅ Разрешен (Telegram): ${origin}`);
+      return callback(null, true);
+    }
+    
+    console.log(`[CORS] ❌ Запрещен: ${origin}`);
     return callback(new Error('Not allowed by CORS'));
   },
   credentials: true,
