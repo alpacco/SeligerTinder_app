@@ -80,11 +80,15 @@ pool.query('SELECT NOW()', (err, res) => {
 const db = {
   // Метод get (SELECT с одним результатом)
   get: (sql, params, callback) => {
-    // Адаптируем SQL для PostgreSQL: добавляем кавычки к camelCase идентификаторам
+    // Адаптируем SQL для PostgreSQL
     let adaptedSql = sql;
-    // Заменяем все camelCase идентификаторы на версии с кавычками
-    // userId -> "userId", photoUrl -> "photoUrl", и т.д.
-    adaptedSql = adaptedSql.replace(/\b(userId|photoUrl|createdAt|needPhoto|pushSent|is_pro|pro_start|pro_end|last_login|super_likes_count|photo1|photo2|photo3|photoBot)\b/g, '"$1"');
+    // 1. Заменяем все camelCase идентификаторы на версии с кавычками
+    adaptedSql = adaptedSql.replace(/\b(userId|photoUrl|createdAt|needPhoto|pushSent|is_pro|pro_start|pro_end|last_login|super_likes_count|photo1|photo2|photo3|photoBot|PriceGift)\b/g, '"$1"');
+    // 2. Заменяем SQLite placeholders ? на PostgreSQL $1, $2, $3...
+    if (params && params.length > 0) {
+      let paramIndex = 1;
+      adaptedSql = adaptedSql.replace(/\?/g, () => `$${paramIndex++}`);
+    }
     
     pool.query(adaptedSql, params || [])
       .then(result => {
@@ -94,16 +98,22 @@ const db = {
         console.error('❌ [db.get] Ошибка SQL:', err.message);
         console.error('❌ [db.get] Оригинальный SQL:', sql);
         console.error('❌ [db.get] Адаптированный SQL:', adaptedSql);
+        console.error('❌ [db.get] Параметры:', params);
         callback(err, null);
       });
   },
 
   // Метод all (SELECT с множественными результатами)
   all: (sql, params, callback) => {
-    // Адаптируем SQL для PostgreSQL: добавляем кавычки к camelCase идентификаторам
+    // Адаптируем SQL для PostgreSQL
     let adaptedSql = sql;
-    // Заменяем все camelCase идентификаторы на версии с кавычками
-    adaptedSql = adaptedSql.replace(/\b(userId|photoUrl|createdAt|needPhoto|pushSent|is_pro|pro_start|pro_end|last_login|super_likes_count|photo1|photo2|photo3|photoBot)\b/g, '"$1"');
+    // 1. Заменяем все camelCase идентификаторы на версии с кавычками
+    adaptedSql = adaptedSql.replace(/\b(userId|photoUrl|createdAt|needPhoto|pushSent|is_pro|pro_start|pro_end|last_login|super_likes_count|photo1|photo2|photo3|photoBot|PriceGift)\b/g, '"$1"');
+    // 2. Заменяем SQLite placeholders ? на PostgreSQL $1, $2, $3...
+    if (params && params.length > 0) {
+      let paramIndex = 1;
+      adaptedSql = adaptedSql.replace(/\?/g, () => `$${paramIndex++}`);
+    }
     
     pool.query(adaptedSql, params || [])
       .then(result => {
@@ -113,16 +123,22 @@ const db = {
         console.error('❌ [db.all] Ошибка SQL:', err.message);
         console.error('❌ [db.all] Оригинальный SQL:', sql);
         console.error('❌ [db.all] Адаптированный SQL:', adaptedSql);
+        console.error('❌ [db.all] Параметры:', params);
         callback(err, null);
       });
   },
 
   // Метод run (INSERT, UPDATE, DELETE)
   run: (sql, params, callback) => {
-    // Адаптируем SQL для PostgreSQL: добавляем кавычки к camelCase идентификаторам
+    // Адаптируем SQL для PostgreSQL
     let adaptedSql = sql;
-    // Заменяем все camelCase идентификаторы на версии с кавычками
-    adaptedSql = adaptedSql.replace(/\b(userId|photoUrl|createdAt|needPhoto|pushSent|is_pro|pro_start|pro_end|last_login|super_likes_count|photo1|photo2|photo3|photoBot)\b/g, '"$1"');
+    // 1. Заменяем все camelCase идентификаторы на версии с кавычками
+    adaptedSql = adaptedSql.replace(/\b(userId|photoUrl|createdAt|needPhoto|pushSent|is_pro|pro_start|pro_end|last_login|super_likes_count|photo1|photo2|photo3|photoBot|PriceGift)\b/g, '"$1"');
+    // 2. Заменяем SQLite placeholders ? на PostgreSQL $1, $2, $3...
+    if (params && params.length > 0) {
+      let paramIndex = 1;
+      adaptedSql = adaptedSql.replace(/\?/g, () => `$${paramIndex++}`);
+    }
     
     pool.query(adaptedSql, params || [])
       .then(result => {
@@ -139,6 +155,7 @@ const db = {
         console.error('❌ [db.run] Ошибка SQL:', err.message);
         console.error('❌ [db.run] Оригинальный SQL:', sql);
         console.error('❌ [db.run] Адаптированный SQL:', adaptedSql);
+        console.error('❌ [db.run] Параметры:', params);
         if (callback) {
           callback(err);
         }
@@ -155,8 +172,15 @@ const db = {
   query: (sql, params) => {
     // Адаптируем SQL для PostgreSQL
     let adaptedSql = sql;
-    adaptedSql = adaptedSql.replace(/\b(userId|photoUrl|createdAt|needPhoto|pushSent|is_pro|pro_start|pro_end|last_login|super_likes_count|photo1|photo2|photo3|photoBot)\b/g, '"$1"');
-    return pool.query(adaptedSql, params || []);
+    // 1. Заменяем все camelCase идентификаторы на версии с кавычками
+    adaptedSql = adaptedSql.replace(/\b(userId|photoUrl|createdAt|needPhoto|pushSent|is_pro|pro_start|pro_end|last_login|super_likes_count|photo1|photo2|photo3|photoBot|PriceGift)\b/g, '"$1"');
+    // 2. Заменяем SQLite placeholders ? на PostgreSQL $1, $2, $3...
+    const paramsArray = params || [];
+    if (paramsArray.length > 0) {
+      let paramIndex = 1;
+      adaptedSql = adaptedSql.replace(/\?/g, () => `$${paramIndex++}`);
+    }
+    return pool.query(adaptedSql, paramsArray);
   },
 
   // Закрытие соединения

@@ -205,7 +205,18 @@ const corsOptions = {
       return callback(null, true);
     }
     
+    // Разрешаем запросы с того же домена (если WEB_APP_URL установлен)
+    if (process.env.WEB_APP_URL) {
+      const webAppUrl = process.env.WEB_APP_URL.replace(/^https?:\/\//, '');
+      const originHost = origin.replace(/^https?:\/\//, '');
+      if (originHost === webAppUrl || originHost.includes(webAppUrl) || webAppUrl.includes(originHost)) {
+        console.log(`[CORS] ✅ Разрешен (WEB_APP_URL match): ${origin}`);
+        return callback(null, true);
+      }
+    }
+    
     console.log(`[CORS] ❌ Запрещен: ${origin}`);
+    console.log(`[CORS] Разрешенные origins:`, corsOrigins);
     return callback(new Error('Not allowed by CORS'));
   },
   credentials: true,
@@ -400,7 +411,11 @@ function getHashMap() {
 // 11. Корневой маршрут и SPA Fallback
 // Получаем базовые URL для передачи в шаблон
 const getBaseUrls = (req) => {
-  const webAppUrl = process.env.WEB_APP_URL || (req ? (req.protocol + '://' + req.get('host')) : null) || 'https://sta-black-dim.waw.amverum.cloud';
+  let webAppUrl = process.env.WEB_APP_URL || (req ? (req.protocol + '://' + req.get('host')) : null) || 'https://sta-black-dim.waw.amverum.cloud';
+  // Убеждаемся, что URL начинается с https://
+  if (webAppUrl && !webAppUrl.startsWith('http://') && !webAppUrl.startsWith('https://')) {
+    webAppUrl = `https://${webAppUrl}`;
+  }
   const apiBaseUrl = webAppUrl + '/api';
   return { webAppUrl, apiBaseUrl };
 };

@@ -16,9 +16,14 @@ const USE_POSTGRES = process.env.USE_POSTGRES === 'true' || !!process.env.DATABA
 function dbGet(db, sql, params = []) {
   return new Promise((resolve, reject) => {
     if (USE_POSTGRES) {
-      // PostgreSQL - адаптируем SQL для camelCase полей
+      // PostgreSQL - адаптируем SQL для camelCase полей и placeholders
       let adaptedSql = sql;
-      adaptedSql = adaptedSql.replace(/\b(userId|photoUrl|createdAt|needPhoto|pushSent|is_pro|pro_start|pro_end|last_login|super_likes_count|photo1|photo2|photo3|photoBot)\b/g, '"$1"');
+      adaptedSql = adaptedSql.replace(/\b(userId|photoUrl|createdAt|needPhoto|pushSent|is_pro|pro_start|pro_end|last_login|super_likes_count|photo1|photo2|photo3|photoBot|PriceGift)\b/g, '"$1"');
+      // Заменяем ? на $1, $2, $3...
+      if (params && params.length > 0) {
+        let paramIndex = 1;
+        adaptedSql = adaptedSql.replace(/\?/g, () => `$${paramIndex++}`);
+      }
       db.query(adaptedSql, params)
         .then(result => resolve(result.rows[0] || null))
         .catch(reject);
@@ -45,9 +50,14 @@ function dbGet(db, sql, params = []) {
 function dbAll(db, sql, params = []) {
   return new Promise((resolve, reject) => {
     if (USE_POSTGRES) {
-      // PostgreSQL - адаптируем SQL для camelCase полей
+      // PostgreSQL - адаптируем SQL для camelCase полей и placeholders
       let adaptedSql = sql;
-      adaptedSql = adaptedSql.replace(/\b(userId|photoUrl|createdAt|needPhoto|pushSent|is_pro|pro_start|pro_end|last_login|super_likes_count|photo1|photo2|photo3|photoBot)\b/g, '"$1"');
+      adaptedSql = adaptedSql.replace(/\b(userId|photoUrl|createdAt|needPhoto|pushSent|is_pro|pro_start|pro_end|last_login|super_likes_count|photo1|photo2|photo3|photoBot|PriceGift)\b/g, '"$1"');
+      // Заменяем ? на $1, $2, $3...
+      if (params && params.length > 0) {
+        let paramIndex = 1;
+        adaptedSql = adaptedSql.replace(/\?/g, () => `$${paramIndex++}`);
+      }
       db.query(adaptedSql, params)
         .then(result => resolve(result.rows || []))
         .catch(reject);
@@ -74,9 +84,14 @@ function dbAll(db, sql, params = []) {
 function dbRun(db, sql, params = []) {
   return new Promise((resolve, reject) => {
     if (USE_POSTGRES) {
-      // PostgreSQL - адаптируем SQL для camelCase полей
+      // PostgreSQL - адаптируем SQL для camelCase полей и placeholders
       let adaptedSql = sql;
-      adaptedSql = adaptedSql.replace(/\b(userId|photoUrl|createdAt|needPhoto|pushSent|is_pro|pro_start|pro_end|last_login|super_likes_count|photo1|photo2|photo3|photoBot)\b/g, '"$1"');
+      adaptedSql = adaptedSql.replace(/\b(userId|photoUrl|createdAt|needPhoto|pushSent|is_pro|pro_start|pro_end|last_login|super_likes_count|photo1|photo2|photo3|photoBot|PriceGift)\b/g, '"$1"');
+      // Заменяем ? на $1, $2, $3...
+      if (params && params.length > 0) {
+        let paramIndex = 1;
+        adaptedSql = adaptedSql.replace(/\?/g, () => `$${paramIndex++}`);
+      }
       db.query(adaptedSql, params)
         .then(result => {
           resolve({
