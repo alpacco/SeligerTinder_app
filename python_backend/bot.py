@@ -232,24 +232,36 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 def main():
     """Запуск бота"""
-    print("=" * 50)
+    import sys
+    import os
+    
+    print("=" * 70)
     print("🤖 ЗАПУСК TELEGRAM BOT")
-    print("=" * 50)
+    print("=" * 70)
+    print(f"📁 Рабочая директория: {os.getcwd()}")
+    print(f"🐍 Python версия: {sys.version}")
+    print(f"📦 Python путь: {sys.executable}")
+    print("=" * 70)
     
     if not BOT_TOKEN:
         print("❌ BOT_TOKEN не установлен!")
+        print("⚠️ Проверьте переменные окружения в Railway")
         return
     
     print(f"✅ BOT_TOKEN установлен (длина: {len(BOT_TOKEN)} символов)")
+    print(f"   Первые 10 символов: {BOT_TOKEN[:10]}...")
     print(f"✅ WEB_APP_URL: {WEB_APP_URL}")
     print(f"✅ API_URL: {API_URL}")
     print(f"✅ DEV_CHAT_ID: {DEV_CHAT_ID if DEV_CHAT_ID else 'не установлен (команды доступны всем)'}")
+    print("=" * 70)
     
     try:
+        print("🔵 Создание Application...")
         application = Application.builder().token(BOT_TOKEN).build()
         print("✅ Application создан")
         
         # Регистрация команд
+        print("🔵 Регистрация обработчиков команд...")
         application.add_handler(CommandHandler("start", start_command))
         print("✅ Команда /start зарегистрирована")
         
@@ -267,14 +279,30 @@ def main():
         print("✅ CallbackQueryHandler зарегистрирован")
         
         # Запуск бота
-        print("=" * 50)
+        print("=" * 70)
+        print("✅ Все обработчики зарегистрированы")
+        print("🔵 Запуск polling...")
+        print("=" * 70)
         print("✅ Бот запущен и готов к работе!")
-        print("=" * 50)
-        application.run_polling(allowed_updates=Update.ALL_TYPES)
+        print("⏳ Ожидание обновлений от Telegram...")
+        print("=" * 70)
+        
+        # Запускаем polling с логированием
+        application.run_polling(
+            allowed_updates=Update.ALL_TYPES,
+            drop_pending_updates=True,  # Игнорируем старые обновления
+            close_loop=False
+        )
+    except KeyboardInterrupt:
+        print("\n⚠️ Получен сигнал остановки (Ctrl+C)")
+        print("🛑 Остановка бота...")
     except Exception as e:
         print(f"❌ Ошибка при запуске бота: {e}")
         import traceback
         traceback.print_exc()
+        print("=" * 70)
+        print("🛑 Бот остановлен из-за ошибки")
+        print("=" * 70)
         raise
 
 
