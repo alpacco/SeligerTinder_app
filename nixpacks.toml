@@ -24,9 +24,18 @@ cmds = [
   "echo '🔍 Python path: $PYTHON'",
   "npm i",
   "echo '🔍 === OpenCV Diagnostics After npm install ==='",
-  "npm run opencv:diagnose || echo '⚠️ OpenCV diagnostics failed'",
+  "echo '🔍 Node.js:' && node --version",
+  "echo '🔍 npm:' && npm --version",
+  "echo '🔍 Python:' && which python3 && python3 --version",
+  "echo '🔍 GCC:' && which gcc && gcc --version | head -1",
+  "echo '🔍 CMake:' && which cmake && cmake --version | head -1",
+  "echo '🔍 pkg-config:' && which pkg-config",
+  "echo '🔍 Checking OpenCV...'",
+  "(pkg-config --modversion opencv4 2>&1 || echo '⚠️ pkg-config opencv4 not found')",
+  "(pkg-config --cflags opencv4 2>&1 || echo '⚠️ pkg-config opencv4 cflags not found')",
+  "(pkg-config --libs opencv4 2>&1 || echo '⚠️ pkg-config opencv4 libs not found')",
   "echo '🔍 === Attempting OpenCV Rebuild ==='",
-  "npm run opencv:rebuild || echo '⚠️ OpenCV rebuild failed - face detection will be disabled'"
+  "npm rebuild @u4/opencv4nodejs --verbose 2>&1 || echo '⚠️ OpenCV rebuild failed - face detection will be disabled'"
 ]
 
 [phases.build]
