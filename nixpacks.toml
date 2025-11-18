@@ -1,16 +1,18 @@
 [phases.setup]
-nixPkgs = ["python312", "python312Packages.pip", "pkg-config", "opencv", "postgresql"]
+nixPkgs = ["python312", "python312Packages.pip", "pkg-config", "opencv", "postgresql", "nodejs_20", "npm"]
 
 [phases.install]
 cmds = [
+  # Установка Python зависимостей
   "python3.12 -m venv /app/.venv || python -m venv /app/.venv",
   ". /app/.venv/bin/activate && pip install --upgrade pip",
-  ". /app/.venv/bin/activate && pip install -r requirements.txt"
+  ". /app/.venv/bin/activate && pip install -r requirements.txt",
+  # Сборка фронтенда (как в другом проекте)
+  "cd /app/frontend && npm install",
+  "cd /app/frontend && npm run build"
 ]
 
 # Railway должен использовать Procfile для запуска процессов
 # НЕ указываем [start] здесь, чтобы Railway использовал Procfile
 # Procfile содержит:
 #   web: cd python_backend && python3.12 -m uvicorn main:app --host 0.0.0.0 --port $PORT
-#   worker: cd python_backend && python3.12 bot.py
-
