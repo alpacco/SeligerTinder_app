@@ -134,9 +134,31 @@ const corsOrigins = [
 
 const corsOptions = {
   origin: (origin, callback) => {
-    if (process.env.LOCAL === 'true' || !origin || corsOrigins.includes(origin)) {
+    // Разрешаем запросы без origin (например, прямые запросы к статике)
+    if (!origin) {
       return callback(null, true);
     }
+    
+    // Локальный режим - разрешаем все
+    if (process.env.LOCAL === 'true') {
+      return callback(null, true);
+    }
+    
+    // Проверяем точное совпадение
+    if (corsOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    
+    // Проверяем wildcard паттерны (например, *.up.railway.app)
+    for (const allowed of corsOrigins) {
+      if (allowed && typeof allowed === 'string' && allowed.includes('*')) {
+        const pattern = allowed.replace('*.', '');
+        if (origin.includes(pattern)) {
+          return callback(null, true);
+        }
+      }
+    }
+    
     return callback(new Error('Not allowed by CORS'));
   },
   credentials: true,
