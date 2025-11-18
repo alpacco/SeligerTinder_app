@@ -423,6 +423,8 @@ app.get('*', async (req, res, next) => {
   
   console.log(`[SPA Fallback] Рендерим index.ejs для пути: ${req.path}`);
   
+  const { webAppUrl, apiBaseUrl } = getBaseUrls(req);
+  
   try {
     // Получаем userId из query параметров или заголовков
     const userId = req.query.userId || req.headers['x-user-id'];
@@ -432,10 +434,10 @@ app.get('*', async (req, res, next) => {
       user = await getUserData(userId) || {};
     }
     
-    res.render('index', { user, gifts: [], hashMap: getHashMap() });
+    res.render('index', { user, gifts: [], hashMap: getHashMap(), apiBaseUrl, webAppUrl });
   } catch (error) {
     console.error('[SPA Fallback] Ошибка при получении данных пользователя:', error);
-    res.render('index', { user: {}, gifts: [], hashMap: getHashMap() });
+    res.render('index', { user: {}, gifts: [], hashMap: getHashMap(), apiBaseUrl, webAppUrl });
   }
 });
 
