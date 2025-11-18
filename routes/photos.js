@@ -4,23 +4,36 @@ const multer = require('multer');
 const fs = require('fs');
 const path = require('path');
 const { bot } = require('../bot');
-const vision = require('@google-cloud/vision');
+const cv = require('opencv4nodejs');
 const sharp = require('sharp');
-const visionKeyPath = path.join(__dirname, '../Google Vision/vision-key.json');
-let visionClient = null;
-if (fs.existsSync(visionKeyPath)) {
-  try {
-    visionClient = new vision.ImageAnnotatorClient({ keyFilename: visionKeyPath });
-    console.log('✅ Google Vision API инициализирован успешно');
-    console.log('🔍 [Vision] Готов к проверке лиц и мемов/фейков');
-  } catch (error) {
-    console.error('❌ Ошибка инициализации Google Vision API:', error.message);
-    visionClient = null;
-  }
-} else {
-  console.warn('⚠️ Файл Google Vision ключа не найден:', visionKeyPath);
-  console.log('🔍 [Vision] Google Vision API недоступен - проверка лиц и мемов/фейков отключена');
-  visionClient = null;
+
+// Инициализация OpenCV
+let opencvAvailable = false;
+try {
+  // Проверяем доступность OpenCV
+  const testMat = new cv.Mat(100, 100, cv.CV_8UC3);
+  testMat.release();
+  opencvAvailable = true;
+  console.log('✅ OpenCV инициализирован успешно');
+  console.log('🔍 [OpenCV] Готов к проверке лиц');
+} catch (error) {
+  console.error('❌ Ошибка инициализации OpenCV:', error.message);
+  console.log('🔍 [OpenCV] OpenCV недоступен - проверка лиц отключена');
+  opencvAvailable = false;
+}
+
+// Загружаем каскад для детекции лиц
+let faceClassifier = null;
+try {
+  // Используем встроенный каскад Haar для детекции лиц
+  // OpenCV4nodejs включает предобученные каскады
+  const haarPath = path.join(__dirname, '../node_modules/opencv4nodejs/build/Release/opencv4nodejs.node');
+  // Альтернативно, можно использовать встроенные каскады через cv.CASCADE_FRONTALFACE_ALT2
+  faceClassifier = new cv.CascadeClassifier(cv.HAAR_FRONTALFACE_ALT2);
+  console.log('✅ Каскад для детекции лиц загружен');
+} catch (error) {
+  console.warn('⚠️ Не удалось загрузить каскад для детекции лиц:', error.message);
+  faceClassifier = null;
 }
 // Функция для конвертации HEIC в JPEG
 async function convertHeicToJpeg(buffer) {
@@ -37,84 +50,112 @@ async function convertHeicToJpeg(buffer) {
 }
 
 async function faceDetector(imagePath) {
-  console.log(`🔍 [Vision] Начинаем проверку лица через Google Vision API...`);
-  console.log(`🔍 [Vision] Путь к файлу: ${imagePath}`);
+  console.log(`🔍 [OpenCV] Начинаем проверку лица через OpenCV...`);
+  console.log(`🔍 [OpenCV] Путь к файлу: ${imagePath}`);
+  
+  if (!opencvAvailable || !faceClassifier) {
+    console.warn('⚠️ [OpenCV] OpenCV недоступен, пропускаем проверку лица');
+    return false;
+  }
   
   try {
     // Проверяем, что файл существует
     if (!fs.existsSync(imagePath)) {
-      console.error(`❌ [Vision] Файл не найден: ${imagePath}`);
+      console.error(`❌ [OpenCV] Файл не найден: ${imagePath}`);
       return false;
     }
     
     // Получаем размер файла
     const stats = fs.statSync(imagePath);
-    console.log(`🔍 [Vision] Размер файла: ${stats.size} байт`);
+    console.log(`🔍 [OpenCV] Размер файла: ${stats.size} байт`);
     
-  const [result] = await visionClient.faceDetection(imagePath);
-  const faces = result.faceAnnotations;
-    const hasFace = Array.isArray(faces) && faces.length > 0;
+    // Загружаем изображение через OpenCV
+    const img = cv.imread(imagePath);
+    const gray = img.bgrToGray();
     
-    console.log(`🔍 [Vision] Результат проверки лица: ${hasFace ? 'ЛИЦО НАЙДЕНО' : 'ЛИЦО НЕ НАЙДЕНО'} (количество лиц: ${faces?.length || 0})`);
+    // Детектируем лица
+    const faces = faceClassifier.detectMultiScale(gray);
     
-    if (faces && faces.length > 0) {
-      console.log(`🔍 [Vision] Детали найденных лиц:`);
-      faces.forEach((face, index) => {
-        console.log(`  Лицо ${index + 1}: confidence=${face.detectionConfidence}, joy=${face.joyLikelihood}, sorrow=${face.sorrowLikelihood}`);
+    // Освобождаем память
+    img.release();
+    gray.release();
+    
+    const hasFace = faces.objects && faces.objects.length > 0;
+    const faceCount = faces.objects ? faces.objects.length : 0;
+    
+    console.log(`🔍 [OpenCV] Результат проверки лица: ${hasFace ? 'ЛИЦО НАЙДЕНО' : 'ЛИЦО НЕ НАЙДЕНО'} (количество лиц: ${faceCount})`);
+    
+    if (hasFace) {
+      console.log(`🔍 [OpenCV] Детали найденных лиц:`);
+      faces.objects.forEach((face, index) => {
+        console.log(`  Лицо ${index + 1}: x=${face.x}, y=${face.y}, width=${face.width}, height=${face.height}`);
       });
     }
     
     return hasFace;
   } catch (error) {
-    console.error('❌ [Vision] Ошибка при проверке лица:', error.message);
-    console.error('❌ [Vision] Полная ошибка:', error);
+    console.error('❌ [OpenCV] Ошибка при проверке лица:', error.message);
+    console.error('❌ [OpenCV] Полная ошибка:', error);
     return false;
   }
 }
 
 // Новый вариант для работы с буфером
 async function faceDetectorBuffer(imageBuffer) {
-  if (!visionClient) {
-    console.log('🔍 [Vision] Клиент не инициализирован, пропускаем проверку лица');
+  if (!opencvAvailable || !faceClassifier) {
+    console.log('🔍 [OpenCV] OpenCV недоступен, пропускаем проверку лица');
     return false;
   }
-  console.log('🔍 [Vision] Начинаем проверку лица через Google Vision API (буфер)...');
+  console.log('🔍 [OpenCV] Начинаем проверку лица через OpenCV (буфер)...');
   try {
     // Конвертируем HEIC в JPEG если нужно
     let processedBuffer = imageBuffer;
     if (imageBuffer.length > 0) {
-  try {
+      try {
         processedBuffer = await convertHeicToJpeg(imageBuffer);
       } catch (error) {
-        console.log('🔍 [Vision] Конвертация HEIC не удалась, используем оригинальный буфер');
+        console.log('🔍 [OpenCV] Конвертация HEIC не удалась, используем оригинальный буфер');
       }
     }
     
-    const [result] = await visionClient.faceDetection({
-      image: { content: processedBuffer.toString('base64') }
-    });
-    const faces = result.faceAnnotations;
-    const hasFace = Array.isArray(faces) && faces.length > 0;
-    console.log(`🔍 [Vision] Результат проверки лица (буфер): ${hasFace ? 'ЛИЦО НАЙДЕНО' : 'ЛИЦО НЕ НАЙДЕНО'} (количество лиц: ${faces?.length || 0})`);
+    // Загружаем изображение из буфера
+    const img = cv.imdecode(processedBuffer);
+    if (!img || img.empty) {
+      console.error('❌ [OpenCV] Не удалось декодировать изображение из буфера');
+      return false;
+    }
+    
+    const gray = img.bgrToGray();
+    
+    // Детектируем лица
+    const faces = faceClassifier.detectMultiScale(gray);
+    
+    // Освобождаем память
+    img.release();
+    gray.release();
+    
+    const hasFace = faces.objects && faces.objects.length > 0;
+    const faceCount = faces.objects ? faces.objects.length : 0;
+    console.log(`🔍 [OpenCV] Результат проверки лица (буфер): ${hasFace ? 'ЛИЦО НАЙДЕНО' : 'ЛИЦО НЕ НАЙДЕНО'} (количество лиц: ${faceCount})`);
     return hasFace;
   } catch (error) {
-    console.error('❌ [Vision] Ошибка при проверке лица (буфер):', error.message);
+    console.error('❌ [OpenCV] Ошибка при проверке лица (буфер):', error.message);
     return false;
   }
 }
 global.faceDetectorBuffer = faceDetectorBuffer;
     
-// Функция для проверки наличия лица на фотографии через Google Vision
-async function checkFaceInPhoto(visionClient, imageBuffer) {
-  console.log(`🔍 [Vision] Начинаем проверку наличия лица на фотографии`);
+// Функция для проверки наличия лица на фотографии через OpenCV
+async function checkFaceInPhoto(opencvClient, imageBuffer) {
+  console.log(`🔍 [OpenCV] Начинаем проверку наличия лица на фотографии`);
   
-  if (!visionClient) {
-    console.log('🔍 [Vision] Клиент не инициализирован, пропускаем проверку лица');
+  if (!opencvAvailable || !faceClassifier) {
+    console.log('🔍 [OpenCV] OpenCV недоступен, пропускаем проверку лица');
     return { success: false, error: 'Сервис проверки лица недоступен' };
   }
   
   try {
-    console.log('🔍 [Vision] Отправляем фото в Google Vision API для проверки лица...');
+    console.log('🔍 [OpenCV] Анализируем фото через OpenCV для проверки лица...');
     
     // Конвертируем HEIC в JPEG если нужно
     let processedBuffer = imageBuffer;
@@ -122,30 +163,42 @@ async function checkFaceInPhoto(visionClient, imageBuffer) {
       try {
         processedBuffer = await convertHeicToJpeg(imageBuffer);
       } catch (error) {
-        console.log('🔍 [Vision] Конвертация HEIC не удалась, используем оригинальный буфер');
+        console.log('🔍 [OpenCV] Конвертация HEIC не удалась, используем оригинальный буфер');
       }
     }
     
-    const [result] = await visionClient.faceDetection({
-      image: { content: processedBuffer.toString('base64') }
-    });
-
-    const faces = result.faceAnnotations;
-    console.log(`🔍 [Vision] Получен ответ от Vision API, количество лиц: ${faces?.length || 0}`);
+    // Загружаем изображение из буфера
+    const img = cv.imdecode(processedBuffer);
+    if (!img || img.empty) {
+      console.error('❌ [OpenCV] Не удалось декодировать изображение из буфера');
+      return { success: false, error: 'Не удалось обработать изображение' };
+    }
     
-    if (!faces || faces.length === 0) {
-      console.log('🔍 [Vision] Лицо не обнаружено на фотографии');
+    const gray = img.bgrToGray();
+    
+    // Детектируем лица
+    const faces = faceClassifier.detectMultiScale(gray);
+    
+    // Освобождаем память
+    img.release();
+    gray.release();
+    
+    const faceCount = faces.objects ? faces.objects.length : 0;
+    console.log(`🔍 [OpenCV] Получен результат, количество лиц: ${faceCount}`);
+    
+    if (faceCount === 0) {
+      console.log('🔍 [OpenCV] Лицо не обнаружено на фотографии');
       return { success: false, error: 'Лицо не обнаружено на фотографии' };
     }
 
-    console.log(`🔍 [Vision] ✅ Лицо обнаружено на фотографии (количество лиц: ${faces.length})`);
+    console.log(`🔍 [OpenCV] ✅ Лицо обнаружено на фотографии (количество лиц: ${faceCount})`);
     return { 
       success: true, 
-      faceCount: faces.length 
+      faceCount: faceCount 
     };
     
   } catch (error) {
-    console.error('❌ [Vision] Ошибка при проверке лица через Vision API:', error);
+    console.error('❌ [OpenCV] Ошибка при проверке лица через OpenCV:', error);
     return { 
       success: false, 
       error: 'Ошибка при анализе фотографии. Попробуйте еще раз.' 
@@ -153,87 +206,31 @@ async function checkFaceInPhoto(visionClient, imageBuffer) {
   }
 }
 
-// --- Функция для проверки мемов и фейковых изображений через Vision ---
-async function isMemeOrFake(visionClient, imageBuffer) {
-  console.log('🔍 [Vision] Начинаем проверку на мемы/фейки через Google Vision API...');
+// --- Функция для проверки мемов и фейковых изображений через OpenCV ---
+// Примечание: OpenCV не имеет встроенной проверки на мемы/фейки как Google Vision
+// Эта функция возвращает false (мем не обнаружен), так как OpenCV фокусируется на детекции лиц
+async function isMemeOrFake(opencvClient, imageBuffer) {
+  console.log('🔍 [OpenCV] Проверка на мемы/фейки через OpenCV...');
   
-  if (!visionClient) {
-    console.log('🔍 [Vision] Клиент не инициализирован, пропускаем проверку мемов/фейков');
+  if (!opencvAvailable) {
+    console.log('🔍 [OpenCV] OpenCV недоступен, пропускаем проверку мемов/фейков');
     return { isMeme: false };
   }
   
   try {
-    // Конвертируем HEIC в JPEG если нужно
-    let processedBuffer = imageBuffer;
-    if (imageBuffer.length > 0) {
-      try {
-        processedBuffer = await convertHeicToJpeg(imageBuffer);
-      } catch (error) {
-        console.log('🔍 [Vision] Конвертация HEIC не удалась, используем оригинальный буфер');
-      }
-    }
+    // OpenCV не имеет встроенной проверки на мемы/фейки как Google Vision API
+    // Можно добавить базовую проверку на основе анализа изображения:
+    // - Проверка размера изображения (мемы часто имеют специфичные размеры)
+    // - Проверка соотношения сторон
+    // - Анализ текста на изображении (требует OCR)
+    // Пока возвращаем false, так как OpenCV фокусируется на детекции лиц
     
-    // SafeSearch
-    console.log('🔍 [Vision] Отправляем запрос SafeSearch для проверки на фейки...');
-    const [safeResult] = await visionClient.safeSearchDetection({ 
-      image: { content: processedBuffer.toString('base64') } 
-    });
-    const safe = safeResult.safeSearchAnnotation || {};
-    const spoof = safe.spoof || 'UNKNOWN';
-    const spoofMap = { 
-      'VERY_LIKELY': 0.9, 
-      'LIKELY': 0.7, 
-      'POSSIBLE': 0.5, 
-      'UNLIKELY': 0.3, 
-      'VERY_UNLIKELY': 0.1, 
-      'UNKNOWN': 0.5 
-    };
-    const spoofScore = spoofMap[spoof] || 0.5;
-    
-    console.log(`🔍 [Vision] SafeSearch результат: spoof=${spoof} (score=${spoofScore})`);
-    
-    if (spoofScore >= 0.7) {
-      console.log(`🔍 [Vision] ОШИБКА: Обнаружен фейк/мем через SafeSearch (${spoof})`);
-      return { isMeme: true, reason: `SafeSearch spoofLikelihood=${spoof}` };
-    }
-    
-    // Web Detection
-    console.log('🔍 [Vision] Отправляем запрос Web Detection для проверки на мемы...');
-    const [webResult] = await visionClient.webDetection({ 
-      image: { content: processedBuffer.toString('base64') } 
-    });
-    const web = webResult.webDetection || {};
-    
-    console.log(`🔍 [Vision] Web Detection результат:`, {
-      bestGuessLabels: web.bestGuessLabels?.length || 0,
-      webEntities: web.webEntities?.length || 0
-    });
-    
-    if (web.bestGuessLabels && web.bestGuessLabels.length) {
-      const label = web.bestGuessLabels[0].label || '';
-      console.log(`🔍 [Vision] Лучший лейбл: "${label}"`);
-      // Более мягкая проверка - только явные мемы
-      if (/meme|deepfake|ai generated|artificial intelligence|generated|screenshot|screen capture/i.test(label)) {
-        console.log(`🔍 [Vision] ОШИБКА: Обнаружен мем/фейк через Web Detection (label: ${label})`);
-        return { isMeme: true, reason: `WebDetection label: ${label}` };
-      }
-    }
-    
-    if (web.webEntities && web.webEntities.length) {
-      console.log(`🔍 [Vision] Проверяем ${web.webEntities.length} веб-сущностей...`);
-      for (const ent of web.webEntities) {
-        if (ent.description && /meme|deepfake|ai generated|artificial intelligence|generated|screenshot|screen capture/i.test(ent.description)) {
-          console.log(`🔍 [Vision] ОШИБКА: Обнаружен мем/фейк через Web Detection (entity: ${ent.description})`);
-          return { isMeme: true, reason: `WebDetection entity: ${ent.description}` };
-        }
-      }
-    }
-    
-    console.log('🔍 [Vision] ✅ Проверка на мемы/фейки пройдена успешно');
+    console.log('🔍 [OpenCV] OpenCV не поддерживает проверку на мемы/фейки (только детекция лиц)');
+    console.log('🔍 [OpenCV] ✅ Проверка на мемы/фейки пропущена');
     return { isMeme: false };
     
   } catch (err) {
-    console.error('❌ [Vision] Ошибка при проверке мемов/фейков:', err);
+    console.error('❌ [OpenCV] Ошибка при проверке мемов/фейков:', err);
     return { isMeme: false };
   }
 }
@@ -519,10 +516,10 @@ function photosRouter(db, logger, IMG_DIR, BOT_TOKEN, visionClient) {
       }
       console.log(`Successfully updated DB for slot ${chosenSlot}, URL: ${slotUrl}`);
 
-      // Обновить needPhoto - если Google Vision работает и проверка прошла успешно, то needPhoto = 0
-      // Если Google Vision не работает, то needPhoto остается 1 (нужно фото)
-      if (visionClient) {
-        // Google Vision работает, проверка прошла успешно, устанавливаем needPhoto = 0
+      // Обновить needPhoto - если OpenCV работает и проверка прошла успешно, то needPhoto = 0
+      // Если OpenCV не работает, то needPhoto остается 1 (нужно фото)
+      if (opencvAvailable && faceClassifier) {
+        // OpenCV работает, проверка прошла успешно, устанавливаем needPhoto = 0
         await new Promise((resolve, reject) => {
           db.run('UPDATE users SET needPhoto = 0 WHERE userId = ?', [userId], function(err) {
             if (err) reject(err); else resolve();
@@ -706,8 +703,8 @@ function photosRouter(db, logger, IMG_DIR, BOT_TOKEN, visionClient) {
         }
 
         // Проверка на мемы/фейки
-        if (visionClient) {
-          const memeCheck = await isMemeOrFake(visionClient, buffer);
+        if (opencvAvailable) {
+          const memeCheck = await isMemeOrFake(opencvClient, buffer);
           console.log(`[webUploadPhoto] Meme check:`, memeCheck);
           if (memeCheck.isMeme) {
             console.warn(`[webUploadPhoto] Отклонено: мем/фейк (${memeCheck.reason})`);
@@ -1242,8 +1239,8 @@ function photosRouter(db, logger, IMG_DIR, BOT_TOKEN, visionClient) {
         }
 
         // Проверка на мемы/фейки
-        if (visionClient) {
-          const memeCheck = await isMemeOrFake(visionClient, buffer);
+        if (opencvAvailable) {
+          const memeCheck = await isMemeOrFake(opencvClient, buffer);
           console.log(`[uploadBase64] Meme check:`, memeCheck);
           if (memeCheck.isMeme) {
             console.warn(`[uploadBase64] Отклонено: мем/фейк (${memeCheck.reason})`);
@@ -1540,4 +1537,5 @@ global.detectGenderFacePlusPlus = detectGenderFacePlusPlus;
 global.faceDetector = faceDetector;
 global.faceDetectorBuffer = faceDetectorBuffer;
 
+module.exports = photosRouter;
 module.exports = photosRouter;

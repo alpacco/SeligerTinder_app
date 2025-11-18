@@ -16,7 +16,7 @@
     "migrate": "node migrations/migrate.js"
   },
   "dependencies": {
-    "@google-cloud/vision": "^4.0.2",
+    "opencv4nodejs": "^6.2.0",
     "axios": "^1.7.9",
     "body-parser": "^1.20.3",
     "cors": "^2.8.5",

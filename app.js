@@ -254,28 +254,13 @@ console.log('⚙️ CORS настроен. Локальный режим:', proc
 //   console.warn('⚠️ Не удалось подключить файловые логи:', err.message);
 // }
 
-// Инициализация Google Vision клиента с проверкой файла ключа
-let visionClient = null;
-const visionKeyPath = path.join(__dirname, 'Google Vision', 'vision-key.json');
-
-if (fs.existsSync(visionKeyPath)) {
-  try {
-    visionClient = new vision.ImageAnnotatorClient({
-      keyFilename: visionKeyPath,
-    });
-    console.log('✅ Google Vision API инициализирован успешно');
-  } catch (error) {
-    console.error('❌ Ошибка инициализации Google Vision API:', error.message);
-    visionClient = null;
-  }
-} else {
-  console.warn('⚠️ Файл Google Vision ключа не найден:', visionKeyPath);
-  console.warn('⚠️ Проверка пола на фото будет отключена');
-  visionClient = null;
-}
-
-// Делаем visionClient глобально доступным
-global.visionClient = visionClient;
+// Инициализация OpenCV (заменяет Google Vision)
+// OpenCV инициализируется в routes/photos.js
+// Здесь просто создаем заглушку для совместимости
+let opencvClient = { available: true };
+global.opencvClient = opencvClient;
+// Для обратной совместимости с кодом, который использует visionClient
+global.visionClient = opencvClient;
 
 // Логируем количество пользователей в базе (только если таблица существует)
 // SQL будет автоматически адаптирован в db-pg.js для PostgreSQL

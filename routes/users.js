@@ -338,8 +338,8 @@ function usersRouter(db) {
 
         if (photoUrl && photoUrl.startsWith('http') && photoUrl !== '/img/logo.svg') {
           console.log(`[POST /api/users/updateGender] Проверяем photoUrl из Telegram: ${photoUrl}`);
-          if (global.visionClient) {
-            console.log(`[POST /api/users/updateGender] Vision: отправляем фото на проверку лица...`);
+          if (global.opencvClient && global.opencvClient.available) {
+            console.log(`[POST /api/users/updateGender] OpenCV: отправляем фото на проверку лица...`);
             fetch(photoUrl)
               .then(response => {
                 console.log('[POST /api/users/updateGender] fetch response status:', response.status);
@@ -356,7 +356,7 @@ function usersRouter(db) {
                 }
               })
               .then(hasFace => {
-                console.log(`[POST /api/users/updateGender] Vision результат: лицо найдено = ${hasFace}`);
+                console.log(`[POST /api/users/updateGender] OpenCV результат: лицо найдено = ${hasFace}`);
                 if (hasFace) {
                   db.run('UPDATE users SET gender = ?, needPhoto = 0 WHERE userId = ?', [gender, String(userId)], function(err2) {
                     if (err2) {
@@ -389,7 +389,7 @@ function usersRouter(db) {
                 });
               });
           } else {
-            console.log(`[POST /api/users/updateGender] Google Vision недоступен, устанавливаем needPhoto = 1`);
+            console.log(`[POST /api/users/updateGender] OpenCV недоступен, устанавливаем needPhoto = 1`);
             db.run('UPDATE users SET gender = ?, needPhoto = 1 WHERE userId = ?', [gender, String(userId)], function(err2) {
               if (err2) {
                 console.error('[POST /api/users/updateGender] Ошибка обновления:', err2);
