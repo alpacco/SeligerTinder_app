@@ -22,16 +22,15 @@ cmds = [
   "echo '🔍 Node.js version:' && node --version",
   "echo '🔍 npm version:' && npm --version",
   "echo '🔍 Python path: $PYTHON'",
-  "npm i"
-]
-
-[phases.build]
-cmds = [
-  "echo '🔍 === Build Phase: OpenCV Diagnostics ==='",
+  "npm i",
+  "echo '🔍 === OpenCV Diagnostics After npm install ==='",
   "npm run opencv:diagnose || echo '⚠️ OpenCV diagnostics failed'",
   "echo '🔍 === Attempting OpenCV Rebuild ==='",
   "npm run opencv:rebuild || echo '⚠️ OpenCV rebuild failed - face detection will be disabled'"
 ]
+
+[phases.build]
+cmds = ["echo 'Build phase completed'"]
 
 [start]
 cmd = "node start-all.js"
