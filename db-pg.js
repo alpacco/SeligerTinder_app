@@ -116,7 +116,12 @@ const db = {
 
   // Метод run (INSERT, UPDATE, DELETE)
   run: (sql, params, callback) => {
-    pool.query(sql, params || [])
+    // Адаптируем SQL для PostgreSQL: добавляем кавычки к camelCase идентификаторам
+    let adaptedSql = sql;
+    // Простая замена userId на "userId" для основных случаев
+    adaptedSql = adaptedSql.replace(/\buserId\b/g, '"userId"');
+    
+    pool.query(adaptedSql, params || [])
       .then(result => {
         // Создаем объект, похожий на this из sqlite3
         const context = {
@@ -128,6 +133,8 @@ const db = {
         }
       })
       .catch(err => {
+        console.error('❌ [db.run] Ошибка SQL:', err.message);
+        console.error('❌ [db.run] SQL запрос:', adaptedSql);
         if (callback) {
           callback(err);
         }
