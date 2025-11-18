@@ -5,8 +5,15 @@ db_utils.py
 import json
 import re
 from typing import Any, Optional, List, Dict, Tuple
-from database import pg_pool
 from psycopg2.extras import RealDictCursor
+
+
+def get_pg_pool():
+    """Получить pg_pool динамически (чтобы избежать проблем с импортом)"""
+    from database import pg_pool
+    if pg_pool is None:
+        raise RuntimeError("pg_pool не инициализирован! Убедитесь, что init_database() вызван.")
+    return pg_pool
 
 
 def safe_json_parse(value: Any, default: Any = None) -> Any:
