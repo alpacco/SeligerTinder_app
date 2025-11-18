@@ -18,7 +18,19 @@ function dbGet(db, sql, params = []) {
     if (USE_POSTGRES) {
       // PostgreSQL - адаптируем SQL для camelCase полей и placeholders
       let adaptedSql = sql;
-      adaptedSql = adaptedSql.replace(/\b(userId|photoUrl|createdAt|needPhoto|pushSent|is_pro|pro_start|pro_end|last_login|super_likes_count|photo1|photo2|photo3|photoBot|PriceGift)\b/g, '"$1"');
+      // Заменяем INSERT OR IGNORE на ON CONFLICT DO NOTHING
+      if (adaptedSql.match(/INSERT\s+OR\s+IGNORE/i)) {
+        const match = adaptedSql.match(/INSERT\s+OR\s+IGNORE\s+INTO\s+(\w+)\s*\(([^)]+)\)/i);
+        if (match) {
+          const columns = match[2];
+          const uniqueCol = columns.split(',').find(col => col.trim().toLowerCase().includes('userid'))?.trim() || columns.split(',')[0].trim();
+          adaptedSql = adaptedSql.replace(
+            /INSERT\s+OR\s+IGNORE\s+INTO\s+(\w+)\s*\(([^)]+)\)/i,
+            `INSERT INTO $1 ($2) ON CONFLICT ("${uniqueCol}") DO NOTHING`
+          );
+        }
+      }
+      adaptedSql = adaptedSql.replace(/\b(userId|photoUrl|createdAt|needPhoto|pushSent|is_pro|pro_start|pro_end|last_login|super_likes_count|photo1|photo2|photo3|photoBot|PriceGift|NameGift|PhotoGift|AboutGift|SaleGift|StopGift)\b/g, '"$1"');
       // Заменяем ? на $1, $2, $3...
       if (params && params.length > 0) {
         let paramIndex = 1;
@@ -52,7 +64,19 @@ function dbAll(db, sql, params = []) {
     if (USE_POSTGRES) {
       // PostgreSQL - адаптируем SQL для camelCase полей и placeholders
       let adaptedSql = sql;
-      adaptedSql = adaptedSql.replace(/\b(userId|photoUrl|createdAt|needPhoto|pushSent|is_pro|pro_start|pro_end|last_login|super_likes_count|photo1|photo2|photo3|photoBot|PriceGift)\b/g, '"$1"');
+      // Заменяем INSERT OR IGNORE на ON CONFLICT DO NOTHING
+      if (adaptedSql.match(/INSERT\s+OR\s+IGNORE/i)) {
+        const match = adaptedSql.match(/INSERT\s+OR\s+IGNORE\s+INTO\s+(\w+)\s*\(([^)]+)\)/i);
+        if (match) {
+          const columns = match[2];
+          const uniqueCol = columns.split(',').find(col => col.trim().toLowerCase().includes('userid'))?.trim() || columns.split(',')[0].trim();
+          adaptedSql = adaptedSql.replace(
+            /INSERT\s+OR\s+IGNORE\s+INTO\s+(\w+)\s*\(([^)]+)\)/i,
+            `INSERT INTO $1 ($2) ON CONFLICT ("${uniqueCol}") DO NOTHING`
+          );
+        }
+      }
+      adaptedSql = adaptedSql.replace(/\b(userId|photoUrl|createdAt|needPhoto|pushSent|is_pro|pro_start|pro_end|last_login|super_likes_count|photo1|photo2|photo3|photoBot|PriceGift|NameGift|PhotoGift|AboutGift|SaleGift|StopGift)\b/g, '"$1"');
       // Заменяем ? на $1, $2, $3...
       if (params && params.length > 0) {
         let paramIndex = 1;
@@ -86,7 +110,19 @@ function dbRun(db, sql, params = []) {
     if (USE_POSTGRES) {
       // PostgreSQL - адаптируем SQL для camelCase полей и placeholders
       let adaptedSql = sql;
-      adaptedSql = adaptedSql.replace(/\b(userId|photoUrl|createdAt|needPhoto|pushSent|is_pro|pro_start|pro_end|last_login|super_likes_count|photo1|photo2|photo3|photoBot|PriceGift)\b/g, '"$1"');
+      // Заменяем INSERT OR IGNORE на ON CONFLICT DO NOTHING
+      if (adaptedSql.match(/INSERT\s+OR\s+IGNORE/i)) {
+        const match = adaptedSql.match(/INSERT\s+OR\s+IGNORE\s+INTO\s+(\w+)\s*\(([^)]+)\)/i);
+        if (match) {
+          const columns = match[2];
+          const uniqueCol = columns.split(',').find(col => col.trim().toLowerCase().includes('userid'))?.trim() || columns.split(',')[0].trim();
+          adaptedSql = adaptedSql.replace(
+            /INSERT\s+OR\s+IGNORE\s+INTO\s+(\w+)\s*\(([^)]+)\)/i,
+            `INSERT INTO $1 ($2) ON CONFLICT ("${uniqueCol}") DO NOTHING`
+          );
+        }
+      }
+      adaptedSql = adaptedSql.replace(/\b(userId|photoUrl|createdAt|needPhoto|pushSent|is_pro|pro_start|pro_end|last_login|super_likes_count|photo1|photo2|photo3|photoBot|PriceGift|NameGift|PhotoGift|AboutGift|SaleGift|StopGift)\b/g, '"$1"');
       // Заменяем ? на $1, $2, $3...
       if (params && params.length > 0) {
         let paramIndex = 1;
