@@ -16,7 +16,13 @@ npm_config_python = "python3"
 
 [phases.install]
 cmds = [
-  "export PYTHON=$(which python3) && export npm_config_python=$(which python3) && echo '🔍 Python path: $PYTHON' && npm i"
+  "export PATH=/nix/store/*/bin:$PATH",
+  "export PYTHON=$(which python3) && export npm_config_python=$(which python3)",
+  "export NODE_PATH=$(which node | xargs dirname)",
+  "echo '🔍 Node.js version:' && node --version",
+  "echo '🔍 npm version:' && npm --version",
+  "echo '🔍 Python path: $PYTHON'",
+  "npm i"
 ]
 
 [phases.build]
