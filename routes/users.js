@@ -492,6 +492,28 @@ function usersRouter(db) {
     );
   });
 
+  // POST /api/update_bio - Алиас для /api/updateBio (для совместимости с ботом)
+  router.post('/update_bio', (req, res, next) => {
+    const { userId, bio } = req.body;
+    console.log('[POST /api/users/update_bio] Params:', { userId, bio });
+    if (!userId) {
+      console.warn('[POST /api/users/update_bio] Ошибка: userId обязателен');
+      return res.status(400).json({ success: false, error: 'userId required' });
+    }
+    db.run(
+      'UPDATE users SET bio = ? WHERE userId = ?',
+      [bio || '', userId],
+      err => {
+        if (err) {
+          console.error('[POST /api/users/update_bio] Ошибка:', err);
+          return next(err);
+        }
+        console.log('[POST /api/users/update_bio] Успешно обновлен bio');
+        res.json({ success: true });
+      }
+    );
+  });
+
   // POST /api/updateGoals - Обновить цели знакомства
   router.post('/updateGoals', (req, res, next) => {
     const { userId, goals } = req.body;

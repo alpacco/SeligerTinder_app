@@ -45,6 +45,7 @@ const adminRouter = require('./routes/admin');
 
 // База данных (поддерживает SQLite и PostgreSQL)
 const { db, giftDb, pool } = require('./db');
+const { dbGet } = require('./utils/db');
 
 // 2. Конфигурация окружения и путей
 dotenv.config();
@@ -346,8 +347,23 @@ app.use('/api', goalsRouter(db));
 app.use('/api', giftsRouter(db, giftDb));
 app.use('/api', pushRouter(db));
 app.use('/api/pro', proRouter(db));
+// Добавляем /api/grantPro как алиас для команды бота (монтируем proRouter на /api тоже)
+app.use('/api', proRouter(db));
 app.use('/api', adminRouter(db));
 app.use('/api/stats', statsRouter(db));
+// Добавляем /api/statsDay как алиас для команды бота
+app.get('/api/statsDay', async (req, res) => {
+  try {
+    const day = new Date().toISOString().slice(0, 10);
+    const USE_POSTGRES = process.env.USE_POSTGRES === 'true' || !!process.env.DATABASE_URL;
+    const dbForQuery = USE_POSTGRES ? pool : db;
+    const row = await dbGet(dbForQuery, 'SELECT COUNT(DISTINCT "userId") AS "dayCount" FROM visits WHERE DATE(timestamp) = ?', [day]);
+    res.json({ success: true, visits24h: row ? row.dayCount : 0 });
+  } catch (err) {
+    console.error(`/api/statsDay error: ${err.message}`);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
 console.log('✅ API-маршруты успешно смонтированы.');
 
 // Функция для получения данных пользователя

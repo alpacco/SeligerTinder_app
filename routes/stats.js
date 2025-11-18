@@ -56,16 +56,16 @@ function statsRouter(db) {
     }
   });
 
-  // GET /api/statsDay — визиты за последние 24 часа
+  // GET /api/statsDay — визиты за последние 24 часа (алиас для /api/stats/day)
   router.get('/day', async (req, res) => {
     try {
       const day = new Date().toISOString().slice(0, 10);
       const row = await new Promise((resolve, reject) =>
-        db.get('SELECT COUNT(DISTINCT userId) AS dayCount FROM visits WHERE DATE(timestamp) = ?', [day], (err, row) => err ? reject(err) : resolve(row))
+        db.get('SELECT COUNT(DISTINCT "userId") AS "dayCount" FROM visits WHERE DATE(timestamp) = ?', [day], (err, row) => err ? reject(err) : resolve(row))
       );
       res.json({ success: true, visits24h: row ? row.dayCount : 0 });
     } catch (err) {
-      console.error(`/api/statsDay error: ${err.message}`);
+      console.error(`/api/stats/day error: ${err.message}`);
       res.status(500).json({ success: false, error: err.message });
     }
   });

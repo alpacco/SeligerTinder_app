@@ -16,15 +16,15 @@ npm_config_python = "python3"
 
 [phases.install]
 cmds = [
-  "export PATH=/nix/store/*/bin:$PATH && export PYTHON=$(which python3) && export npm_config_python=$(which python3) && export NODE_PATH=$(which node | xargs dirname) && OPENCV_DIR=$(find /nix/store -type d -name 'opencv*' -path '*/lib/pkgconfig' 2>/dev/null | head -1 | xargs dirname 2>/dev/null) && if [ -n \"$OPENCV_DIR\" ]; then export PKG_CONFIG_PATH=$OPENCV_DIR/lib/pkgconfig:$PKG_CONFIG_PATH && export LD_LIBRARY_PATH=$OPENCV_DIR/lib:$LD_LIBRARY_PATH && echo '🔍 Found OpenCV at: $OPENCV_DIR' && echo '🔍 PKG_CONFIG_PATH set to: $PKG_CONFIG_PATH'; else OPENCV_PC=$(find /nix/store -name 'opencv*.pc' 2>/dev/null | head -1) && if [ -n \"$OPENCV_PC\" ]; then export PKG_CONFIG_PATH=$(dirname \"$OPENCV_PC\"):$PKG_CONFIG_PATH && echo '🔍 Found OpenCV .pc at: $OPENCV_PC'; else echo '⚠️ OpenCV not found'; fi; fi",
+  "echo '🔧 Preparing build environment...'",
   "echo '🔍 Node.js version:' && node --version",
   "echo '🔍 npm version:' && npm --version",
   "echo '🔍 Python path:' && which python3 && python3 --version",
   "echo '🔍 PKG_CONFIG_PATH:' && echo $PKG_CONFIG_PATH",
   "echo '🔍 Searching for OpenCV .pc files...' && find /nix/store -name 'opencv*.pc' 2>/dev/null | head -3 || echo '⚠️ No OpenCV .pc files found'",
-  "npm i",
+  "export PATH=/nix/store/*/bin:$PATH; PY_BIN=$(which python3); export PYTHON=$PY_BIN; export npm_config_python=$PY_BIN; OPENCV_PC=$(find /nix/store -name 'opencv*.pc' -print -quit 2>/dev/null || true); if [ -n \"$OPENCV_PC\" ]; then OPENCV_PKGCONFIG_DIR=$(dirname \"$OPENCV_PC\"); OPENCV_LIB_DIR=$(dirname \"$OPENCV_PKGCONFIG_DIR\"); export PKG_CONFIG_PATH=\"$OPENCV_PKGCONFIG_DIR:${PKG_CONFIG_PATH:-}\"; export LD_LIBRARY_PATH=\"$OPENCV_LIB_DIR:${LD_LIBRARY_PATH:-}\"; echo \"🔍 Found OpenCV .pc at: $OPENCV_PC\"; else echo '⚠️ OpenCV .pc files not found (continuing without native support)'; fi; npm i",
   "echo '🔍 === OpenCV Diagnostics After npm install ==='",
-  "OPENCV_DIR=$(find /nix/store -type d -name 'opencv*' -path '*/lib/pkgconfig' 2>/dev/null | head -1 | xargs dirname 2>/dev/null) && if [ -n \"$OPENCV_DIR\" ]; then export PKG_CONFIG_PATH=$OPENCV_DIR/lib/pkgconfig:$PKG_CONFIG_PATH && export LD_LIBRARY_PATH=$OPENCV_DIR/lib:$LD_LIBRARY_PATH; else OPENCV_PC=$(find /nix/store -name 'opencv*.pc' 2>/dev/null | head -1) && if [ -n \"$OPENCV_PC\" ]; then export PKG_CONFIG_PATH=$(dirname \"$OPENCV_PC\"):$PKG_CONFIG_PATH; fi; fi",
+  "OPENCV_PC=$(find /nix/store -name 'opencv*.pc' -print -quit 2>/dev/null || true); if [ -n \"$OPENCV_PC\" ]; then OPENCV_PKGCONFIG_DIR=$(dirname \"$OPENCV_PC\"); OPENCV_LIB_DIR=$(dirname \"$OPENCV_PKGCONFIG_DIR\"); export PKG_CONFIG_PATH=\"$OPENCV_PKGCONFIG_DIR:${PKG_CONFIG_PATH:-}\"; export LD_LIBRARY_PATH=\"$OPENCV_LIB_DIR:${LD_LIBRARY_PATH:-}\"; echo \"🔍 OpenCV .pc detected at: $OPENCV_PC\"; else echo '⚠️ OpenCV .pc files not found'; fi",
   "echo '🔍 Node.js:' && node --version",
   "echo '🔍 npm:' && npm --version",
   "echo '🔍 Python:' && which python3 && python3 --version",
@@ -37,7 +37,7 @@ cmds = [
   "(pkg-config --cflags opencv4 2>&1 || pkg-config --cflags opencv 2>&1 || echo '⚠️ pkg-config opencv4/opencv cflags not found')",
   "(pkg-config --libs opencv4 2>&1 || pkg-config --libs opencv 2>&1 || echo '⚠️ pkg-config opencv4/opencv libs not found')",
   "echo '🔍 === Attempting OpenCV Rebuild ==='",
-  "OPENCV_DIR=$(find /nix/store -type d -name 'opencv*' -path '*/lib/pkgconfig' 2>/dev/null | head -1 | xargs dirname 2>/dev/null) && if [ -n \"$OPENCV_DIR\" ]; then export PKG_CONFIG_PATH=$OPENCV_DIR/lib/pkgconfig:$PKG_CONFIG_PATH && export LD_LIBRARY_PATH=$OPENCV_DIR/lib:$LD_LIBRARY_PATH; else OPENCV_PC=$(find /nix/store -name 'opencv*.pc' 2>/dev/null | head -1) && if [ -n \"$OPENCV_PC\" ]; then export PKG_CONFIG_PATH=$(dirname \"$OPENCV_PC\"):$PKG_CONFIG_PATH; fi; fi && npm rebuild @u4/opencv4nodejs --verbose 2>&1 || echo '⚠️ OpenCV rebuild failed - face detection will be disabled'"
+  "OPENCV_PC=$(find /nix/store -name 'opencv*.pc' -print -quit 2>/dev/null || true); if [ -n \"$OPENCV_PC\" ]; then OPENCV_PKGCONFIG_DIR=$(dirname \"$OPENCV_PC\"); OPENCV_LIB_DIR=$(dirname \"$OPENCV_PKGCONFIG_DIR\"); export PKG_CONFIG_PATH=\"$OPENCV_PKGCONFIG_DIR:${PKG_CONFIG_PATH:-}\"; export LD_LIBRARY_PATH=\"$OPENCV_LIB_DIR:${LD_LIBRARY_PATH:-}\"; echo \"🔍 Rebuild will use OpenCV .pc at: $OPENCV_PC\"; else echo '⚠️ OpenCV .pc files not found -- rebuild will likely fail'; fi; npm rebuild @u4/opencv4nodejs --verbose 2>&1 || echo '⚠️ OpenCV rebuild failed - face detection will be disabled'",
 ]
 
 [phases.build]
