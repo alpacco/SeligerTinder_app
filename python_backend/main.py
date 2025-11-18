@@ -202,6 +202,61 @@ async def init_app():
     elif ADMIN_TOKEN:
         print("✅ Admin авторизация настроена через Bearer Token")
     
+    # Проверка наличия собранных файлов фронтенда
+    print("=" * 70)
+    print("📦 [INIT] Проверка собранных файлов фронтенда...")
+    print(f"  - public_dir: {public_dir}")
+    print(f"  - public_dir.exists(): {public_dir.exists()}")
+    
+    if public_dir.exists():
+        # Проверяем hash-map.json
+        hash_map_path = public_dir / "hash-map.json"
+        if hash_map_path.exists():
+            print(f"  ✅ hash-map.json найден: {hash_map_path}")
+            try:
+                import json
+                with open(hash_map_path) as f:
+                    hash_map = json.load(f)
+                print(f"  ✅ hash-map.json загружен: {len(hash_map)} записей")
+                if hash_map:
+                    print(f"  - Примеры записей: {list(hash_map.items())[:3]}")
+            except Exception as e:
+                print(f"  ❌ Ошибка загрузки hash-map.json: {e}")
+        else:
+            print(f"  ⚠️ hash-map.json НЕ НАЙДЕН: {hash_map_path}")
+            print(f"  ⚠️ Это означает, что сборка фронтенда еще не прошла на сервере")
+            print(f"  ⚠️ Проверьте логи Railway на этапе 'install' - должна быть команда 'npm run build'")
+        
+        # Проверяем JS файлы
+        js_dir = public_dir / "js"
+        if js_dir.exists():
+            js_files = list(js_dir.glob("*.js"))
+            print(f"  - js_dir: {js_dir}")
+            print(f"  - Найдено JS файлов: {len(js_files)}")
+            if js_files:
+                print(f"  - Примеры файлов: {[f.name for f in js_files[:5]]}")
+            else:
+                print(f"  ⚠️ JS файлы НЕ НАЙДЕНЫ в {js_dir}")
+                print(f"  ⚠️ Это означает, что сборка фронтенда не создала файлы")
+        else:
+            print(f"  ⚠️ Директория js/ НЕ НАЙДЕНА: {js_dir}")
+        
+        # Проверяем CSS файлы
+        css_dir = public_dir / "css"
+        if css_dir.exists():
+            css_files = list(css_dir.glob("*.css"))
+            print(f"  - css_dir: {css_dir}")
+            print(f"  - Найдено CSS файлов: {len(css_files)}")
+            if css_files:
+                print(f"  - Примеры файлов: {[f.name for f in css_files[:5]]}")
+        else:
+            print(f"  ⚠️ Директория css/ НЕ НАЙДЕНА: {css_dir}")
+    else:
+        print(f"  ⚠️ Директория public/ НЕ НАЙДЕНА: {public_dir}")
+        print(f"  ⚠️ Это критическая ошибка - фронтенд не может быть отдан")
+    
+    print("=" * 70)
+    
     print("✅ Backend server initialized")
 
 
@@ -217,10 +272,53 @@ async def get_config():
     # Загружаем hash-map.json для JS файлов
     hash_map_path = public_dir / "hash-map.json"
     hash_map = {}
+    
+    print("=" * 70)
+    print("📦 [CONFIG] Проверка файлов фронтенда...")
+    print(f"  - public_dir: {public_dir}")
+    print(f"  - public_dir.exists(): {public_dir.exists()}")
+    print(f"  - hash_map_path: {hash_map_path}")
+    print(f"  - hash_map_path.exists(): {hash_map_path.exists()}")
+    
     if hash_map_path.exists():
-        import json
-        with open(hash_map_path) as f:
-            hash_map = json.load(f)
+        try:
+            import json
+            with open(hash_map_path) as f:
+                hash_map = json.load(f)
+            print(f"  ✅ hash-map.json загружен: {len(hash_map)} записей")
+            print(f"  - hashMap содержимое: {hash_map}")
+        except Exception as e:
+            print(f"  ❌ Ошибка загрузки hash-map.json: {e}")
+    else:
+        print(f"  ⚠️ hash-map.json НЕ НАЙДЕН!")
+        print(f"  ⚠️ Это означает, что сборка фронтенда еще не прошла на сервере")
+        print(f"  ⚠️ Проверьте логи Railway на этапе 'install' - должна быть команда 'npm run build'")
+    
+    # Проверяем наличие JS файлов
+    js_dir = public_dir / "js"
+    if js_dir.exists():
+        js_files = list(js_dir.glob("*.js"))
+        print(f"  - js_dir: {js_dir}")
+        print(f"  - Найдено JS файлов: {len(js_files)}")
+        if js_files:
+            print(f"  - Примеры файлов: {[f.name for f in js_files[:5]]}")
+        else:
+            print(f"  ⚠️ JS файлы НЕ НАЙДЕНЫ в {js_dir}")
+    else:
+        print(f"  ⚠️ Директория js/ НЕ НАЙДЕНА: {js_dir}")
+    
+    # Проверяем наличие CSS файлов
+    css_dir = public_dir / "css"
+    if css_dir.exists():
+        css_files = list(css_dir.glob("*.css"))
+        print(f"  - css_dir: {css_dir}")
+        print(f"  - Найдено CSS файлов: {len(css_files)}")
+        if css_files:
+            print(f"  - Примеры файлов: {[f.name for f in css_files[:5]]}")
+    else:
+        print(f"  ⚠️ Директория css/ НЕ НАЙДЕНА: {css_dir}")
+    
+    print("=" * 70)
     
     return {
         "webAppUrl": web_app_url,
