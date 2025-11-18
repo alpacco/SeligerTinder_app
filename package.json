@@ -12,11 +12,10 @@
     "start:bot": "node start-bot.js",
     "start:all": "node start-all.js",
     "build:prod": "vite build",
-    "postinstall": "npm rebuild sqlite3 @u4/opencv4nodejs",
+    "postinstall": "npm rebuild sqlite3",
     "migrate": "node migrations/migrate.js"
   },
   "dependencies": {
-    "@u4/opencv4nodejs": "^7.1.2",
     "axios": "^1.7.9",
     "body-parser": "^1.20.3",
     "cors": "^2.8.5",
@@ -38,6 +37,9 @@
     "sqlite": "^5.1.1",
     "sqlite3": "^5.1.7",
     "telegraf": "^4.16.3"
+  },
+  "optionalDependencies": {
+    "@u4/opencv4nodejs": "^7.1.2"
   },
   "devDependencies": {
     "rimraf": "^3.0.2",
