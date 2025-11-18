@@ -62,7 +62,8 @@ const {
 // console.log('📦 Загружены пути:', { LOG_DIR_PATH, IMG_DIR_PATH, GIFT_IMG_PATH });
 
 // Пути для данных получаем из db модуля (поддерживает оба типа БД)
-const { IMAGES_DIR, LOG_DIR, GIFT_IMAGES_DIR } = require('./db');
+// Примечание: IMAGES_DIR и GIFT_IMAGES_DIR также получаем в секции 4.1
+const { LOG_DIR } = require('./db');
 
 // 3. Инициализация Express
 const app = express();
@@ -339,56 +340,6 @@ app.use('/api/pro', proRouter(db));
 app.use('/api', adminRouter(db));
 app.use('/api/stats', statsRouter(db));
 console.log('✅ API-маршруты успешно смонтированы.');
-
-// 10. Раздача статических файлов
-app.use(express.static(path.join(__dirname, 'public'), { 
-  index: false,
-  maxAge: '1y', // Кэширование на 1 год для статических файлов
-  etag: true,
-  lastModified: true,
-  setHeaders: (res, filePath) => {
-    // Специальные заголовки для Telegram Mini App
-    if (filePath.endsWith('.js') || filePath.endsWith('.css')) {
-      res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
-      res.setHeader('X-Content-Type-Options', 'nosniff');
-      res.setHeader('Content-Type', filePath.endsWith('.js') ? 'application/javascript' : 'text/css');
-    } else if (filePath.match(/\.(png|jpg|jpeg|gif|svg|ico)$/)) {
-      res.setHeader('Cache-Control', 'public, max-age=86400'); // 1 день для изображений
-    }
-    // Убеждаемся, что CORS заголовки установлены для статики
-    const origin = res.req.headers.origin;
-    if (origin && corsOrigins.some(allowed => {
-      if (allowed.includes('*')) {
-        return origin.includes(allowed.replace('*.', ''));
-      }
-      return origin === allowed;
-    })) {
-      res.setHeader('Access-Control-Allow-Origin', origin);
-      res.setHeader('Access-Control-Allow-Credentials', 'true');
-    }
-  }
-}));
-// Для раздачи статики использовать только абсолютные пути:
-app.use('/data/img', express.static(IMAGES_DIR, {
-  maxAge: '1d', // Кэширование изображений на 1 день
-  etag: true,
-  lastModified: true,
-  setHeaders: (res, path) => {
-    // Кэширование фотографий пользователей
-    res.setHeader('Cache-Control', 'public, max-age=86400');
-    res.setHeader('X-Content-Type-Options', 'nosniff');
-  }
-}));
-app.use('/giftimg', express.static(GIFT_IMAGES_DIR, {
-  maxAge: '1d', // Кэширование подарков на 1 день
-  etag: true,
-  lastModified: true,
-  setHeaders: (res, path) => {
-    res.setHeader('Cache-Control', 'public, max-age=86400');
-    res.setHeader('X-Content-Type-Options', 'nosniff');
-  }
-}));
-console.log('🗂️ Настроена раздача статических файлов с кэшированием для Telegram Mini App.');
 
 // Функция для получения данных пользователя
 async function getUserData(userId) {
