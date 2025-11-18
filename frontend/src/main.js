@@ -1740,10 +1740,22 @@ ageToggleIcon.addEventListener("click", () => {
           console.error("Ошибка автопуша needPhoto:", e);
         }
       }
-    }, 5 * 60 * 1000);3
+    }, 5 * 60 * 1000);
 
   // Присваиваем реализацию showScreen переменной showScreenImpl
-showScreenImpl = showScreen;
+  showScreenImpl = showScreen;
+  
+  // КРИТИЧНО: Заменяем window.showScreen на настоящую реализацию
+  console.log("🔵 [MAIN.JS] Заменяем window.showScreen на настоящую реализацию...");
+  window.showScreen = showScreen;
+  console.log("  ✅ window.showScreen заменен на настоящую реализацию:", typeof window.showScreen);
+  console.log("  - showScreenImpl:", typeof showScreenImpl);
+  
+  // Также экспортируем showCandidate если он определен
+  if (typeof showCandidate !== 'undefined') {
+    window.showCandidate = showCandidate;
+    console.log("  ✅ window.showCandidate установлен");
+  }
 
 }); 
 
