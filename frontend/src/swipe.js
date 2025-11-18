@@ -1,0 +1,1160 @@
+// Модуль swipe.js: ВСЯ ЛОГИКА СВАЙПОВ, анимаций, обработчиков свайпов, кнопок и спец.событий
+// Экспортируемые функции:
+// - showPreviousCandidate, setupSwipeControls, showCandidate, fillCard, shareInvite, customHideBadges, moveToNextCandidate
+// - onMutualLike, onSuperMatch, onSuperPending, onSuperRejected
+// - handleLikeClick, attachLikeHandler, handleDislikeClick, attachDislikeHandler
+// - openChat, showToast, customRenderPaginator, cyclePhoto, setupSwipeHandlers, updateSwipeScreen
+// - updateMatchesCount, loadCandidates, loadUserData, initSwipeScreen
+
+// Логика свайпа и кандидатов, вынесенная из main.js
+import { hideBadges, renderPaginator } from './utils.js';
+import { sendLike, sendDislike, sendSuperLike, sendPush, fetchGoals } from './api.js';
+import { fillCard } from './card.js';
+// Динамический импорт user-actions для избежания проблем с Vite
+let loadUserData, handlePhotoAddition;
+import('./user-actions.js').then(module => {
+  loadUserData = module.loadUserData;
+  handlePhotoAddition = module.handlePhotoAddition;
+}).catch(err => {
+  console.warn('Не удалось загрузить user-actions:', err);
+});
+
+// Глобальные переменные, связанные со свайпом
+export let candidates = [];
+export let currentIndex = 0;
+export let currentPhotoIndex = 0;
+export let inMutualMatch = false;
+export let viewingCandidate = null;
+export let swipeHistory = [];
+window.swipeHistory = swipeHistory;
+
+window.currentIndex = 0;
+
+export function showPreviousCandidate() {
+  if (window.swipeHistory.length > 0) {
+    window._isBackAction = true;
+    const { candidate, index } = window.swipeHistory.pop();
+    window.candidates.splice(index, 0, candidate);
+    window.currentIndex = index;
+    const singleCard = document.getElementById("singleCard");
+    fillCard(singleCard, window.candidates[window.currentIndex]);
+    window.setupSwipeControls && window.setupSwipeControls();
+    window.updateMatchesCount && window.updateMatchesCount();
+  }
+}
+
+export function setupSwipeControls() {
+  const swipeScreen = document.getElementById("screen-swipe");
+  let cardsBtns = swipeScreen.querySelector(".cards-btns");
+  if (!cardsBtns) {
+    cardsBtns = document.createElement("div");
+    cardsBtns.className = "cards-btns";
+    swipeScreen.appendChild(cardsBtns);
+  }
+  cardsBtns.innerHTML = "";
+  // Back button for PRO users
+  if (window.currentUser.is_pro) {
+    const backBtn = document.createElement("button");
+    backBtn.className = "back-cnd-btn";
+    backBtn.innerHTML = `<svg class="back-icon" width="36" height="36" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><g><path class="st0" d="M25,30.3L25,30.3c1-1,2.6-1,3.5,0L39,40.8c1,1,1,2.6,0,3.5l0,0c-1,1-2.6,1-3.5,0L25,33.8C24,32.8,24,31.2,25,30.3z"/><path class="st0" d="M25,30.2l10.5-10.5c1-1,2.6-1,3.5,0l0,0c1,1,1,2.6,0,3.5L28.5,33.7c-1,1-2.6,1-3.5,0l0,0C24,32.8,24,31.2,25,30.2z"/></g></svg>`;
+    backBtn.addEventListener("click", () => {
+      window.singleCard.style.transition = "transform 0.5s ease";
+      window.singleCard.style.transform = "translate(-1000px, 0) rotate(-45deg)";
+      setTimeout(() => {
+        window.showPreviousCandidate && window.showPreviousCandidate();
+        window.singleCard.style.transition = "none";
+        window.singleCard.style.transform = "none";
+      }, 500);
+    });
+    cardsBtns.appendChild(backBtn);
+  }
+  // Dislike button
+  const dislikeBtn = document.createElement("button");
+  dislikeBtn.className = "dislike_d";
+  dislikeBtn.innerHTML = `<svg class="dislike-icon" width="36" height="36" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><rect class="st0" x="29.5" y="14.61" width="5" height="34.78" rx="2.5" ry="2.5" transform="translate(-13.25 32) rotate(-45)"/><rect class="st0" x="14.61" y="29.5" width="34.78" height="5" rx="2.5" ry="2.5" transform="translate(-13.25 32) rotate(-45)"/></svg>`;
+  cardsBtns.appendChild(dislikeBtn);
+  // Dislike click handler
+  dislikeBtn.addEventListener('click', () => {
+
+    if (!window.candidates || window.candidates.length === 0 || window.currentIndex >= window.candidates.length) {
+
+      window.showCandidate && window.showCandidate();
+    } else {
+
+      window.doDislike && window.doDislike();
+    }
+  });
+  // Like button
+  const likeBtn = document.createElement("button");
+  likeBtn.className = "like_d";
+  likeBtn.innerHTML = `<svg class="like-icon" width="36" height="36" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><path class="st0" d="M40.2,19.3c-5.1-0.5-7.5,2.5-8.2,3.5c-0.6-1-3.1-4-8.2-3.5c-5.4,0.6-10.8,7-5.7,15.6c4.2,6.9,13.6,11.9,13.9,12.1l0,0l0,0l0,0l0,0c0.2-0.1,9.7-5.1,13.9-12.1C51,26.3,45.6,19.9,40.2,19.3L40.2,19.3z"/></svg>`;
+  cardsBtns.appendChild(likeBtn);
+  // Like click handler
+  likeBtn.addEventListener('click', () => {
+
+    if (!window.candidates || window.candidates.length === 0 || window.currentIndex >= window.candidates.length) {
+
+      window.showCandidate && window.showCandidate();
+    } else {
+
+      window.doLike && window.doLike();
+    }
+  });
+  // Super-Like for PRO users
+  if (window.currentUser.is_pro) {
+    const superBtn = document.createElement("button");
+    superBtn.className = "superlike_d";
+    superBtn.innerHTML = `<svg class="superlike-icon" width="36" height="36" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><g><path class="st0" d="M36.7,48.8c0-0.2,0.2-0.4,0.3-0.6c2.6-2.3,2.7-6.5,0.7-9.3c-0.8-1.2-1.9-2.1-3-3c-1.6-1.5-2.4-3.4-2.5-5.6c0-0.2,0-0.4-0.2-0.5c-0.2-0.1-0.3,0.1-0.4,0.3c-2,2.1-3.1,4.6-3.3,7.5c-0.1,0.8-0.1,1.6,0,2.4c0,0.3,0,0.3-0.3,0.2c-0.8-0.3-1.2-0.9-1.5-1.7c-0.1-0.2-0.1-0.6-0.4-0.7c-0.3,0-0.4,0.3-0.6,0.6c-0.5,0.9-0.8,2-0.9,3c-0.1,1.5,0,3,0.6,4.4c0.5,1.1,1.3,1.9,2.2,2.7c0.1,0.1,0.4,0.2,0.3,0.4c-0.1,0.3-0.4,0.1-0.6,0c-2.3-0.7-4.1-2-5.6-3.8c-1.9-2.4-2.7-5.1-2.5-8.2c0.2-1.7,0.7-3.2,1.6-4.7c1.6-2.5,3.4-4.9,5.5-7.1c1.3-1.4,2.3-2.9,2.9-4.7c0.6-2,0.5-4,0-6c-0.1-0.3-0.2-0.6-0.1-1c0.6,0.2,1.1,0.6,1.7,0.9c3.1,1.9,5.4,4.4,6.5,7.9c0.7,2,0.8,4,0.5,6.1C37.6,29,37.6,29,38,29c0.7-0.2,1.1-0.5,1.5-1.1c0.3-0.5,0.5-1,0.7-1.6c0.1-0.4,0.2-0.4,0.5-0.2c1.3,0.9,2.2,2.2,2.9,3.6c1.3,2.7,1.9,5.6,1.6,8.6c-0.4,4.3-2.5,7.5-6.1,9.8C38.3,48.6,37.5,48.9,36.7,48.8z"/></g></svg> <span id='superlike-count' class='superlike-count'>${window.currentUser.superLikesCount}</span>`;
+    superBtn.disabled = window.currentUser.superLikesCount <= 0;
+    superBtn.addEventListener("click", async () => {
+      try {
+        const receiverId = window.singleCard.dataset.userId;
+
+        
+        // Отправляем суперлайк
+        const superJson = await sendSuperLike(window.currentUser.userId, receiverId);
+
+        
+        if (superJson && superJson.success) {
+          window.currentUser.superLikesCount--;
+          let sent = JSON.parse(localStorage.getItem('sentSuperLikes') || '[]');
+          sent.push(receiverId);
+          localStorage.setItem('sentSuperLikes', JSON.stringify(sent));
+          window.currentUser.likes.push(receiverId);
+
+          
+          // Отправляем обычный лайк
+          try {
+            const likeJson = await sendLike(window.currentUser.userId, receiverId);
+
+            
+            // Обновляем счетчик
+          document.getElementById('superlike-count').textContent = String(window.currentUser.superLikesCount);
+          localStorage.setItem('superLikesCount', String(window.currentUser.superLikesCount));
+            
+          if (window.currentUser.superLikesCount <= 0) {
+            superBtn.disabled = true;
+            }
+            
+            // Проверяем, есть ли взаимный лайк
+            if (likeJson && (likeJson.isMatch || superJson.mutual)) {
+
+              window.onMutualLike && window.onMutualLike();
+            } else if (superJson.status === "pending") {
+
+              window.onSuperPending && window.onSuperPending();
+            } else {
+
+              // Обычный переход к следующему кандидату
+              window.moveToNextCandidate && window.moveToNextCandidate('right');
+            }
+          } catch (err) {
+
+            window.moveToNextCandidate && window.moveToNextCandidate('right');
+          }
+        }
+      } catch (e) {
+
+        window.showToast && window.showToast('Ошибка при отправке суперлайка');
+      }
+    });
+    cardsBtns.appendChild(superBtn);
+  }
+}
+
+export function showCandidate() {
+  // Экспортируем в глобальную область для использования в main.js
+  window.showCandidateFromSwipe = showCandidate;
+  const singleCard = document.getElementById("singleCard");
+  if (window.currentUser.needPhoto === 1) {
+    console.log('[showCandidate] needPhoto=1, показываем кнопку "Добавить фото"');
+    singleCard.style.backgroundImage = "none";
+    singleCard.style.backgroundColor = "#fff";
+    const errorText = window.currentUser.photoErrorReason ? `<div class='photo-error-reason'>${window.currentUser.photoErrorReason}</div>` : '';
+    singleCard.innerHTML = `
+      <div class="no-users invite-wrapper">
+        ${errorText}
+        <h3>Пожалуйста, загрузите 1-3 фото с лицом, чтобы просматривать анкеты.</h3>
+        <button id="add-photo-swipe-btn" class="invite-button">Добавить фото</button>
+      </div>
+    `;
+    singleCard.style.boxShadow = "none";
+    document.querySelectorAll(".back-cnd-btn, .superlike_d, .like_d, .dislike_d").forEach(b => b.style.display = "none");
+    const btn = document.getElementById("add-photo-swipe-btn");
+    if (btn) {
+      // Удаляем старые обработчики
+      const newBtn = btn.cloneNode(true);
+      btn.parentNode.replaceChild(newBtn, btn);
+      
+      newBtn.addEventListener("click", function() { handlePhotoAddition.call(newBtn); });
+      console.log('[showCandidate] Кнопка найдена, навешиваем обработчик handlePhotoAddition (import)');
+    }
+    return;
+  }
+  if (!window.candidates || window.candidates.length === 0 || window.currentIndex >= window.candidates.length) {
+    const newCard = singleCard.cloneNode(false); // без детей и событий
+    singleCard.parentNode.replaceChild(newCard, singleCard);
+
+    newCard.style.backgroundImage = "none";
+    newCard.style.backgroundColor = "#fff";
+    newCard.innerHTML = `
+      <div class="no-users invite-wrapper">
+        <h3>Нет новых пользователей</h3>
+        <button id="invite-button" class="invite-button">Пригласить</button>
+      </div>
+    `;
+    newCard.style.boxShadow = "none";
+    newCard.className = "card";
+    document.querySelectorAll(".back-cnd-btn, .superlike_d, .like_d, .dislike_d").forEach(b => b.style.display = "none");
+    newCard.querySelector("#invite-button").addEventListener("click", window.shareInvite);
+    return;
+  }
+  // Обычная карточка
+  const currentCandidate = window.candidates[window.currentIndex];
+  fillCard(singleCard, { ...currentCandidate });
+  singleCard.classList.remove("show-match", "returning");
+  // Добавляю анимацию появления
+  singleCard.classList.add("card-appear");
+  singleCard.addEventListener('animationend', function handler() {
+    singleCard.classList.remove('card-appear');
+    singleCard.removeEventListener('animationend', handler);
+  });
+  document.querySelectorAll(".like_d, .dislike_d")
+    .forEach(b => b.style.display = window.currentUser.needPhoto ? "none" : "flex");
+  // Для PRO показываем Back и SuperLike
+  if (window.currentUser.is_pro && !window.currentUser.needPhoto) {
+    document.querySelectorAll(".back-cnd-btn, .superlike_d").forEach(b => b.style.display = "flex");
+  }
+}
+
+export function shareInvite() {
+  const text = "Привет! Нашёл удобное приложение для знакомств между соседями нашего ЖК.: https://t.me/SeligerTinderApp_bot/sta";
+  if (navigator.share) {
+    navigator.share({ text })
+      .catch((err) => {
+        if (err && err.name !== "AbortError") {
+          alert("Ошибка шаринга: " + err.message);
+        }
+        // AbortError игнорируем
+      });
+  } else {
+    navigator.clipboard.writeText(text)
+      .then(() => alert("Текст скопирован в буфер обмена"))
+      .catch(() => alert("Не удалось скопировать текст"));
+  }
+}
+window.shareInvite = shareInvite;
+
+export function customHideBadges(cardEl) {
+  const likeB = cardEl.querySelector(".badge-like");
+  const nopeB = cardEl.querySelector(".badge-nope");
+  if (likeB) likeB.style.opacity = 0;
+  if (nopeB) nopeB.style.opacity = 0;
+}
+
+export function moveToNextCandidate(direction = 'right') {
+  // Удаляем кандидата только если это НЕ взаимный лайк
+  if (!window._isBackAction && !window.inMutualMatch) {
+    const currentCandidate = window.candidates[window.currentIndex];
+    if (currentCandidate) {
+      window.swipeHistory.push({ candidate: currentCandidate, index: window.currentIndex });
+      window.candidates.splice(window.currentIndex, 1);
+      if (window.currentIndex >= window.candidates.length) {
+        window.currentIndex = 0;
+      }
+    }
+  }
+  
+  // Сбрасываем флаги
+  window._isBackAction = false;
+  window.inMutualMatch = false;
+  
+  window.singleCard.style.transition = 'transform 0.5s ease';
+  window.singleCard.style.transform = 'translate(1000px, 0) rotate(45deg)';
+  window.customHideBadges && window.customHideBadges(window.singleCard);
+
+  // ВСЕГДА сбрасываем кнопки к состоянию по умолчанию при переходе к новому кандидату
+  // Restore like/dislike buttons to default state
+  let likeBtn = document.querySelector(".like_d");
+  if (likeBtn) {
+    const btnClone = likeBtn.cloneNode(true);
+    likeBtn.parentNode.replaceChild(btnClone, likeBtn);
+    likeBtn = btnClone;
+  }
+  let dislikeBtn = document.querySelector(".dislike_d");
+  if (dislikeBtn) {
+    const btnClone = dislikeBtn.cloneNode(true);
+    dislikeBtn.parentNode.replaceChild(btnClone, dislikeBtn);
+    dislikeBtn = btnClone;
+  }
+
+  if (likeBtn) {
+    likeBtn.innerHTML = `<svg class="like-icon" width="36" height="36" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><path class="st0" d="M40.2,19.3c-5.1-0.5-7.5,2.5-8.2,3.5c-0.6-1-3.1-4-8.2-3.5c-5.4,0.6-10.8,7-5.7,15.6c4.2,6.9,13.6,11.9,13.9,12.1l0,0l0,0l0,0l0,0c0.2-0.1,9.7-5.1,13.9-12.1C51,26.3,45.6,19.9,40.2,19.3L40.2,19.3z"/></svg>`;
+    likeBtn.onclick = null;
+    likeBtn.style.backgroundColor = '';
+    likeBtn.style.fontSize = '';
+    // Восстанавливаем обработчик события для Like
+    likeBtn.addEventListener('click', () => {
+      if (!window.candidates || window.candidates.length === 0 || window.currentIndex >= window.candidates.length) {
+        window.showCandidate && window.showCandidate();
+      } else {
+        window.doLike && window.doLike();
+      }
+    });
+  }
+  if (dislikeBtn) {
+    dislikeBtn.innerHTML = `<svg class="dislike-icon" width="36" height="36" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><rect class="st0" x="29.5" y="14.61" width="5" height="34.78" rx="2.5" ry="2.5" transform="translate(-13.25 32) rotate(-45)"/><rect class="st0" x="14.61" y="29.5" width="34.78" height="5" rx="2.5" ry="2.5" transform="translate(-13.25 32) rotate(-45)"/></svg>`;
+    dislikeBtn.onclick = null;
+    dislikeBtn.style.backgroundColor = '';
+    dislikeBtn.style.fontSize = '';
+    dislikeBtn.className = 'dislike_d'; // Сброс классов к дефолтному
+    // Восстанавливаем обработчик события для Dislike
+    dislikeBtn.addEventListener('click', () => {
+      if (!window.candidates || window.candidates.length === 0 || window.currentIndex >= window.candidates.length) {
+        window.showCandidate && window.showCandidate();
+      } else {
+        window.doDislike && window.doDislike();
+      }
+    });
+  }
+
+  // Ensure buttons are visible and move to next
+  document.querySelectorAll(".like_d, .dislike_d").forEach(b => b.style.display = 'flex');
+  
+  // Анимация свайпа
+  let transformValue = 'translate(1000px, 0) rotate(45deg)';
+  if (direction === 'left') {
+    transformValue = 'translate(-1000px, 0) rotate(-45deg)';
+  }
+  // Всегда выставляем transition перед анимацией
+  window.singleCard.style.transition = 'transform 0.5s ease';
+  window.singleCard.style.transform = transformValue;
+  window.singleCard.addEventListener('transitionend', function handler() {
+    window.singleCard.removeEventListener('transitionend', handler);
+    window.singleCard.style.transition = 'none';
+    window.singleCard.style.transform = 'none';
+    window.customHideBadges && window.customHideBadges(window.singleCard);
+    
+    // Переходим к следующему кандидату
+    if (window.candidates.length > 0) {
+      window.currentIndex = (window.currentIndex + 1) % window.candidates.length;
+    } else {
+      window.currentIndex = 0;
+    }
+    
+    // Показываем нового кандидата
+  window.showCandidate && window.showCandidate();
+
+  // После показа кандидата проверяем, нужно ли изменить кнопки для НОВОГО кандидата
+  setTimeout(() => {
+      const newCandidate = window.candidates.find(c => String(c.id || c.userId) === window.singleCard.dataset.userId);
+    if (newCandidate) {
+        const hasMutualLike = window.currentUser.likes.includes(newCandidate.id || newCandidate.userId);
+      if (hasMutualLike) {
+          // Взаимный лайк - показываем анимацию сердца
+          const matchBadge = window.singleCard.querySelector(".badge-match");
+          if (matchBadge) {
+            matchBadge.innerHTML = "❤️‍🔥";
+            matchBadge.style.opacity = "1";
+            matchBadge.style.transform = "";
+            matchBadge.classList.add("match-animation");
+            matchBadge.addEventListener("animationend", () => {
+              matchBadge.classList.remove("match-animation");
+              matchBadge.style.opacity = "0";
+            }, { once: true });
+          }
+          if ("vibrate" in navigator) navigator.vibrate([50,30,80,30,110,30,150]);
+
+          // Кнопки swipe: like -> Next, dislike -> Chat/Wave
+        let likeBtn = document.querySelector(".like_d");
+        if (likeBtn) {
+            const btnClone = likeBtn.cloneNode(true);
+            likeBtn.parentNode.replaceChild(btnClone, likeBtn);
+            likeBtn = btnClone;
+          }
+          let dislikeBtn = document.querySelector(".dislike_d");
+          if (dislikeBtn) {
+            const btnClone = dislikeBtn.cloneNode(true);
+            dislikeBtn.parentNode.replaceChild(btnClone, dislikeBtn);
+            dislikeBtn = btnClone;
+          }
+
+          // Next
+          if (likeBtn) {
+            likeBtn.style.display = "flex";
+            likeBtn.innerHTML = `<img class="next" src="/img/next.svg" alt="next" />`;
+          likeBtn.onclick = () => {
+            window.singleCard.style.transition = "transform 0.5s ease";
+            window.singleCard.style.transform = "translate(1000px, 0) rotate(45deg)";
+            setTimeout(() => {
+              window.moveToNextCandidate && window.moveToNextCandidate();
+              window.singleCard.style.transition = "none";
+              window.singleCard.style.transform = "none";
+            }, 500);
+          };
+        }
+          // Chat / Wave (Chat button styled blue)
+        if (dislikeBtn) {
+            dislikeBtn.style.display = "flex";
+            if (newCandidate.id && newCandidate.id.startsWith('VALID_') && newCandidate.username) {
+              dislikeBtn.classList.remove('wave-btn');
+              dislikeBtn.classList.add('chat-btn');
+            dislikeBtn.style.backgroundColor = "#55a6ff"; // голубой
+              dislikeBtn.innerHTML = `<img class="chat" src="/img/chat.svg" alt="chat" />`;
+            dislikeBtn.onclick = () => {
+              window.openChat && window.openChat(newCandidate.username);
+            };
+          } else {
+              // Для TEST_ пользователей или пользователей без username показываем Wave
+              dislikeBtn.classList.remove('chat-btn');
+              dislikeBtn.classList.add('wave-btn');
+              dislikeBtn.innerHTML = `<img class="wave" src="/img/wave.svg" alt="wave" />`;
+            dislikeBtn.style.backgroundColor = "#ff5e5e";
+            dislikeBtn.style.fontSize = "36px";
+            dislikeBtn.onclick = async () => {
+              const btn = dislikeBtn;
+              try {
+                  sendPush({ senderId: window.currentUser.userId, senderUsername: window.currentUser.username || window.currentUser.name, receiverId: newCandidate.id || newCandidate.userId });
+              } catch (err) {
+                console.error("❌ /api/sendPush ошибка:", err);
+              }
+            };
+          }
+        }
+          window.updateMatchesCount && window.updateMatchesCount();
+      }
+    }
+  }, 50); // Небольшая задержка для корректного обновления DOM
+  });
+}
+
+export function onMutualLike() {
+
+  window.updateMatchesCount && window.updateMatchesCount();
+  window.inMutualMatch = true;
+  
+  // Сохраняем текущего кандидата в истории для кнопки Back
+  const currentCandidate = window.candidates[window.currentIndex];
+  if (currentCandidate) {
+    window.swipeHistory.push({ candidate: currentCandidate, index: window.currentIndex });
+    // УДАЛЯЕМ кандидата из массива при взаимном лайке
+    window.candidates.splice(window.currentIndex, 1);
+    if (window.currentIndex >= window.candidates.length) {
+      window.currentIndex = 0;
+    }
+  }
+  
+  // Свайп-карточка улетает вправо
+
+  window.singleCard.style.transition = "transform 0.5s ease";
+  window.singleCard.style.transform = "translate(1000px, 0) rotate(45deg)";
+  setTimeout(() => {
+    // Возврат в центр и подготовка
+
+    window.singleCard.style.transition = "transform 0.3s ease";
+    window.singleCard.style.transform = "none";
+    window.customHideBadges && window.customHideBadges(window.singleCard);
+
+    // Анимация сердца
+
+    const matchBadge = window.singleCard.querySelector(".badge-match");
+
+    if (matchBadge) {
+
+      matchBadge.innerHTML = "❤️‍🔥";
+      matchBadge.style.opacity = "1";
+      matchBadge.style.transform = "";
+      matchBadge.classList.add("match-animation");
+
+      matchBadge.addEventListener("animationend", () => {
+
+        matchBadge.classList.remove("match-animation");
+        matchBadge.style.opacity = "0";
+      }, { once: true });
+    } else {
+      console.warn('[swipe.js] Элемент .badge-match не найден!');
+    }
+    if ("vibrate" in navigator) navigator.vibrate([50,30,80,30,110,30,150]);
+
+    // Кнопки swipe: like -> Next, dislike -> Chat/Wave
+    let likeBtn = document.querySelector(".like_d");
+    if (likeBtn) {
+      const btnClone = likeBtn.cloneNode(true);
+      likeBtn.parentNode.replaceChild(btnClone, likeBtn);
+      likeBtn = btnClone;
+    }
+    let dislikeBtn = document.querySelector(".dislike_d");
+    if (dislikeBtn) {
+      const btnClone = dislikeBtn.cloneNode(true);
+      dislikeBtn.parentNode.replaceChild(btnClone, dislikeBtn);
+      dislikeBtn = btnClone;
+    }
+    const cand = window.candidates.find(c => String(c.id || c.userId) === window.singleCard.dataset.userId);
+
+    // Next
+    if (likeBtn) {
+      likeBtn.style.display = "flex";
+      likeBtn.innerHTML = `<img class="next" src="/img/next.svg" alt="next" />`;
+      likeBtn.onclick = () => {
+        window.singleCard.style.transition = "transform 0.5s ease";
+        window.singleCard.style.transform = "translate(1000px, 0) rotate(45deg)";
+        setTimeout(() => {
+          window.moveToNextCandidate && window.moveToNextCandidate();
+          window.singleCard.style.transition = "none";
+          window.singleCard.style.transform = "none";
+        }, 500);
+      };
+    }
+    // Chat / Wave (Chat button styled blue)
+    if (dislikeBtn) {
+      dislikeBtn.style.display = "flex";
+      if (cand && cand.id && cand.id.startsWith('VALID_') && cand.username) {
+        dislikeBtn.classList.remove('wave-btn');
+        dislikeBtn.classList.add('chat-btn');
+        dislikeBtn.style.backgroundColor = "#55a6ff"; // голубой
+        dislikeBtn.innerHTML = `<img class="chat" src="/img/chat.svg" alt="chat" />`;
+        dislikeBtn.onclick = () => {
+          window.openChat && window.openChat(cand.username);
+        };
+      } else {
+        // Для TEST_ пользователей или пользователей без username показываем Wave
+        dislikeBtn.classList.remove('chat-btn');
+        dislikeBtn.classList.add('wave-btn');
+        dislikeBtn.innerHTML = `<img class="wave" src="/img/wave.svg" alt="wave" />`;
+        dislikeBtn.style.backgroundColor = "#ff5e5e";
+        dislikeBtn.style.fontSize = "36px";
+        dislikeBtn.onclick = async () => {
+          const btn = dislikeBtn;
+          try {
+            sendPush({ senderId: window.currentUser.userId, senderUsername: window.currentUser.username || window.currentUser.name, receiverId: cand.id || cand.userId });
+          } catch (err) {
+            console.error("❌ /api/sendPush ошибка:", err);
+          }
+        };
+      }
+    }
+    window.updateMatchesCount && window.updateMatchesCount();
+  }, 500);
+}
+
+export function onSuperMatch() {
+    window.inMutualMatch = true;
+
+    // Сохраняем текущего кандидата в истории для кнопки Back
+    const currentCandidate = window.candidates[window.currentIndex];
+    if (currentCandidate) {
+        window.swipeHistory.push({ candidate: currentCandidate, index: window.currentIndex });
+    }
+
+    // Изменяем кнопки на правильные для взаимного мэтча
+    let likeBtn = document.querySelector(".like_d");
+    if (likeBtn) {
+        const btnClone = likeBtn.cloneNode(true);
+        likeBtn.parentNode.replaceChild(btnClone, likeBtn);
+        likeBtn = btnClone;
+    }
+    let dislikeBtn = document.querySelector(".dislike_d");
+    if (dislikeBtn) {
+        const btnClone = dislikeBtn.cloneNode(true);
+        dislikeBtn.parentNode.replaceChild(btnClone, dislikeBtn);
+        dislikeBtn = btnClone;
+    }
+
+    const cand = window.candidates.find(c => String(c.id || c.userId) === window.singleCard?.dataset?.userId);
+
+    // Next
+    if (likeBtn) {
+        likeBtn.style.display = "flex";
+        likeBtn.innerHTML = `<img class="next" src="/img/next.svg" alt="next" />`;
+        likeBtn.onclick = () => {
+            window.singleCard.style.transition = "transform 0.5s ease";
+            window.singleCard.style.transform = "translate(1000px, 0) rotate(45deg)";
+            setTimeout(() => {
+                // УДАЛЯЕМ кандидата из массива при супер-мэтче
+                if (currentCandidate) {
+                    window.candidates.splice(window.currentIndex, 1);
+                    if (window.currentIndex >= window.candidates.length) {
+                        window.currentIndex = 0;
+                    }
+                }
+                window.moveToNextCandidate && window.moveToNextCandidate();
+                window.singleCard.style.transition = "none";
+                window.singleCard.style.transform = "none";
+            }, 500);
+        };
+    }
+
+    // Chat / Wave
+    if (dislikeBtn) {
+        dislikeBtn.style.display = "flex";
+        // Проверяем, является ли пользователь VALID_ (имеет валидный Telegram username)
+        if (cand && cand.id && cand.id.startsWith('VALID_') && cand.username) {
+            dislikeBtn.classList.remove('wave-btn');
+            dislikeBtn.classList.add('chat-btn');
+            dislikeBtn.style.backgroundColor = "#55a6ff"; // голубой
+            dislikeBtn.innerHTML = `<img class="chat" src="/img/chat.svg" alt="chat" />`;
+            dislikeBtn.onclick = () => {
+                window.openChat && window.openChat(cand.username);
+            };
+        } else {
+            // Для TEST_ пользователей или пользователей без username показываем Wave
+            dislikeBtn.classList.remove('chat-btn');
+            dislikeBtn.classList.add('wave-btn');
+            dislikeBtn.innerHTML = `<img class="wave" src="/img/wave.svg" alt="wave" />`;
+            dislikeBtn.style.backgroundColor = "#ff5e5e";
+            dislikeBtn.style.fontSize = "36px";
+            dislikeBtn.onclick = async () => {
+                const btn = dislikeBtn;
+                try {
+                    sendPush({ senderId: window.currentUser.userId, senderUsername: window.currentUser.username || window.currentUser.name, receiverId: cand.id || cand.userId });
+                } catch (err) {
+                    console.error("❌ /api/sendPush ошибка:", err);
+                }
+            };
+        }
+    }
+
+    const matchBadge = window.singleCard?.querySelector(".badge-match");
+    if (matchBadge) {
+        matchBadge.innerHTML = `<img src="/img/superlike.svg" alt="Super-Like" />`;
+        matchBadge.style.opacity = "1";
+        // Начальное состояние: небольшой и прозрачный
+        matchBadge.style.transform = "scale(0.5)";
+        matchBadge.classList.add("match-animation");
+        matchBadge.addEventListener("animationend", () => {
+            matchBadge.classList.remove("match-animation");
+            matchBadge.style.opacity = "0";
+            matchBadge.style.transform = "";
+            // После анимации свайпаем карточку вправо
+            window.singleCard.style.transition = "transform 0.5s ease";
+            window.singleCard.style.transform = "translate(1000px, 0) rotate(45deg)";
+            setTimeout(() => {
+                // Возвращаем карточку в центр (как в onMutualLike)
+                window.singleCard.style.transition = "transform 0.3s ease";
+                window.singleCard.style.transform = "none";
+                window.customHideBadges && window.customHideBadges(window.singleCard);
+
+                // Анимация сердца
+                const matchBadge = window.singleCard.querySelector(".badge-match");
+                if (matchBadge) {
+                    matchBadge.innerHTML = "❤️‍🔥";
+                    matchBadge.style.opacity = "1";
+                    matchBadge.style.transform = "";
+                    matchBadge.classList.add("match-animation");
+                    matchBadge.addEventListener("animationend", () => {
+                        matchBadge.classList.remove("match-animation");
+                        matchBadge.style.opacity = "0";
+                    }, { once: true });
+                }
+                if ("vibrate" in navigator) navigator.vibrate([50,30,80,30,110,30,150]);
+
+                window.updateMatchesCount && window.updateMatchesCount();
+            }, 500);
+        }, { once: true });
+    } else {
+    }
+}
+
+export function onSuperPending() {
+  // Скрываем исходные кнопки
+  document.querySelectorAll(".like_d, .dislike_d").forEach(b => b.style.display = "none");
+  // Отображаем бейдж pending
+  let badge = window.singleCard?.querySelector(".badge-match");
+  if (!badge) {
+    badge = document.createElement('div');
+    badge.className = 'badge-match';
+    badge.style.opacity = '0';
+    window.singleCard.appendChild(badge);
+  }
+  if (badge) {
+    // Анимация сердца как при mutual like
+    badge.innerHTML = "❤️‍🔥";
+    badge.style.opacity = "1";
+    badge.style.transform = "";
+    badge.classList.add("match-animation");
+    badge.addEventListener("animationend", () => {
+      badge.classList.remove("match-animation");
+      badge.style.opacity = "0";
+    }, { once: true });
+    // Эффект свайпа для SuperLike pending
+    window.singleCard.style.transition = "transform 0.5s ease";
+    window.singleCard.style.transform = "translate(1000px, 0) rotate(45deg)";
+    setTimeout(() => {
+      window.singleCard.style.transition = "transform 0.5s ease";
+      window.singleCard.style.transform = "none";
+      window.customHideBadges && window.customHideBadges(window.singleCard);
+      // Анимация звезды при возврате карточки после SuperLike pending
+      const returnBadge = window.singleCard.querySelector(".badge-match");
+      if (returnBadge) {
+        returnBadge.innerHTML = "\u2b50";
+        returnBadge.style.opacity = "";
+        returnBadge.style.transform = "";
+        // eslint-disable-next-line no-unused-expressions
+        returnBadge.offsetWidth;
+        returnBadge.classList.add("match-animation");
+        returnBadge.addEventListener("animationend", () => {
+          returnBadge.classList.remove("match-animation");
+          returnBadge.style.opacity = "0";
+        }, { once: true });
+      }
+    }, 500);
+    // авто-свайп карточки при SuperLike pending временно отключён для устранения мерцания
+    // window.singleCard.style.transition = "transform 0.5s ease";
+    // window.singleCard.style.transform = "translate(1000px, 0) rotate(45deg)";
+    // setTimeout(() => {
+    //   window.moveToNextCandidate && window.moveToNextCandidate();
+    //   window.updateMatchesCount && window.updateMatchesCount();
+    // }, 500);
+  } else {
+  }
+  // Переходим к Next/Chat кнопкам
+  let likeBtn = document.querySelector(".like_d");
+  if (likeBtn) {
+    const btnClone = likeBtn.cloneNode(true);
+    likeBtn.parentNode.replaceChild(btnClone, likeBtn);
+    likeBtn = btnClone;
+  }
+  let dislikeBtn = document.querySelector(".dislike_d");
+  if (dislikeBtn) {
+    const btnClone = dislikeBtn.cloneNode(true);
+    dislikeBtn.parentNode.replaceChild(btnClone, dislikeBtn);
+    dislikeBtn = btnClone;
+  }
+  const cand = window.candidates?.find(c => String(c.id || c.userId) === window.singleCard?.dataset?.userId);
+  if (likeBtn) {
+    likeBtn.style.display = "flex";
+    likeBtn.innerHTML = `<img class="next" src="/img/next.svg" alt="next" />`;
+    likeBtn.onclick = () => {
+      window.singleCard.style.transition = "transform 0.5s ease";
+      window.singleCard.style.transform = "translate(1000px, 0) rotate(45deg)";
+      setTimeout(() => {
+        // УБИРАЕМ удаление кандидата отсюда - оно будет в moveToNextCandidate
+        // const idx = window.candidates?.findIndex(c => String(c.id || c.userId) === window.singleCard?.dataset?.userId);
+        // if (idx >= 0) {
+        //   window.swipeHistory?.push(window.candidates[idx]);
+        //   window.candidates.splice(idx, 1);
+        // }
+        window.singleCard.style.transition = "none";
+        window.singleCard.style.transform = "none";
+        window.customHideBadges && window.customHideBadges(window.singleCard);
+        window.moveToNextCandidate && window.moveToNextCandidate('right');
+        window.showCandidate && window.showCandidate();
+        window.setupSwipeControls && window.setupSwipeControls();
+        window.updateMatchesCount && window.updateMatchesCount();
+      }, 500);
+    };
+  }
+  if (dislikeBtn) {
+    dislikeBtn.style.display = "flex";
+    if (cand && cand.username) {
+      dislikeBtn.style.backgroundColor = "#55a6ff";
+      dislikeBtn.innerHTML = `<img class="chat" src="/img/chat.svg" alt="chat" />`;
+      dislikeBtn.onclick = () => {
+        window.openChat && window.openChat(cand.username);
+      };
+    } else {
+      dislikeBtn.innerHTML = "\ud83d\udc4b";
+      dislikeBtn.style.backgroundColor = "#ff5e5e";
+      dislikeBtn.style.fontSize = "36px";
+      dislikeBtn.onclick = async () => {
+        try {
+          sendPush({ senderId: window.currentUser.userId, senderUsername: window.currentUser.username || window.currentUser.name, receiverId: cand.id || cand.userId });
+        } catch (err) {
+          console.error("\u274c /api/sendPush error after superlike pending:", err);
+        }
+      };
+    }
+  }
+}
+
+export function onSuperRejected() {
+  const badge = window.singleCard?.querySelector(".badge-match");
+  if (badge) {
+    badge.textContent = "К сожалению, пользователь не ответил взаимностью…";
+    badge.style.opacity = "1";
+    badge.style.transform = "";
+  } else {
+  }
+}
+
+// Обработчик клика по кнопке Like (первый шаг: только проверки)
+export function handleLikeClick() {
+    // Проверка наличия кандидатов и текущего индекса
+    if (!window.candidates || window.candidates.length === 0 || window.currentIndex >= window.candidates.length) {
+        window.showCandidate && window.showCandidate();
+    } else {
+        window.doLike && window.doLike();
+    }
+}
+
+// Функция для навешивания обработчика на кнопку Like
+export function attachLikeHandler() {
+    const likeBtn = document.querySelector('.like_d');
+    if (likeBtn) {
+        likeBtn.addEventListener('click', handleLikeClick);
+    }
+}
+
+// Асинхронная функция doLike (добавлена первая часть логики)
+export async function doLike() {
+
+    if (window.inMutualMatch) {
+
+        window.moveToNextCandidate && window.moveToNextCandidate('right');
+        return;
+    }
+    const topUserId = window.singleCard?.dataset?.userId;
+
+    const idx = window.candidates?.findIndex(c => String(c.id || c.userId) === String(topUserId));
+
+    if (idx < 0) return;
+    const candidate = window.candidates[idx];
+    try {
+
+        const json = await sendLike(window.currentUser.userId, topUserId);
+
+        
+        if (json && json.success) {
+            window.currentUser.likes = window.currentUser.likes || [];
+            window.currentUser.likes.push(topUserId);
+            
+            // Проверяем, есть ли взаимный лайк
+            if (json.isMatch || ((candidate.id || candidate.userId) && (candidate.id || candidate.userId).startsWith('VALID_') && candidate.username)) {
+
+                window.onMutualLike && window.onMutualLike();
+            } else {
+
+                // Анимация улетающей карточки вправо
+                window.singleCard.style.transition = "transform 0.5s ease";
+                window.singleCard.style.transform = `translate(1000px, 0) rotate(45deg)`;
+                setTimeout(() => {
+                    window.swipeHistory.push(window.candidates[idx]);
+                    // УБИРАЕМ удаление кандидата отсюда - оно будет в moveToNextCandidate
+                    // window.candidates.splice(idx, 1);
+                    window.moveToNextCandidate && window.moveToNextCandidate('right');
+                    window.updateMatchesCount && window.updateMatchesCount();
+                }, 500);
+            }
+        }
+    } catch (err) {
+        console.error('❌ Ошибка лайка:', err);
+        window.showToast && window.showToast('Ошибка при лайке');
+    }
+}
+
+// Обработчик клика по кнопке Dislike (первый шаг: только проверки)
+export function handleDislikeClick() {
+    // Проверка наличия кандидатов и текущего индекса
+    if (!window.candidates || window.candidates.length === 0 || window.currentIndex >= window.candidates.length) {
+        window.showCandidate && window.showCandidate();
+    } else {
+        window.doDislike && window.doDislike();
+    }
+}
+
+// Функция для навешивания обработчика на кнопку Dislike
+export function attachDislikeHandler() {
+    const dislikeBtn = document.querySelector('.dislike_d');
+    if (dislikeBtn) {
+        dislikeBtn.addEventListener('click', handleDislikeClick);
+    }
+}
+
+// Асинхронная функция doDislike (добавлена первая часть логики)
+export async function doDislike() {
+
+    if (window.inMutualMatch) {
+
+        window.moveToNextCandidate && window.moveToNextCandidate('left');
+        return;
+    }
+    const topUserId = window.singleCard?.dataset?.userId;
+
+    const idx = window.candidates?.findIndex(c => String(c.id || c.userId) === String(topUserId));
+
+    if (idx < 0) return;
+    // Удаляем кандидата из массива после дизлайка
+    const candidate = window.candidates[idx];
+    const url = `${window.API_URL}/dislike`;
+    try {
+
+        sendDislike(window.currentUser.userId, topUserId);
+            window.currentUser.dislikes = window.currentUser.dislikes || [];
+            window.currentUser.dislikes.push(topUserId);
+        window.moveToNextCandidate && window.moveToNextCandidate('left');
+    } catch (err) {
+        console.error('❌ Ошибка дизлайка:', err);
+        window.showToast && window.showToast('Ошибка при дизлайке');
+    }
+}
+
+export function openChat(username) {
+  const url = `https://t.me/${username}`;
+  if (window.tg && window.tg.openTelegramLink) {
+    window.tg.openTelegramLink(url);
+  } else {
+    window.open(url, "_blank");
+  }
+}
+
+export function showToast(message) {
+  const toast = document.createElement('div');
+  toast.textContent = message;
+  Object.assign(toast.style, {
+    position: 'absolute',
+    top: '20px',
+    left: '50%',
+    transform: 'translateX(-50%)',
+    background: 'rgba(0,0,0,0.7)',
+    color: '#fff',
+    padding: '10px 20px',
+    borderRadius: '25px',
+    maxWidth: '100%',
+    zIndex: '2100',
+    pointerEvents: 'none',
+    opacity: '1',
+    transition: 'opacity 0.5s ease',
+  });
+  document.body.appendChild(toast);
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    setTimeout(() => toast.remove(), 500);
+  }, 2000);
+}
+
+// TODO: Вынести сюда остальной код свайпа по мере рефакторинга 
+
+export function customRenderPaginator(paginatorEl, count, activeIndex) {
+  paginatorEl.innerHTML = "";
+  if (count < 2) {
+    paginatorEl.style.display = "none";
+    return;
+  }
+  paginatorEl.style.display = "flex";
+  for (let i = 0; i < count; i++) {
+    const dot = document.createElement("div");
+    dot.className = i === activeIndex ? "pag_active" : "pag";
+    paginatorEl.appendChild(dot);
+  }
+}
+
+export function cyclePhoto() {
+  const singleCard = document.getElementById("singleCard");
+  const rawPhotos = singleCard.dataset.photos ? JSON.parse(singleCard.dataset.photos) : [];
+  if (rawPhotos.length < 2) return;
+  window.currentPhotoIndex = (window.currentPhotoIndex + 1) % rawPhotos.length;
+  singleCard.style.backgroundImage = `url('${rawPhotos[window.currentPhotoIndex]}')`;
+  const paginatorEl = singleCard.querySelector(".paginator");
+  if (paginatorEl) {
+    customRenderPaginator(paginatorEl, rawPhotos.length, window.currentPhotoIndex);
+  }
+}
+
+export function setupSwipeHandlers() {
+  const singleCard = document.getElementById("singleCard");
+  let isDragging = false, startX = 0, startY = 0, currentX = 0, currentY = 0;
+  const maxDistance = 200, minFont = 64, maxFont = 128, threshold = 100;
+  if (!singleCard) return;
+  singleCard.addEventListener("pointerdown", (e) => {
+    if (window.currentIndex >= window.candidates.length) return;
+    isDragging = true;
+    startX = e.clientX;
+    startY = e.clientY;
+    currentX = 0;
+    currentY = 0;
+    singleCard.setPointerCapture(e.pointerId);
+    singleCard.style.transition = "none";
+  });
+  singleCard.addEventListener("pointermove", (e) => {
+    if (!isDragging) return;
+    currentX = e.clientX - startX;
+    currentY = e.clientY - startY;
+    const rot = (currentX / 200) * 20;
+    singleCard.style.transform = `translate(${currentX}px, ${currentY}px) rotate(${rot}deg)`;
+    singleCard.style.boxShadow = "0 8px 24px rgba(0,0,0,0.3)";
+    const likeB = singleCard.querySelector(".badge-like");
+    const nopeB = singleCard.querySelector(".badge-nope");
+    let ratio = Math.min(Math.abs(currentX) / maxDistance, 1);
+    let fontNow = minFont + (maxFont - minFont) * ratio;
+    if (currentX > 0) {
+      if (likeB) { likeB.style.opacity = ratio; likeB.style.fontSize = fontNow + "px"; }
+      if (nopeB) { nopeB.style.opacity = 0; nopeB.style.fontSize = minFont + "px"; }
+    } else {
+      if (nopeB) { nopeB.style.opacity = ratio; nopeB.style.fontSize = fontNow + "px"; }
+      if (likeB) { likeB.style.opacity = 0; likeB.style.fontSize = minFont + "px"; }
+    }
+  });
+  singleCard.addEventListener("pointerup", e => {
+    isDragging = false;
+    singleCard.releasePointerCapture(e.pointerId);
+    const distX = Math.abs(currentX), distY = Math.abs(currentY);
+    if (distX < 10 && distY < 10) {
+      window.cyclePhoto();
+    } else if (distX > threshold) {
+      const dir = currentX > 0 ? "right" : "left";
+      if (dir === "right") {
+        window.doLike();
+      } else {
+        window.doDislike();
+      }
+    } else {
+      // плавный возврат при неполном свайпе
+      singleCard.style.transition = "transform 0.3s ease";
+      singleCard.style.transform = "none";
+      singleCard.style.boxShadow = "0 2px 8px rgba(0,0,0,0.2)";
+      window.customHideBadges(singleCard);
+      currentX = 0;
+      currentY = 0;
+    }
+  });
+}
+
+export async function updateMatchesCount() {
+  const badge = document.getElementById("matches-count");
+  if (!badge) return;
+  try {
+    const url = `${window.API_URL}/matches?userId=${window.currentUser.userId}`;
+    console.log('[updateMatchesCount] fetch:', url);
+    const resp = await fetch(url);
+    const json = await resp.json();
+    console.log('[updateMatchesCount] response:', json);
+    if (!json.success || !Array.isArray(json.data)) {
+      badge.style.display = "none";
+      return;
+    }
+    const count = new Set(json.data.map(m => m.id)).size;
+    badge.textContent = count > 0 ? count : "";
+    badge.style.display = count > 0 ? "inline-block" : "none";
+  } catch (err) {
+    console.error("❌ updateMatchesCount:", err);
+  }
+}
+
+export function updateSwipeScreen() {
+    window.updateMatchesCount && window.updateMatchesCount();
+    const bigAvatar = document.querySelector("#screen-swipe .avatar_small_2");
+    const userId2El = document.querySelector("#screen-swipe .user-id2");
+    if (bigAvatar) {
+        if (window.currentUser.photos && window.currentUser.photos.length > 0 && window.currentUser.photos[0]) {
+            bigAvatar.src = window.currentUser.photos[0];
+        } else {
+            bigAvatar.src = '/img/avatar.svg'; // Fallback на корректную заглушку
+        }
+    }
+    if (userId2El) {
+        const displayName = window.currentUser.name.length > 10 ? window.currentUser.name.substring(0, 10) + '...' : window.currentUser.name;
+        userId2El.innerHTML = `<span class="user-link">${displayName}</span>`;
+    }
+}
+
+// --- ДОБАВИТЬ: функция для обновления пользователя после изменений ---
+async function refreshCurrentUser() {
+  try {
+    const userId = window.currentUser?.userId;
+    if (!userId) return;
+    const updated = await window.getUser(userId);
+    if (updated && updated.success && updated.user) {
+      window.currentUser = updated.user;
+      if (typeof updateSwipeScreen === 'function') updateSwipeScreen();
+    }
+  } catch (e) {
+    console.error('Ошибка обновления пользователя:', e);
+  }
+}
+
+export async function loadCandidates() {
+  const userId = window.currentUser?.userId;
+  console.log('[loadCandidates] userId:', userId);
+  try {
+    const url = `${window.API_URL}/candidates?userId=${userId}`;
+    console.log('[loadCandidates] fetch:', url);
+    const resp = await fetch(url);
+    const json = await resp.json();
+    console.log('[loadCandidates] response:', json);
+    if (!json || !json.success) {
+      window.showToast && window.showToast('Ошибка загрузки кандидатов: ' + (json?.error || 'Неизвестная ошибка'));
+      return;
+    }
+    window.candidates = json.candidates || [];
+    window.currentIndex = 0;
+    if (typeof updateSwipeScreen === 'function') updateSwipeScreen();
+  } catch (e) {
+    console.error('[loadCandidates] error:', e);
+  }
+}
+
+export async function initSwipeScreen() {
+  showSwipeSkeleton();
+  // setTimeout(() => { hideSwipeSkeleton(); }, 2000); // УБРАНО: отладочный таймаут
+  // Обновляем UI (аватар, имя, бейдж)
+  window.updateSwipeScreen && window.updateSwipeScreen();
+  window.updateMatchesCount && window.updateMatchesCount();
+
+  // Навешиваем переход на профиль по клику на аватар
+  const avatarFrame = document.querySelector("#screen-swipe .ava-frame");
+  if (avatarFrame) {
+    if (document.querySelector("#screen-swipe .header-pro-badge")) {
+      avatarFrame.classList.add("has-pro");
+    } else {
+      avatarFrame.classList.remove("has-pro");
+    }
+    avatarFrame.style.cursor = "pointer";
+    avatarFrame.onclick = () => {
+      window.viewingCandidate = null;
+      window.showScreen && window.showScreen("screen-profile");
+    };
+  }
+
+  // Загружаем пользователя и кандидатов
+  await window.loadCandidates();
+  window.setupSwipeControls && window.setupSwipeControls();
+  if (window.currentUser.is_pro) {
+    sendPush({ userId: window.currentUser.userId });
+  }
+  if (window.currentUser.needPhoto === 1) {
+    window.candidates = [];
+    window.showCandidate && window.showCandidate();
+    window.updateMatchesCount && window.updateMatchesCount();
+    window.currentIndex = 0;
+    hideSwipeSkeleton();
+  } else {
+    await window.loadCandidates();
+    hideSwipeSkeleton();
+  }
+}
+
+function showSwipeSkeleton() {
+  let skeleton = document.getElementById('swipe-skeleton');
+  if (!skeleton) {
+    // Если skeleton был удалён, создаём его заново из шаблона
+    const swipeScreen = document.getElementById('screen-swipe');
+    if (swipeScreen) {
+      const skeletonHTML = `
+      <div class="card-container" id="swipe-skeleton" style="display: block;">
+        <div class="photo-frame">
+          <div class="card skeleton">
+            <div class="user-info">
+              <div class="name-age-container"></div>
+              <div class="candidate-goals">
+                <div class="skeleton skeleton--text" style="width: 80%; height: 14px;"></div>
+              </div>
+              <p class="user-bio">
+                <span class="skeleton skeleton--text" style="width: 40%; height: 20px"></span>
+                <span class="skeleton skeleton--text" style="width: 70%;"></span>
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>`;
+      swipeScreen.insertAdjacentHTML('afterbegin', skeletonHTML);
+    }
+  }
+}
+
+function hideSwipeSkeleton() {
+  const skeleton = document.getElementById('swipe-skeleton');
+  if (skeleton) {
+    skeleton.remove();
+  }
+} 
+window.showCandidate = showCandidate; 

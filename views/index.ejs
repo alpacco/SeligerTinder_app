@@ -45,8 +45,11 @@
       100% { transform: rotate(360deg); }
     }
   </style>
-  <link rel="stylesheet" href="/css/style.css" />
-  <link rel="stylesheet" href="/css/pro.css" />
+  <% if (hashMap && hashMap['main-css']) { %>
+  <link rel="stylesheet" href="/css/<%= hashMap['main-css'] %>" />
+  <% } else { %>
+  <link rel="stylesheet" href="/css/main.css" />
+  <% } %>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body>

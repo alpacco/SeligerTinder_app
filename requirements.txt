@@ -1,0 +1,44 @@
+# Python Backend для SeligerTinder
+
+# Web Framework
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+python-multipart==0.0.6
+
+# Telegram Bot
+python-telegram-bot==20.7
+
+# Database
+psycopg2-binary==2.9.9
+
+# Image Processing
+opencv-python-headless==4.8.1.78
+Pillow==10.1.0
+sharp==0.1.0  # Для HEIC, но может не работать - используем Pillow
+
+# Utilities
+python-dotenv==1.0.0
+pydantic==2.5.0
+pydantic-settings==2.1.0
+
+# Security & Middleware
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+slowapi==0.1.9  # Rate limiting для FastAPI
+
+# HTTP Client
+httpx==0.25.2
+aiohttp==3.9.1
+
+# Cron jobs
+APScheduler==3.10.4
+
+# File handling
+aiofiles==23.2.1
+
+# JSON
+orjson==3.9.10
+
+# Logging
+loguru==0.7.2
+

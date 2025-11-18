@@ -118,3 +118,17 @@ Google Vision/vision-key.json
 # Build outputs
 dist/
 build/
+*.json
+*key*.json
+*secret*.json
+*credentials*.json
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+*.egg
+*.egg-info/
+dist/
+build/

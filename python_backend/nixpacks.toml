@@ -1,0 +1,19 @@
+[phases.setup]
+nixPkgs = [
+  "python311",
+  "opencv",
+  "python311Packages.pip"
+]
+
+[phases.install]
+cmds = [
+  "pip install --upgrade pip",
+  "pip install -r requirements.txt"
+]
+
+[phases.build]
+cmds = ["echo 'Build phase completed'"]
+
+[start]
+cmd = "python python_backend/start.py"
+
