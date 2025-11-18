@@ -18,7 +18,7 @@ npm_config_python = "python3"
 cmds = ["export PYTHON=$(which python3) && export npm_config_python=$(which python3) && npm i"]
 
 [phases.build]
-cmds = ["npm rebuild @u4/opencv4nodejs || echo 'OpenCV rebuild skipped - will continue without face detection'"]
+cmds = ["npm rebuild @u4/opencv4nodejs 2>&1 || echo '⚠️ OpenCV rebuild failed - face detection will be disabled'"]
 
 [start]
 cmd = "node start-all.js"
