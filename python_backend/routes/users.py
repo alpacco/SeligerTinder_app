@@ -118,17 +118,19 @@ async def join_user(user: UserCreate):
         print(f"[POST /api/join] Регистрация пользователя: userId={user.userId}, name={user.name}")
         
         # Проверяем, существует ли пользователь
-        existing = await db_get('SELECT "userId" FROM users WHERE "userId" = $1', [user.userId])
+        # Используем ? - функция adapt_sql_for_postgres преобразует в $1, $2...
+        existing = await db_get('SELECT "userId" FROM users WHERE "userId" = ?', [user.userId])
         
         if existing:
             print(f"[POST /api/join] Пользователь уже существует: {user.userId}")
             return {"success": True, "message": "User already exists"}
         
         # Создаём нового пользователя
+        # Используем ? - функция adapt_sql_for_postgres преобразует в $1, $2...
         # Используем NOW() вместо datetime('now') для PostgreSQL
         await db_run(
             """INSERT INTO users ("userId", name, username, "photoUrl", gender, "createdAt")
-               VALUES ($1, $2, $3, $4, $5, NOW())
+               VALUES (?, ?, ?, ?, ?, NOW())
                ON CONFLICT ("userId") DO NOTHING""",
             [user.userId, user.name or "", user.username or "", user.photoUrl or "", user.gender or ""]
         )
