@@ -132,47 +132,51 @@ const db = {
   run: (sql, params, callback) => {
     // Адаптируем SQL для PostgreSQL
     let adaptedSql = sql;
-    // 1. Заменяем SQLite-специфичные конструкции на PostgreSQL
+    let uniqueCol = null;
+    
+    // 1. Сначала заменяем SQLite-специфичные конструкции на PostgreSQL
     // INSERT OR IGNORE -> INSERT ... ON CONFLICT DO NOTHING
     if (adaptedSql.match(/INSERT\s+OR\s+IGNORE/i)) {
       // Находим таблицу и поля
-      const match = adaptedSql.match(/INSERT\s+OR\s+IGNORE\s+INTO\s+(\w+)\s*\(([^)]+)\)/i);
+      const match = adaptedSql.match(/INSERT\s+OR\s+IGNORE\s+INTO\s+(\w+)\s*\(([^)]+)\)\s+VALUES/i);
       if (match) {
         const tableName = match[1];
         const columns = match[2];
-        // Находим UNIQUE колонку (обычно userId)
-        const uniqueCol = columns.split(',').find(col => col.trim().toLowerCase().includes('userid'))?.trim() || columns.split(',')[0].trim();
-        // Заменяем на PostgreSQL синтаксис
-        adaptedSql = adaptedSql.replace(
-          /INSERT\s+OR\s+IGNORE\s+INTO\s+(\w+)\s*\(([^)]+)\)/i,
-          `INSERT INTO $1 ($2) ON CONFLICT ("${uniqueCol}") DO NOTHING`
-        );
+        // Находим UNIQUE колонку (обычно userId) - БЕЗ кавычек пока
+        const cols = columns.split(',').map(c => c.trim());
+        uniqueCol = cols.find(col => col.toLowerCase() === 'userid' || col.toLowerCase().includes('userid')) || cols[0];
+        // Заменяем INSERT OR IGNORE на INSERT, ON CONFLICT добавим после VALUES
+        adaptedSql = adaptedSql.replace(/INSERT\s+OR\s+IGNORE\s+INTO/i, 'INSERT INTO');
       }
     }
     // INSERT OR REPLACE -> INSERT ... ON CONFLICT DO UPDATE
     if (adaptedSql.match(/INSERT\s+OR\s+REPLACE/i)) {
-      const match = adaptedSql.match(/INSERT\s+OR\s+REPLACE\s+INTO\s+(\w+)\s*\(([^)]+)\)/i);
+      const match = adaptedSql.match(/INSERT\s+OR\s+REPLACE\s+INTO\s+(\w+)\s*\(([^)]+)\)\s+VALUES/i);
       if (match) {
-        const tableName = match[1];
         const columns = match[2];
-        const uniqueCol = columns.split(',').find(col => col.trim().toLowerCase().includes('userid'))?.trim() || columns.split(',')[0].trim();
-        const colList = columns.split(',').map(c => c.trim()).join(', ');
-        const updateList = columns.split(',').map(c => {
-          const col = c.trim();
-          return `"${col}" = EXCLUDED."${col}"`;
-        }).join(', ');
-        adaptedSql = adaptedSql.replace(
-          /INSERT\s+OR\s+REPLACE\s+INTO\s+(\w+)\s*\(([^)]+)\)\s+VALUES\s*\(([^)]+)\)/i,
-          `INSERT INTO $1 ($2) VALUES ($3) ON CONFLICT ("${uniqueCol}") DO UPDATE SET ${updateList}`
-        );
+        const cols = columns.split(',').map(c => c.trim());
+        uniqueCol = cols.find(col => col.toLowerCase() === 'userid' || col.toLowerCase().includes('userid')) || cols[0];
+        adaptedSql = adaptedSql.replace(/INSERT\s+OR\s+REPLACE\s+INTO/i, 'INSERT INTO');
       }
     }
+    
     // 2. Заменяем все camelCase идентификаторы на версии с кавычками
     adaptedSql = adaptedSql.replace(/\b(userId|photoUrl|createdAt|needPhoto|pushSent|is_pro|pro_start|pro_end|last_login|super_likes_count|photo1|photo2|photo3|photoBot|PriceGift|NameGift|PhotoGift|AboutGift|SaleGift|StopGift)\b/g, '"$1"');
+    
     // 3. Заменяем SQLite placeholders ? на PostgreSQL $1, $2, $3...
     if (params && params.length > 0) {
       let paramIndex = 1;
       adaptedSql = adaptedSql.replace(/\?/g, () => `$${paramIndex++}`);
+    }
+    
+    // 4. Добавляем ON CONFLICT после VALUES (если был INSERT OR IGNORE)
+    if (uniqueCol) {
+      // Убеждаемся, что uniqueCol тоже в кавычках, если это camelCase
+      const quotedUniqueCol = uniqueCol.match(/^(userId|photoUrl|createdAt|needPhoto|pushSent|is_pro|pro_start|pro_end|last_login|super_likes_count|photo1|photo2|photo3|photoBot|PriceGift|NameGift|PhotoGift|AboutGift|SaleGift|StopGift)$/i) 
+        ? `"${uniqueCol}"` 
+        : uniqueCol;
+      // Находим конец VALUES(...) и добавляем ON CONFLICT
+      adaptedSql = adaptedSql.replace(/(VALUES\s*\([^)]+\))\s*$/i, `$1 ON CONFLICT (${quotedUniqueCol}) DO NOTHING`);
     }
     
     pool.query(adaptedSql, params || [])
@@ -207,26 +211,37 @@ const db = {
   query: (sql, params) => {
     // Адаптируем SQL для PostgreSQL
     let adaptedSql = sql;
-    // 1. Заменяем SQLite-специфичные конструкции
+    let uniqueCol = null;
+    
+    // 1. Сначала заменяем SQLite-специфичные конструкции
     if (adaptedSql.match(/INSERT\s+OR\s+IGNORE/i)) {
-      const match = adaptedSql.match(/INSERT\s+OR\s+IGNORE\s+INTO\s+(\w+)\s*\(([^)]+)\)/i);
+      const match = adaptedSql.match(/INSERT\s+OR\s+IGNORE\s+INTO\s+(\w+)\s*\(([^)]+)\)\s+VALUES/i);
       if (match) {
         const columns = match[2];
-        const uniqueCol = columns.split(',').find(col => col.trim().toLowerCase().includes('userid'))?.trim() || columns.split(',')[0].trim();
-        adaptedSql = adaptedSql.replace(
-          /INSERT\s+OR\s+IGNORE\s+INTO\s+(\w+)\s*\(([^)]+)\)/i,
-          `INSERT INTO $1 ($2) ON CONFLICT ("${uniqueCol}") DO NOTHING`
-        );
+        const cols = columns.split(',').map(c => c.trim());
+        uniqueCol = cols.find(col => col.toLowerCase() === 'userid' || col.toLowerCase().includes('userid')) || cols[0];
+        adaptedSql = adaptedSql.replace(/INSERT\s+OR\s+IGNORE\s+INTO/i, 'INSERT INTO');
       }
     }
+    
     // 2. Заменяем все camelCase идентификаторы на версии с кавычками
     adaptedSql = adaptedSql.replace(/\b(userId|photoUrl|createdAt|needPhoto|pushSent|is_pro|pro_start|pro_end|last_login|super_likes_count|photo1|photo2|photo3|photoBot|PriceGift|NameGift|PhotoGift|AboutGift|SaleGift|StopGift)\b/g, '"$1"');
+    
     // 3. Заменяем SQLite placeholders ? на PostgreSQL $1, $2, $3...
     const paramsArray = params || [];
     if (paramsArray.length > 0) {
       let paramIndex = 1;
       adaptedSql = adaptedSql.replace(/\?/g, () => `$${paramIndex++}`);
     }
+    
+    // 4. Добавляем ON CONFLICT после VALUES (если был INSERT OR IGNORE)
+    if (uniqueCol) {
+      const quotedUniqueCol = uniqueCol.match(/^(userId|photoUrl|createdAt|needPhoto|pushSent|is_pro|pro_start|pro_end|last_login|super_likes_count|photo1|photo2|photo3|photoBot|PriceGift|NameGift|PhotoGift|AboutGift|SaleGift|StopGift)$/i) 
+        ? `"${uniqueCol}"` 
+        : uniqueCol;
+      adaptedSql = adaptedSql.replace(/(VALUES\s*\([^)]+\))\s*$/i, `$1 ON CONFLICT (${quotedUniqueCol}) DO NOTHING`);
+    }
+    
     return pool.query(adaptedSql, paramsArray);
   },
 

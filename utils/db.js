@@ -18,24 +18,36 @@ function dbGet(db, sql, params = []) {
     if (USE_POSTGRES) {
       // PostgreSQL - адаптируем SQL для camelCase полей и placeholders
       let adaptedSql = sql;
-      // Заменяем INSERT OR IGNORE на ON CONFLICT DO NOTHING
+      let uniqueCol = null;
+      
+      // 1. Сначала заменяем INSERT OR IGNORE
       if (adaptedSql.match(/INSERT\s+OR\s+IGNORE/i)) {
-        const match = adaptedSql.match(/INSERT\s+OR\s+IGNORE\s+INTO\s+(\w+)\s*\(([^)]+)\)/i);
+        const match = adaptedSql.match(/INSERT\s+OR\s+IGNORE\s+INTO\s+(\w+)\s*\(([^)]+)\)\s+VALUES/i);
         if (match) {
           const columns = match[2];
-          const uniqueCol = columns.split(',').find(col => col.trim().toLowerCase().includes('userid'))?.trim() || columns.split(',')[0].trim();
-          adaptedSql = adaptedSql.replace(
-            /INSERT\s+OR\s+IGNORE\s+INTO\s+(\w+)\s*\(([^)]+)\)/i,
-            `INSERT INTO $1 ($2) ON CONFLICT ("${uniqueCol}") DO NOTHING`
-          );
+          const cols = columns.split(',').map(c => c.trim());
+          uniqueCol = cols.find(col => col.toLowerCase() === 'userid' || col.toLowerCase().includes('userid')) || cols[0];
+          adaptedSql = adaptedSql.replace(/INSERT\s+OR\s+IGNORE\s+INTO/i, 'INSERT INTO');
         }
       }
+      
+      // 2. Заменяем camelCase идентификаторы
       adaptedSql = adaptedSql.replace(/\b(userId|photoUrl|createdAt|needPhoto|pushSent|is_pro|pro_start|pro_end|last_login|super_likes_count|photo1|photo2|photo3|photoBot|PriceGift|NameGift|PhotoGift|AboutGift|SaleGift|StopGift)\b/g, '"$1"');
-      // Заменяем ? на $1, $2, $3...
+      
+      // 3. Заменяем ? на $1, $2, $3...
       if (params && params.length > 0) {
         let paramIndex = 1;
         adaptedSql = adaptedSql.replace(/\?/g, () => `$${paramIndex++}`);
       }
+      
+      // 4. Добавляем ON CONFLICT после VALUES
+      if (uniqueCol) {
+        const quotedUniqueCol = uniqueCol.match(/^(userId|photoUrl|createdAt|needPhoto|pushSent|is_pro|pro_start|pro_end|last_login|super_likes_count|photo1|photo2|photo3|photoBot|PriceGift|NameGift|PhotoGift|AboutGift|SaleGift|StopGift)$/i) 
+          ? `"${uniqueCol}"` 
+          : uniqueCol;
+        adaptedSql = adaptedSql.replace(/(VALUES\s*\([^)]+\))\s*$/i, `$1 ON CONFLICT (${quotedUniqueCol}) DO NOTHING`);
+      }
+      
       db.query(adaptedSql, params)
         .then(result => resolve(result.rows[0] || null))
         .catch(reject);
@@ -64,24 +76,36 @@ function dbAll(db, sql, params = []) {
     if (USE_POSTGRES) {
       // PostgreSQL - адаптируем SQL для camelCase полей и placeholders
       let adaptedSql = sql;
-      // Заменяем INSERT OR IGNORE на ON CONFLICT DO NOTHING
+      let uniqueCol = null;
+      
+      // 1. Сначала заменяем INSERT OR IGNORE
       if (adaptedSql.match(/INSERT\s+OR\s+IGNORE/i)) {
-        const match = adaptedSql.match(/INSERT\s+OR\s+IGNORE\s+INTO\s+(\w+)\s*\(([^)]+)\)/i);
+        const match = adaptedSql.match(/INSERT\s+OR\s+IGNORE\s+INTO\s+(\w+)\s*\(([^)]+)\)\s+VALUES/i);
         if (match) {
           const columns = match[2];
-          const uniqueCol = columns.split(',').find(col => col.trim().toLowerCase().includes('userid'))?.trim() || columns.split(',')[0].trim();
-          adaptedSql = adaptedSql.replace(
-            /INSERT\s+OR\s+IGNORE\s+INTO\s+(\w+)\s*\(([^)]+)\)/i,
-            `INSERT INTO $1 ($2) ON CONFLICT ("${uniqueCol}") DO NOTHING`
-          );
+          const cols = columns.split(',').map(c => c.trim());
+          uniqueCol = cols.find(col => col.toLowerCase() === 'userid' || col.toLowerCase().includes('userid')) || cols[0];
+          adaptedSql = adaptedSql.replace(/INSERT\s+OR\s+IGNORE\s+INTO/i, 'INSERT INTO');
         }
       }
+      
+      // 2. Заменяем camelCase идентификаторы
       adaptedSql = adaptedSql.replace(/\b(userId|photoUrl|createdAt|needPhoto|pushSent|is_pro|pro_start|pro_end|last_login|super_likes_count|photo1|photo2|photo3|photoBot|PriceGift|NameGift|PhotoGift|AboutGift|SaleGift|StopGift)\b/g, '"$1"');
-      // Заменяем ? на $1, $2, $3...
+      
+      // 3. Заменяем ? на $1, $2, $3...
       if (params && params.length > 0) {
         let paramIndex = 1;
         adaptedSql = adaptedSql.replace(/\?/g, () => `$${paramIndex++}`);
       }
+      
+      // 4. Добавляем ON CONFLICT после VALUES
+      if (uniqueCol) {
+        const quotedUniqueCol = uniqueCol.match(/^(userId|photoUrl|createdAt|needPhoto|pushSent|is_pro|pro_start|pro_end|last_login|super_likes_count|photo1|photo2|photo3|photoBot|PriceGift|NameGift|PhotoGift|AboutGift|SaleGift|StopGift)$/i) 
+          ? `"${uniqueCol}"` 
+          : uniqueCol;
+        adaptedSql = adaptedSql.replace(/(VALUES\s*\([^)]+\))\s*$/i, `$1 ON CONFLICT (${quotedUniqueCol}) DO NOTHING`);
+      }
+      
       db.query(adaptedSql, params)
         .then(result => resolve(result.rows || []))
         .catch(reject);
@@ -110,24 +134,36 @@ function dbRun(db, sql, params = []) {
     if (USE_POSTGRES) {
       // PostgreSQL - адаптируем SQL для camelCase полей и placeholders
       let adaptedSql = sql;
-      // Заменяем INSERT OR IGNORE на ON CONFLICT DO NOTHING
+      let uniqueCol = null;
+      
+      // 1. Сначала заменяем INSERT OR IGNORE
       if (adaptedSql.match(/INSERT\s+OR\s+IGNORE/i)) {
-        const match = adaptedSql.match(/INSERT\s+OR\s+IGNORE\s+INTO\s+(\w+)\s*\(([^)]+)\)/i);
+        const match = adaptedSql.match(/INSERT\s+OR\s+IGNORE\s+INTO\s+(\w+)\s*\(([^)]+)\)\s+VALUES/i);
         if (match) {
           const columns = match[2];
-          const uniqueCol = columns.split(',').find(col => col.trim().toLowerCase().includes('userid'))?.trim() || columns.split(',')[0].trim();
-          adaptedSql = adaptedSql.replace(
-            /INSERT\s+OR\s+IGNORE\s+INTO\s+(\w+)\s*\(([^)]+)\)/i,
-            `INSERT INTO $1 ($2) ON CONFLICT ("${uniqueCol}") DO NOTHING`
-          );
+          const cols = columns.split(',').map(c => c.trim());
+          uniqueCol = cols.find(col => col.toLowerCase() === 'userid' || col.toLowerCase().includes('userid')) || cols[0];
+          adaptedSql = adaptedSql.replace(/INSERT\s+OR\s+IGNORE\s+INTO/i, 'INSERT INTO');
         }
       }
+      
+      // 2. Заменяем camelCase идентификаторы
       adaptedSql = adaptedSql.replace(/\b(userId|photoUrl|createdAt|needPhoto|pushSent|is_pro|pro_start|pro_end|last_login|super_likes_count|photo1|photo2|photo3|photoBot|PriceGift|NameGift|PhotoGift|AboutGift|SaleGift|StopGift)\b/g, '"$1"');
-      // Заменяем ? на $1, $2, $3...
+      
+      // 3. Заменяем ? на $1, $2, $3...
       if (params && params.length > 0) {
         let paramIndex = 1;
         adaptedSql = adaptedSql.replace(/\?/g, () => `$${paramIndex++}`);
       }
+      
+      // 4. Добавляем ON CONFLICT после VALUES
+      if (uniqueCol) {
+        const quotedUniqueCol = uniqueCol.match(/^(userId|photoUrl|createdAt|needPhoto|pushSent|is_pro|pro_start|pro_end|last_login|super_likes_count|photo1|photo2|photo3|photoBot|PriceGift|NameGift|PhotoGift|AboutGift|SaleGift|StopGift)$/i) 
+          ? `"${uniqueCol}"` 
+          : uniqueCol;
+        adaptedSql = adaptedSql.replace(/(VALUES\s*\([^)]+\))\s*$/i, `$1 ON CONFLICT (${quotedUniqueCol}) DO NOTHING`);
+      }
+      
       db.query(adaptedSql, params)
         .then(result => {
           resolve({
