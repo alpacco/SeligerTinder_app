@@ -4,7 +4,7 @@ const multer = require('multer');
 const fs = require('fs');
 const path = require('path');
 const { bot } = require('../bot');
-const cv = require('opencv4nodejs');
+const cv = require('@u4/opencv4nodejs');
 const sharp = require('sharp');
 
 // Инициализация OpenCV
