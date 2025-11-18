@@ -8,7 +8,9 @@ cmds = [
   ". /app/.venv/bin/activate && pip install -r requirements.txt"
 ]
 
-# Команда запуска - Railway будет использовать Procfile, но на всякий случай указываем здесь
-[start]
-cmd = "cd python_backend && . /app/.venv/bin/activate && python3.12 -m uvicorn main:app --host 0.0.0.0 --port $PORT || python -m uvicorn main:app --host 0.0.0.0 --port $PORT"
+# Railway должен использовать Procfile для запуска процессов
+# НЕ указываем [start] здесь, чтобы Railway использовал Procfile
+# Procfile содержит:
+#   web: cd python_backend && python3.12 -m uvicorn main:app --host 0.0.0.0 --port $PORT
+#   worker: cd python_backend && python3.12 bot.py
 
