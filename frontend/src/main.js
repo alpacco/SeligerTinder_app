@@ -1014,8 +1014,6 @@ function showScreen(screenId) {
         userName: currentUser?.name
       });
     }
-    const userNameSpan = document.querySelector("#screen-welcome .user-name");
-    if (userNameSpan) userNameSpan.textContent = currentUser.name;
   }
   function updateGenderScreen() {
     const smallAvatar = document.querySelector("#screen-gender .user-avatar-small");
