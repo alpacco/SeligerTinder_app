@@ -26,16 +26,23 @@ try {
 
 // Загружаем каскад для детекции лиц
 let faceClassifier = null;
-try {
-  // Используем встроенный каскад Haar для детекции лиц
-  // OpenCV4nodejs включает предобученные каскады
-  const haarPath = path.join(__dirname, '../node_modules/opencv4nodejs/build/Release/opencv4nodejs.node');
-  // Альтернативно, можно использовать встроенные каскады через cv.CASCADE_FRONTALFACE_ALT2
-  faceClassifier = new cv.CascadeClassifier(cv.HAAR_FRONTALFACE_ALT2);
-  console.log('✅ Каскад для детекции лиц загружен');
-} catch (error) {
-  console.warn('⚠️ Не удалось загрузить каскад для детекции лиц:', error.message);
-  faceClassifier = null;
+if (cv) {
+  try {
+    // Используем встроенный каскад Haar для детекции лиц
+    // OpenCV4nodejs включает предобученные каскады
+    faceClassifier = new cv.CascadeClassifier(cv.HAAR_FRONTALFACE_ALT2);
+    console.log('✅ Каскад для детекции лиц загружен');
+  } catch (error) {
+    console.warn('⚠️ Не удалось загрузить каскад для детекции лиц:', error.message);
+    // Пробуем альтернативный способ
+    try {
+      faceClassifier = new cv.CascadeClassifier(cv.HAAR_FRONTALFACE_DEFAULT);
+      console.log('✅ Каскад для детекции лиц загружен (альтернативный)');
+    } catch (err2) {
+      console.warn('⚠️ Не удалось загрузить альтернативный каскад:', err2.message);
+      faceClassifier = null;
+    }
+  }
 }
 // Функция для конвертации HEIC в JPEG
 async function convertHeicToJpeg(buffer) {
