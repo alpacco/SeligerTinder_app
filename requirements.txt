@@ -18,8 +18,8 @@ Pillow>=10.2.0
 
 # Utilities
 python-dotenv==1.0.0
-pydantic==2.5.0
-pydantic-settings==2.1.0
+pydantic>=2.9.0  # Обновлено для поддержки Python 3.13
+pydantic-settings>=2.5.0  # Обновлено для совместимости с pydantic 2.9+
 
 # Security & Middleware
 python-jose[cryptography]==3.3.0
