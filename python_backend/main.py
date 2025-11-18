@@ -185,7 +185,7 @@ async def root(request: Request):
                 hash_map = json.load(f)
         
         return templates.TemplateResponse(
-            "index.ejs",
+            "index.j2",
             {
                 "request": request,
                 "webAppUrl": web_app_url,
