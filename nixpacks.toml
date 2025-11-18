@@ -10,6 +10,10 @@ nixPkgs = [
   "cmake"
 ]
 
+[variables]
+PYTHON = "/nix/store/*/bin/python3"
+npm_config_python = "/nix/store/*/bin/python3"
+
 [phases.install]
 cmds = ["npm i"]
 
