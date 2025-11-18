@@ -111,6 +111,40 @@ if (process.env.NODE_ENV === 'development') {
   app.disable('view cache');
 }
 
+// 4.1. Раздача статических файлов (ПЕРЕД CORS для избежания 403)
+// Получаем IMAGES_DIR из db модуля (поддерживает оба типа БД)
+const { IMAGES_DIR, GIFT_IMAGES_DIR } = require('./db');
+
+app.use(express.static(path.join(__dirname, 'public'), { 
+  index: false,
+  maxAge: '1y',
+  etag: true,
+  lastModified: true,
+  setHeaders: (res, filePath) => {
+    if (filePath.endsWith('.js')) {
+      res.setHeader('Content-Type', 'application/javascript');
+      res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+    } else if (filePath.endsWith('.css')) {
+      res.setHeader('Content-Type', 'text/css');
+      res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+    } else if (filePath.match(/\.(png|jpg|jpeg|gif|svg|ico)$/)) {
+      res.setHeader('Cache-Control', 'public, max-age=86400');
+    }
+  }
+}));
+
+app.use('/data/img', express.static(IMAGES_DIR, {
+  maxAge: '1d',
+  etag: true,
+  lastModified: true
+}));
+
+app.use('/giftimg', express.static(GIFT_IMAGES_DIR, {
+  maxAge: '1d',
+  etag: true,
+  lastModified: true
+}));
+
 // 5. Настройка CORS
 const corsOrigins = [
   process.env.WEB_APP_URL, // Railway домен из переменной окружения
