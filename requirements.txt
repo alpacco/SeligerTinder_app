@@ -14,7 +14,7 @@ psycopg2-binary==2.9.9
 # Image Processing
 opencv-python-headless==4.8.1.78
 Pillow>=10.2.0
-sharp==0.1.0  # Для HEIC, но может не работать - используем Pillow
+# sharp удален - не используется, используем Pillow для обработки изображений
 
 # Utilities
 python-dotenv==1.0.0
