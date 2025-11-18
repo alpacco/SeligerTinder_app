@@ -12,7 +12,11 @@
 
 const dotenv = require("dotenv");
 dotenv.config();
-const WEB_APP_URL = process.env.WEB_APP_URL || 'https://sta-black-dim.waw.amverum.cloud';
+// Убеждаемся, что WEB_APP_URL всегда содержит https://
+let WEB_APP_URL = process.env.WEB_APP_URL || 'https://sta-black-dim.waw.amverum.cloud';
+if (WEB_APP_URL && !WEB_APP_URL.startsWith('http://') && !WEB_APP_URL.startsWith('https://')) {
+  WEB_APP_URL = `https://${WEB_APP_URL}`;
+}
 const { Telegraf } = require("telegraf");
 const { fileURLToPath } = require("url");
 // Using native fetch API (available in Node.js 18+)
@@ -25,7 +29,8 @@ const GIFT_IMAGES_DIR = "/data/giftimg";
 
 const BOT_TOKEN = process.env.BOT_TOKEN;
 const DEV_CHAT_ID = 307954967;
-const API_URL = "https://sta-black-dim.waw.amverum.cloud/api";
+// API_URL использует тот же домен, что и WEB_APP_URL
+const API_URL = `${WEB_APP_URL}/api`;
 
 // Создаем экземпляр бота
 const bot = new Telegraf(BOT_TOKEN);
