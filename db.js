@@ -1,10 +1,22 @@
 // db.js
-const sqlite3 = require('sqlite3');
-const fs = require('fs');
-const path = require('path');
+// Поддержка SQLite и PostgreSQL
+// Используется PostgreSQL если установлена переменная окружения USE_POSTGRES=true или DATABASE_URL
 const dotenv = require('dotenv');
-
 dotenv.config();
+
+const USE_POSTGRES = process.env.USE_POSTGRES === 'true' || !!process.env.DATABASE_URL;
+
+if (USE_POSTGRES) {
+  // Используем PostgreSQL
+  console.log('📊 Используется PostgreSQL');
+  module.exports = require('./db-pg');
+} else {
+  // Используем SQLite (старое поведение)
+  console.log('📊 Используется SQLite');
+  
+  const sqlite3 = require('sqlite3');
+  const fs = require('fs');
+  const path = require('path');
 
 // В CommonJS __dirname уже доступен, не нужно определять вручную
 
@@ -229,9 +241,13 @@ const initDb = () => {
 // Запускаем инициализацию
 initDb();
 
-// Экспортируем оба подключения к БД
-module.exports = {
-  db,
-  giftDb,
-  initDb
-};
+  // Экспортируем оба подключения к БД
+  module.exports = {
+    db,
+    giftDb,
+    initDb,
+    IMAGES_DIR,
+    LOG_DIR,
+    GIFT_IMAGES_DIR
+  };
+}

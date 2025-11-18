@@ -43,8 +43,8 @@ const pushRouter = require('./routes/push');
 const proRouter = require('./routes/pro');
 const adminRouter = require('./routes/admin');
 
-// База данных
-const { db, giftDb } = require('./db');
+// База данных (поддерживает SQLite и PostgreSQL)
+const { db, giftDb, pool } = require('./db');
 
 // 2. Конфигурация окружения и путей
 dotenv.config();
@@ -61,52 +61,8 @@ const {
 // [LOG_DIR_PATH, IMG_DIR_PATH, GIFT_IMG_PATH].forEach(...)
 // console.log('📦 Загружены пути:', { LOG_DIR_PATH, IMG_DIR_PATH, GIFT_IMG_PATH });
 
-// === ЭТАЛОННЫЕ ПУТИ ДЛЯ ДАННЫХ ===
-const DB_PATH = '/data/tinder.db'; // путь к базе данных
-const IMAGES_DIR = '/data/img';    // путь для изображений (для каждого пользователя – поддиректория)
-const LOG_DIR = '/data/log';       // путь для логов
-const GIFT_DB_PATH = '/data/gift.bd';     // путь к базе данных подарков
-const GIFT_IMAGES_DIR = '/data/giftimg';  // папка для изображений подарков
-
-console.log(`Путь к БД: ${DB_PATH}`);
-console.log(`Путь для изображений: ${IMAGES_DIR}`);
-console.log(`Путь для логов: ${LOG_DIR}`);
-
-// Проверяем и создаём папку для изображений, если не существует
-try {
-if (!fs.existsSync(IMAGES_DIR)) {
-  fs.mkdirSync(IMAGES_DIR, { recursive: true });
-  console.log(`✅ Папка для фото создана: ${IMAGES_DIR}`);
-  } else {
-    console.log(`✅ Папка для фото уже существует: ${IMAGES_DIR}`);
-  }
-} catch (err) {
-  console.warn(`⚠️ Не удалось создать папку для фото ${IMAGES_DIR}: ${err.message}`);
-}
-
-// Проверяем и создаём папку для логов, если не существует
-try {
-if (!fs.existsSync(LOG_DIR)) {
-  fs.mkdirSync(LOG_DIR, { recursive: true });
-  console.log(`✅ Папка для логов создана: ${LOG_DIR}`);
-  } else {
-    console.log(`✅ Папка для логов уже существует: ${LOG_DIR}`);
-  }
-} catch (err) {
-  console.warn(`⚠️ Не удалось создать папку для логов ${LOG_DIR}: ${err.message}`);
-}
-
-// Проверяем и создаём папку для изображений подарков, если не существует
-try {
-if (!fs.existsSync(GIFT_IMAGES_DIR)) {
-  fs.mkdirSync(GIFT_IMAGES_DIR, { recursive: true });
-  console.log(`✅ Папка для изображений подарков создана: ${GIFT_IMAGES_DIR}`);
-  } else {
-    console.log(`✅ Папка для изображений подарков уже существует: ${GIFT_IMAGES_DIR}`);
-  }
-} catch (err) {
-  console.warn(`⚠️ Не удалось создать папку для подарков ${GIFT_IMAGES_DIR}: ${err.message}`);
-}
+// Пути для данных получаем из db модуля (поддерживает оба типа БД)
+const { IMAGES_DIR, LOG_DIR, GIFT_IMAGES_DIR } = require('./db');
 
 // 3. Инициализация Express
 const app = express();
@@ -250,6 +206,10 @@ db.all("SELECT userId FROM users", [], (err, rows) => {
 app.set('trust proxy', 1);
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+
+// Санитизация входных данных
+const { sanitizeBody } = require('./middleware/validation');
+app.use(sanitizeBody);
 
 app.use((req, res, next) => {
   const start = Date.now();
@@ -455,16 +415,21 @@ app.get('*', async (req, res, next) => {
 });
 
 // 12. Обработчики ошибок
+const { errorHandler, notFoundHandler } = require('./middleware/errorHandler');
+
+// Обработка CORS ошибок
 app.use((err, req, res, next) => {
-  console.error(`Необработанная ошибка: ${err.message}`, { stack: err.stack, url: req.originalUrl });
   if (err.message === 'Not allowed by CORS') {
     return res.status(403).json({ success: false, error: 'Доступ запрещён политикой CORS.' });
   }
-  res.status(err.status || 500).json({
-    success: false,
-    error: 'Внутренняя ошибка сервера.',
-  });
+  next(err);
 });
+
+// Централизованный обработчик ошибок
+app.use(errorHandler);
+
+// Обработка 404 (должен быть последним)
+app.use(notFoundHandler);
 
 // 13. Cron-задачи
 cron.schedule('0 0 * * *', () => {

@@ -111,3 +111,10 @@ Thumbs.db
 
 # Google Vision API key
 Google Vision/vision-key.json
+
+# Railway
+.railway/
+
+# Build outputs
+dist/
+build/

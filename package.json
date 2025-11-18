@@ -3,12 +3,17 @@
   "version": "1.0.0",
   "description": "Mini-app for Tinder-like functionality",
   "main": "app.js",
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
   "scripts": {
     "start": "node start-app.js",
-    "start:bot": "node bot.js",
-    "start:all": "npx npm-run-all --parallel start start:bot",
+    "start:bot": "node start-bot.js",
+    "start:all": "node start-all.js",
     "build:prod": "vite build",
-    "postinstall": "npm rebuild sqlite3"
+    "postinstall": "npm rebuild sqlite3",
+    "migrate": "node migrations/migrate.js"
   },
   "dependencies": {
     "@google-cloud/vision": "^4.0.2",
@@ -29,6 +34,7 @@
     "npm-run-all": "^4.1.5",
     "path": "^0.12.7",
     "sharp": "^0.34.3",
+    "pg": "^8.11.3",
     "sqlite": "^5.1.1",
     "sqlite3": "^5.1.7",
     "telegraf": "^4.16.3"
