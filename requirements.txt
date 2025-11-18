@@ -14,6 +14,7 @@ psycopg2-binary==2.9.9
 
 # Image Processing
 opencv-python-headless==4.8.1.78
+numpy<2.0  # OpenCV 4.8.1.78 несовместим с NumPy 2.x
 Pillow>=10.2.0
 # sharp удален - не используется, используем Pillow для обработки изображений
 
