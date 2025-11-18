@@ -230,20 +230,25 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await query.message.reply_text("Главное меню", reply_markup=get_start_keyboard())
 
 
-def main():
-    """Запуск бота"""
+# Глобальная переменная для бота
+bot_application = None
+
+
+def create_bot_application():
+    """Создание и настройка бота"""
+    global bot_application
+    
     import sys
     import os
     import traceback
     
     print("=" * 70)
-    print("🤖 ЗАПУСК TELEGRAM BOT")
+    print("🤖 СОЗДАНИЕ TELEGRAM BOT APPLICATION")
     print("=" * 70)
     print(f"📁 Рабочая директория: {os.getcwd()}")
     print(f"🐍 Python версия: {sys.version}")
     print(f"📦 Python путь: {sys.executable}")
     print(f"📂 Файл bot.py: {__file__}")
-    print(f"📂 Существует ли bot.py: {os.path.exists(__file__)}")
     print("=" * 70)
     
     # Проверяем переменные окружения
@@ -252,20 +257,13 @@ def main():
     print(f"  - WEB_APP_URL: {WEB_APP_URL if WEB_APP_URL else 'НЕ УСТАНОВЛЕН!'}")
     print(f"  - API_URL: {API_URL if API_URL else 'НЕ УСТАНОВЛЕН!'}")
     print(f"  - DEV_CHAT_ID: {DEV_CHAT_ID if DEV_CHAT_ID else 'не установлен'}")
-    
-    # Проверяем все переменные окружения
-    print("🔵 Все переменные окружения, начинающиеся с BOT, WEB, API, DEV:")
-    for key, value in os.environ.items():
-        if any(key.startswith(prefix) for prefix in ['BOT', 'WEB', 'API', 'DEV']):
-            print(f"  - {key}: {value[:20]}..." if len(str(value)) > 20 else f"  - {key}: {value}")
-    
     print("=" * 70)
     
     if not BOT_TOKEN:
         print("❌ BOT_TOKEN не установлен!")
         print("⚠️ Проверьте переменные окружения в Railway")
         print("⚠️ Убедитесь, что BOT_TOKEN добавлен в Variables")
-        return
+        return None
     
     print(f"✅ BOT_TOKEN установлен (длина: {len(BOT_TOKEN)} символов)")
     print(f"   Первые 10 символов: {BOT_TOKEN[:10]}...")
@@ -315,46 +313,133 @@ def main():
         application.add_handler(CallbackQueryHandler(callback_handler))
         print("✅ CallbackQueryHandler зарегистрирован")
         
-        # Запуск бота
+        bot_application = application
         print("=" * 70)
         print("✅ Все обработчики зарегистрированы")
-        print("🔵 Запуск polling...")
-        print("  - allowed_updates: Update.ALL_TYPES")
-        print("  - drop_pending_updates: True")
-        print("  - close_loop: False")
-        print("=" * 70)
-        print("✅ Бот запущен и готов к работе!")
-        print("⏳ Ожидание обновлений от Telegram...")
-        print("=" * 70)
-        print("💡 Попробуйте отправить команду /start боту в Telegram")
+        print("✅ Bot application создан и сохранен в глобальную переменную")
         print("=" * 70)
         
-        # Запускаем polling с логированием
-        application.run_polling(
-            allowed_updates=Update.ALL_TYPES,
-            drop_pending_updates=True,  # Игнорируем старые обновления
-            close_loop=False
-        )
-    except KeyboardInterrupt:
-        print("\n⚠️ Получен сигнал остановки (Ctrl+C)")
-        print("🛑 Остановка бота...")
+        return application
+        
     except ImportError as e:
         print(f"❌ Ошибка импорта: {e}")
         print("=" * 70)
         traceback.print_exc()
         print("=" * 70)
-        print("🛑 Бот остановлен из-за ошибки импорта")
-        print("=" * 70)
-        raise
+        return None
     except Exception as e:
-        print(f"❌ Ошибка при запуске бота: {e}")
+        print(f"❌ Ошибка при создании бота: {e}")
         print(f"   Тип ошибки: {type(e).__name__}")
         print("=" * 70)
         traceback.print_exc()
         print("=" * 70)
-        print("🛑 Бот остановлен из-за ошибки")
+        return None
+
+
+async def start_bot():
+    """Запуск бота (неблокирующий, для использования в FastAPI)"""
+    global bot_application
+    
+    print("=" * 70)
+    print("🤖 ЗАПУСК TELEGRAM BOT (async)")
+    print("=" * 70)
+    
+    # Проверяем, установлен ли bot_application
+    if bot_application:
+        print("✅ Bot application уже существует, используем его")
+        application = bot_application
+    else:
+        print("ℹ️ Bot application не инициализирован, создаем новый экземпляр...")
+        application = create_bot_application()
+    
+    if application:
+        # Сохраняем в глобальную переменную, если еще не сохранено
+        if not bot_application:
+            bot_application = application
+            print("✅ Bot application сохранен в глобальную переменную")
+        
+        print("📡 Запуск bot polling (неблокирующий)...")
+        try:
+            await application.initialize()
+            print("✅ Bot application инициализирован")
+            
+            await application.start()
+            print("✅ Bot application запущен")
+            
+            # КРИТИЧНО: Устанавливаем глобальную переменную ПЕРЕД start_polling()
+            bot_application = application
+            print("✅ Global bot_application установлен ПЕРЕД polling")
+            
+            # КРИТИЧНО: start_polling() - НЕБЛОКИРУЮЩИЙ через asyncio.create_task()
+            # Если запустить с await, сервер FastAPI никогда не запустится
+            import asyncio
+            asyncio.create_task(application.updater.start_polling(
+                allowed_updates=Update.ALL_TYPES,
+                drop_pending_updates=True
+            ))
+            print("✅ Bot polling запущен в фоне (неблокирующий)")
+            print("=" * 70)
+            print("✅ Бот запущен и готов к работе!")
+            print("⏳ Ожидание обновлений от Telegram...")
+            print("💡 Попробуйте отправить команду /start боту в Telegram")
+            print("=" * 70)
+        except Exception as e:
+            print(f"❌ Ошибка при запуске бота: {e}")
+            import traceback
+            traceback.print_exc()
+            print("=" * 70)
+    else:
+        print("❌ Бот не запущен (нет токена или не удалось создать application)")
+
+
+async def stop_bot():
+    """Остановка бота"""
+    global bot_application
+    
+    if bot_application:
+        print("🛑 Остановка бота...")
+        try:
+            await bot_application.updater.stop()
+            await bot_application.stop()
+            await bot_application.shutdown()
+            print("✅ Бот остановлен")
+        except Exception as e:
+            print(f"⚠️ Ошибка при остановке бота: {e}")
+
+
+def get_bot_application():
+    """Получить экземпляр бота (для использования в других модулях)"""
+    return bot_application
+
+
+def main():
+    """Запуск бота в отдельном процессе (для обратной совместимости)"""
+    import sys
+    import os
+    
+    print("=" * 70)
+    print("🤖 ЗАПУСК TELEGRAM BOT (standalone)")
+    print("=" * 70)
+    print("⚠️ ВНИМАНИЕ: Этот режим используется только для тестирования")
+    print("⚠️ В production бот запускается через FastAPI startup event")
+    print("=" * 70)
+    
+    application = create_bot_application()
+    
+    if application:
+        print("🔵 Запуск polling (блокирующий режим)...")
         print("=" * 70)
-        raise
+        try:
+            application.run_polling(
+                allowed_updates=Update.ALL_TYPES,
+                drop_pending_updates=True,
+                close_loop=False
+            )
+        except KeyboardInterrupt:
+            print("\n⚠️ Получен сигнал остановки (Ctrl+C)")
+            print("🛑 Остановка бота...")
+    else:
+        print("❌ Не удалось создать bot application")
 
 
 if __name__ == "__main__":
