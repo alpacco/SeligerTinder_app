@@ -82,8 +82,9 @@ const db = {
   get: (sql, params, callback) => {
     // Адаптируем SQL для PostgreSQL: добавляем кавычки к camelCase идентификаторам
     let adaptedSql = sql;
-    // Простая замена userId на "userId" для основных случаев
-    adaptedSql = adaptedSql.replace(/\buserId\b/g, '"userId"');
+    // Заменяем все camelCase идентификаторы на версии с кавычками
+    // userId -> "userId", photoUrl -> "photoUrl", и т.д.
+    adaptedSql = adaptedSql.replace(/\b(userId|photoUrl|createdAt|needPhoto|pushSent|is_pro|pro_start|pro_end|last_login|super_likes_count|photo1|photo2|photo3|photoBot)\b/g, '"$1"');
     
     pool.query(adaptedSql, params || [])
       .then(result => {
@@ -91,7 +92,8 @@ const db = {
       })
       .catch(err => {
         console.error('❌ [db.get] Ошибка SQL:', err.message);
-        console.error('❌ [db.get] SQL запрос:', adaptedSql);
+        console.error('❌ [db.get] Оригинальный SQL:', sql);
+        console.error('❌ [db.get] Адаптированный SQL:', adaptedSql);
         callback(err, null);
       });
   },
@@ -100,8 +102,8 @@ const db = {
   all: (sql, params, callback) => {
     // Адаптируем SQL для PostgreSQL: добавляем кавычки к camelCase идентификаторам
     let adaptedSql = sql;
-    // Простая замена userId на "userId" для основных случаев
-    adaptedSql = adaptedSql.replace(/\buserId\b/g, '"userId"');
+    // Заменяем все camelCase идентификаторы на версии с кавычками
+    adaptedSql = adaptedSql.replace(/\b(userId|photoUrl|createdAt|needPhoto|pushSent|is_pro|pro_start|pro_end|last_login|super_likes_count|photo1|photo2|photo3|photoBot)\b/g, '"$1"');
     
     pool.query(adaptedSql, params || [])
       .then(result => {
@@ -109,7 +111,8 @@ const db = {
       })
       .catch(err => {
         console.error('❌ [db.all] Ошибка SQL:', err.message);
-        console.error('❌ [db.all] SQL запрос:', adaptedSql);
+        console.error('❌ [db.all] Оригинальный SQL:', sql);
+        console.error('❌ [db.all] Адаптированный SQL:', adaptedSql);
         callback(err, null);
       });
   },
@@ -118,8 +121,8 @@ const db = {
   run: (sql, params, callback) => {
     // Адаптируем SQL для PostgreSQL: добавляем кавычки к camelCase идентификаторам
     let adaptedSql = sql;
-    // Простая замена userId на "userId" для основных случаев
-    adaptedSql = adaptedSql.replace(/\buserId\b/g, '"userId"');
+    // Заменяем все camelCase идентификаторы на версии с кавычками
+    adaptedSql = adaptedSql.replace(/\b(userId|photoUrl|createdAt|needPhoto|pushSent|is_pro|pro_start|pro_end|last_login|super_likes_count|photo1|photo2|photo3|photoBot)\b/g, '"$1"');
     
     pool.query(adaptedSql, params || [])
       .then(result => {
@@ -134,7 +137,8 @@ const db = {
       })
       .catch(err => {
         console.error('❌ [db.run] Ошибка SQL:', err.message);
-        console.error('❌ [db.run] SQL запрос:', adaptedSql);
+        console.error('❌ [db.run] Оригинальный SQL:', sql);
+        console.error('❌ [db.run] Адаптированный SQL:', adaptedSql);
         if (callback) {
           callback(err);
         }
@@ -149,7 +153,10 @@ const db = {
 
   // Прямой доступ к pool для сложных запросов (используется в utils/db.js)
   query: (sql, params) => {
-    return pool.query(sql, params || []);
+    // Адаптируем SQL для PostgreSQL
+    let adaptedSql = sql;
+    adaptedSql = adaptedSql.replace(/\b(userId|photoUrl|createdAt|needPhoto|pushSent|is_pro|pro_start|pro_end|last_login|super_likes_count|photo1|photo2|photo3|photoBot)\b/g, '"$1"');
+    return pool.query(adaptedSql, params || []);
   },
 
   // Закрытие соединения
