@@ -44,7 +44,12 @@ if (window.Telegram && window.Telegram.WebApp) {
   console.warn("⚠ Telegram.WebApp не найден (серверный/локальный режим?)");
 }
 
-const API_URL = "https://sta-black-dim.waw.amverum.cloud/api";
+// API_URL будет установлен из window.API_URL или конфига
+const API_URL = (typeof window !== "undefined" && window.API_URL) 
+  ? window.API_URL 
+  : (typeof window !== "undefined" && window.API_BASE_URL)
+    ? window.API_BASE_URL
+    : "https://sta-black-dim.waw.amverum.cloud/api";
 const BOT_LINK = "tg://resolve?domain=SeligerTinderApp_bot";
 const isLocal = window.location.hostname === "localhost";
 const WEB_APP_URL = (typeof window !== "undefined" && window.WEB_APP_URL) ? window.WEB_APP_URL : "https://sta-black-dim.waw.amverum.cloud";
@@ -993,6 +998,22 @@ function showScreen(screenId) {
 }
 
   function updateWelcomeScreen() {
+    console.log("🔵 [MAIN.JS] updateWelcomeScreen вызвана");
+    console.log("  - currentUser:", currentUser);
+    console.log("  - currentUser.name:", currentUser?.name);
+    
+    // Обновляем имя пользователя на экране приветствия
+    const welcomeUserName = document.querySelector('#screen-welcome .user-name');
+    if (welcomeUserName && currentUser && currentUser.name) {
+      welcomeUserName.textContent = currentUser.name;
+      console.log("  ✅ Имя пользователя обновлено:", currentUser.name);
+    } else {
+      console.warn("  ⚠️ Не удалось обновить имя пользователя:", {
+        welcomeUserName: !!welcomeUserName,
+        currentUser: !!currentUser,
+        userName: currentUser?.name
+      });
+    }
     const userNameSpan = document.querySelector("#screen-welcome .user-name");
     if (userNameSpan) userNameSpan.textContent = currentUser.name;
   }
