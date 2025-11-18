@@ -91,6 +91,7 @@ async def db_get(sql: str, params: List[Any] = None) -> Optional[Dict[str, Any]]
         params = []
     
     adapted_sql, adapted_params = adapt_sql_for_postgres(sql, params)
+    pg_pool = get_pg_pool()
     conn = pg_pool.getconn()
     try:
         cur = conn.cursor(cursor_factory=RealDictCursor)
@@ -107,6 +108,7 @@ async def db_all(sql: str, params: List[Any] = None) -> List[Dict[str, Any]]:
         params = []
     
     adapted_sql, adapted_params = adapt_sql_for_postgres(sql, params)
+    pg_pool = get_pg_pool()
     conn = pg_pool.getconn()
     try:
         cur = conn.cursor(cursor_factory=RealDictCursor)
@@ -123,6 +125,7 @@ async def db_run(sql: str, params: List[Any] = None) -> Dict[str, Any]:
         params = []
     
     adapted_sql, adapted_params = adapt_sql_for_postgres(sql, params)
+    pg_pool = get_pg_pool()
     conn = pg_pool.getconn()
     try:
         cur = conn.cursor()
@@ -138,6 +141,7 @@ async def db_run(sql: str, params: List[Any] = None) -> Dict[str, Any]:
 
 async def db_transaction(operations: List[Tuple[str, List[Any]]]) -> None:
     """Выполнить несколько операций в транзакции"""
+    pg_pool = get_pg_pool()
     conn = pg_pool.getconn()
     try:
         cur = conn.cursor()
