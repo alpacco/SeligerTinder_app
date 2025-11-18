@@ -1,0 +1,13 @@
+[phases.setup]
+nixPkgs = ["python313", "python313Packages.pip", "pkg-config", "opencv", "postgresql"]
+
+[phases.install]
+cmds = [
+  "python -m venv /app/.venv",
+  "source /app/.venv/bin/activate && pip install --upgrade pip",
+  "source /app/.venv/bin/activate && pip install -r requirements.txt"
+]
+
+[start]
+cmd = "cd python_backend && source /app/.venv/bin/activate && python -m uvicorn main:app --host 0.0.0.0 --port $PORT"
+
