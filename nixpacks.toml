@@ -1,5 +1,5 @@
 [phases.setup]
-nixPkgs = ["python313", "python313Packages.pip", "pkg-config", "opencv", "postgresql"]
+nixPkgs = ["python312", "python312Packages.pip", "pkg-config", "opencv", "postgresql"]
 
 [phases.install]
 cmds = [
@@ -8,6 +8,7 @@ cmds = [
   ". /app/.venv/bin/activate && pip install -r requirements.txt"
 ]
 
+# Команда запуска - Railway будет использовать Procfile, но на всякий случай указываем здесь
 [start]
 cmd = "cd python_backend && . /app/.venv/bin/activate && python -m uvicorn main:app --host 0.0.0.0 --port $PORT"
 
