@@ -385,8 +385,17 @@ function getHashMap() {
 }
 
 // 11. Корневой маршрут и SPA Fallback
+// Получаем базовые URL для передачи в шаблон
+const getBaseUrls = (req) => {
+  const webAppUrl = process.env.WEB_APP_URL || (req ? (req.protocol + '://' + req.get('host')) : null) || 'https://sta-black-dim.waw.amverum.cloud';
+  const apiBaseUrl = webAppUrl + '/api';
+  return { webAppUrl, apiBaseUrl };
+};
+
 app.get('/', async (req, res) => {
   console.log('[GET /] Запрос на корневой маршрут. Загружаем подарки...');
+  
+  const { webAppUrl, apiBaseUrl } = getBaseUrls(req);
   
   try {
     // Получаем userId из query параметров или заголовков
@@ -400,9 +409,9 @@ app.get('/', async (req, res) => {
     giftDb.all('SELECT * FROM gifts ORDER BY PriceGift', [], (err, gifts) => {
       if (err) {
         console.error('!!! [GET /] КРИТИЧЕСКАЯ ОШИБКА при запросе к giftDb:', { error: err.message });
-        return res.render('index', { user, gifts: [], hashMap: getHashMap() });
+        return res.render('index', { user, gifts: [], hashMap: getHashMap(), apiBaseUrl, webAppUrl });
       }
-      res.render('index', { user, gifts: gifts || [], hashMap: getHashMap() });
+      res.render('index', { user, gifts: gifts || [], hashMap: getHashMap(), apiBaseUrl, webAppUrl });
     });
   } catch (error) {
     console.error('[GET /] Ошибка при получении данных пользователя:', error);
