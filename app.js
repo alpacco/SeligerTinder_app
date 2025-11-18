@@ -87,7 +87,7 @@ app.use(helmet({
       styleSrc: ["'self'", "'unsafe-inline'", "https://telegram.org"],
       scriptSrc: ["'self'", "'unsafe-inline'", "https://telegram.org", "https://web.telegram.org"],
       imgSrc: ["'self'", "data:", "https:", "blob:"],
-              connectSrc: ["'self'", "https://telegram.org", "https://sta-black-dim.waw.amverum.cloud"],
+              connectSrc: ["'self'", "https://telegram.org", "https://sta-black-dim.waw.amverum.cloud", process.env.WEB_APP_URL, "https://*.up.railway.app"].filter(Boolean),
       frameSrc: ["'self'", "https://telegram.org"],
     },
   },
@@ -111,11 +111,13 @@ if (process.env.NODE_ENV === 'development') {
 
 // 5. Настройка CORS
 const corsOrigins = [
-          'https://sta-black-dim.waw.amverum.cloud',
+  process.env.WEB_APP_URL, // Railway домен из переменной окружения
+  'https://sta-black-dim.waw.amverum.cloud',
   'https://seligertinder.ru',
   'https://www.seligertinder.ru',
   'https://seligertinder.vercel.app',
   'https://*.vercel.app',
+  'https://*.up.railway.app', // Все Railway домены
   'https://web.telegram.org',
   'https://localhost:8080',
   'https://telegram.org',
@@ -126,7 +128,7 @@ const corsOrigins = [
   'http://localhost',
   'http://localhost:8080',
   'http://localhost:8100',
-];
+].filter(Boolean); // Убираем undefined значения
 
 const corsOptions = {
   origin: (origin, callback) => {

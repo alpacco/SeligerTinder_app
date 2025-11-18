@@ -762,7 +762,7 @@ function photosRouter(db, logger, IMG_DIR, BOT_TOKEN, visionClient) {
           console.log(`[webUploadPhoto] ✅ Файл сохранён: ${finalPath} (${buffer.length} байт)`);
           
                   // Обновляем БД
-          const serverDomain = process.env.SERVER_DOMAIN || 'https://sta-black-dim.waw.amverum.cloud';
+          const serverDomain = process.env.SERVER_DOMAIN || process.env.WEB_APP_URL || 'https://sta-black-dim.waw.amverum.cloud';
           const photoUrl = `${serverDomain}/data/img/${userId}/${photoSlot}`;
           console.log(`[webUploadPhoto] URL для БД: ${photoUrl}`);
           console.log(`[webUploadPhoto] Сохраняем в БД...`);
@@ -833,7 +833,7 @@ function photosRouter(db, logger, IMG_DIR, BOT_TOKEN, visionClient) {
           console.log(`[webUploadPhoto] ✅ Оригинальный файл сохранён: ${finalPath} (${fs.statSync(localPath).size} байт)`);
           
           // Обновляем БД
-          const serverDomain = process.env.SERVER_DOMAIN || 'https://sta-black-dim.waw.amverum.cloud';
+          const serverDomain = process.env.SERVER_DOMAIN || process.env.WEB_APP_URL || 'https://sta-black-dim.waw.amverum.cloud';
           const photoUrl = `${serverDomain}/data/img/${userId}/${photoSlot}`;
           console.log(`[webUploadPhoto] URL для БД: ${photoUrl}`);
           console.log(`[webUploadPhoto] Сохраняем в БД...`);
