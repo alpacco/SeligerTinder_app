@@ -87,7 +87,7 @@ app.use(helmet({
       styleSrc: ["'self'", "'unsafe-inline'", "https://telegram.org"],
       scriptSrc: ["'self'", "'unsafe-inline'", "https://telegram.org", "https://web.telegram.org"],
       imgSrc: ["'self'", "data:", "https:", "blob:"],
-              connectSrc: ["'self'", "https://telegram.org", "https://sta-black-dim.waw.amverum.cloud", process.env.WEB_APP_URL, "https://*.up.railway.app"].filter(Boolean),
+      connectSrc: ["'self'", "https://telegram.org", "https://sta-black-dim.waw.amverum.cloud", process.env.WEB_APP_URL, "https://*.up.railway.app"].filter(Boolean),
       frameSrc: ["'self'", "https://telegram.org"],
     },
   },
@@ -98,7 +98,9 @@ app.use(helmet({
   },
   noSniff: true,
   xssFilter: true,
-  referrerPolicy: { policy: 'strict-origin-when-cross-origin' }
+  referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
+  // Отключаем crossOriginEmbedderPolicy для статических файлов
+  crossOriginEmbedderPolicy: false
 }));
 
 // 4. Настройка View Engine (EJS)
@@ -260,7 +262,9 @@ const apiLimiter = rateLimit({
            req.path.startsWith('/js/') || 
            req.path.startsWith('/img/') || 
            req.path.startsWith('/data/img/') ||
-           req.path.startsWith('/giftimg/');
+           req.path.startsWith('/giftimg/') ||
+           req.path.startsWith('/favicon.ico') ||
+           req.path.startsWith('/labels/');
   }
 });
 app.use('/api/', apiLimiter);
