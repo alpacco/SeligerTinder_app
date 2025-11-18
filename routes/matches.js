@@ -42,15 +42,15 @@ module.exports = (db) => {
 
       console.log(`[routes/matches.js] /api/matches - matchesArr (userIds):`, matchesArr);
       const placeholders = matchesArr.map(() => '?').join(',');
-      // SQL будет автоматически адаптирован в db-pg.js для PostgreSQL
+      // SQL будет автоматически адаптирован в db-pg.js для PostgreSQL (кавычки и placeholders)
       const sql = `
-        SELECT u."userId" AS "userId",
-               u."userId" AS id,
+        SELECT u.userId AS userId,
+               u.userId AS id,
                u.name,
                u.username,
-               COALESCE(u."photo1", u."photoUrl") AS avatar
+               COALESCE(u.photo1, u.photoUrl) AS avatar
         FROM users u
-        WHERE u."userId" IN (${placeholders})
+        WHERE u.userId IN (${placeholders})
       `;
       console.log(`[routes/matches.js] /api/matches - SQL:`, sql);
       const params = [...matchesArr];
