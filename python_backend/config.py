@@ -13,14 +13,12 @@ load_dotenv()
 
 # База данных
 DATABASE_URL = os.getenv("DATABASE_URL")
-if not DATABASE_URL:
-    # Fallback на отдельные переменные для Railway
-    DATABASE_URL = None
-    PGHOST = os.getenv("PGHOST", "localhost")
-    PGPORT = os.getenv("PGPORT", "5432")
-    PGDATABASE = os.getenv("PGDATABASE", "railway")
-    PGUSER = os.getenv("PGUSER", "postgres")
-    PGPASSWORD = os.getenv("PGPASSWORD", "")
+# Всегда определяем переменные для PostgreSQL (даже если DATABASE_URL установлен)
+PGHOST = os.getenv("PGHOST", "localhost")
+PGPORT = os.getenv("PGPORT", "5432")
+PGDATABASE = os.getenv("PGDATABASE", "railway")
+PGUSER = os.getenv("PGUSER", "postgres")
+PGPASSWORD = os.getenv("PGPASSWORD", "")
 
 # Telegram Bot
 BOT_TOKEN = os.getenv("BOT_TOKEN", "")
