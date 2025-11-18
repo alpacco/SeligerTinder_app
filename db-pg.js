@@ -80,11 +80,18 @@ pool.query('SELECT NOW()', (err, res) => {
 const db = {
   // Метод get (SELECT с одним результатом)
   get: (sql, params, callback) => {
-    pool.query(sql, params || [])
+    // Адаптируем SQL для PostgreSQL: добавляем кавычки к camelCase идентификаторам
+    let adaptedSql = sql;
+    // Простая замена userId на "userId" для основных случаев
+    adaptedSql = adaptedSql.replace(/\buserId\b/g, '"userId"');
+    
+    pool.query(adaptedSql, params || [])
       .then(result => {
         callback(null, result.rows[0] || null);
       })
       .catch(err => {
+        console.error('❌ [db.get] Ошибка SQL:', err.message);
+        console.error('❌ [db.get] SQL запрос:', adaptedSql);
         callback(err, null);
       });
   },
