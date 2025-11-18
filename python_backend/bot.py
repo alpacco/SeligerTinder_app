@@ -40,15 +40,29 @@ def get_start_keyboard():
 
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Обработчик команды /start"""
-    await update.message.reply_text(
-        "Добро пожаловать в SeligerTinder!",
-        reply_markup=get_start_keyboard()
-    )
+    user_id = update.effective_user.id if update.effective_user else None
+    username = update.effective_user.username if update.effective_user else None
+    print(f"🔵 [BOT] Команда /start от пользователя {user_id} (@{username})")
+    
+    try:
+        await update.message.reply_text(
+            "Добро пожаловать в SeligerTinder!",
+            reply_markup=get_start_keyboard()
+        )
+        print(f"✅ [BOT] Ответ на /start отправлен пользователю {user_id}")
+    except Exception as e:
+        print(f"❌ [BOT] Ошибка при отправке ответа на /start: {e}")
+        raise
 
 
 async def grantpro_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Команда /grantpro - выдача PRO-подписки"""
+    user_id = update.effective_user.id if update.effective_user else None
+    username = update.effective_user.username if update.effective_user else None
+    print(f"🔵 [BOT] Команда /grantpro от пользователя {user_id} (@{username})")
+    
     if DEV_CHAT_ID and update.effective_user.id != DEV_CHAT_ID:
+        print(f"⚠️ [BOT] Попытка использования /grantpro неавторизованным пользователем {user_id}")
         await update.message.reply_text("❌ Команда /grantpro доступна только администратору.")
         return
     
@@ -218,24 +232,50 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 def main():
     """Запуск бота"""
+    print("=" * 50)
+    print("🤖 ЗАПУСК TELEGRAM BOT")
+    print("=" * 50)
+    
     if not BOT_TOKEN:
         print("❌ BOT_TOKEN не установлен!")
         return
     
-    application = Application.builder().token(BOT_TOKEN).build()
+    print(f"✅ BOT_TOKEN установлен (длина: {len(BOT_TOKEN)} символов)")
+    print(f"✅ WEB_APP_URL: {WEB_APP_URL}")
+    print(f"✅ API_URL: {API_URL}")
+    print(f"✅ DEV_CHAT_ID: {DEV_CHAT_ID if DEV_CHAT_ID else 'не установлен (команды доступны всем)'}")
     
-    # Регистрация команд
-    application.add_handler(CommandHandler("start", start_command))
-    application.add_handler(CommandHandler("grantpro", grantpro_command))
-    application.add_handler(CommandHandler("addbadge", addbadge_command))
-    application.add_handler(CommandHandler("stats", stats_command))
-    
-    # Регистрация callback handlers
-    application.add_handler(CallbackQueryHandler(callback_handler))
-    
-    # Запуск бота
-    print("✅ Бот запущен!")
-    application.run_polling(allowed_updates=Update.ALL_TYPES)
+    try:
+        application = Application.builder().token(BOT_TOKEN).build()
+        print("✅ Application создан")
+        
+        # Регистрация команд
+        application.add_handler(CommandHandler("start", start_command))
+        print("✅ Команда /start зарегистрирована")
+        
+        application.add_handler(CommandHandler("grantpro", grantpro_command))
+        print("✅ Команда /grantpro зарегистрирована")
+        
+        application.add_handler(CommandHandler("addbadge", addbadge_command))
+        print("✅ Команда /addbadge зарегистрирована")
+        
+        application.add_handler(CommandHandler("stats", stats_command))
+        print("✅ Команда /stats зарегистрирована")
+        
+        # Регистрация callback handlers
+        application.add_handler(CallbackQueryHandler(callback_handler))
+        print("✅ CallbackQueryHandler зарегистрирован")
+        
+        # Запуск бота
+        print("=" * 50)
+        print("✅ Бот запущен и готов к работе!")
+        print("=" * 50)
+        application.run_polling(allowed_updates=Update.ALL_TYPES)
+    except Exception as e:
+        print(f"❌ Ошибка при запуске бота: {e}")
+        import traceback
+        traceback.print_exc()
+        raise
 
 
 if __name__ == "__main__":

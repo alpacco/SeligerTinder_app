@@ -293,9 +293,17 @@
     <script>
       // Загружаем конфигурацию с сервера
       (async function() {
+        console.log('🔵 [INIT] Начало загрузки конфигурации...');
         try {
           const response = await fetch('/api/config');
+          console.log('🔵 [INIT] Ответ от /api/config:', response.status, response.statusText);
+          
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+          }
+          
           const config = await response.json();
+          console.log('✅ [INIT] Конфигурация получена:', config);
           
           // Устанавливаем глобальные переменные
           window.API_BASE_URL = config.apiBaseUrl || window.location.origin + '/api';
@@ -303,31 +311,46 @@
           window.WEB_APP_URL = config.webAppUrl || window.location.origin;
           
           console.log('🔧 [Config] API_BASE_URL:', window.API_BASE_URL);
+          console.log('🔧 [Config] API_URL:', window.API_URL);
           console.log('🔧 [Config] WEB_APP_URL:', window.WEB_APP_URL);
+          console.log('🔧 [Config] hashMap:', config.hashMap);
           
           // Обновляем CSS если есть hashMap
           if (config.hashMap && config.hashMap['main-css']) {
             const cssLink = document.getElementById('main-css-link');
             if (cssLink) {
-              cssLink.href = '/css/' + config.hashMap['main-css'];
+              const newHref = '/css/' + config.hashMap['main-css'];
+              console.log('🔧 [Config] Обновление CSS:', cssLink.href, '->', newHref);
+              cssLink.href = newHref;
             }
           }
           
           // Загружаем JS файлы
           const scripts = ['main', 'profile', 'swipe', 'card', 'api', 'utils', 'gift', 'match', 'pro'];
+          console.log('🔵 [INIT] Загрузка JS файлов...');
           scripts.forEach(name => {
             const filename = config.hashMap && config.hashMap[name] ? config.hashMap[name] : `${name}.js`;
+            const scriptUrl = '/js/' + filename;
+            console.log(`  📦 Загрузка: ${scriptUrl}`);
+            
             const script = document.createElement('script');
             script.type = 'module';
-            script.src = '/js/' + filename;
+            script.src = scriptUrl;
+            script.onload = () => console.log(`  ✅ Загружен: ${scriptUrl}`);
+            script.onerror = (err) => console.error(`  ❌ Ошибка загрузки ${scriptUrl}:`, err);
             document.body.appendChild(script);
           });
+          console.log('✅ [INIT] Все JS файлы добавлены в DOM');
         } catch (error) {
-          console.error('❌ Ошибка загрузки конфигурации:', error);
+          console.error('❌ [INIT] Ошибка загрузки конфигурации:', error);
           // Fallback значения
           window.API_BASE_URL = window.location.origin + '/api';
           window.API_URL = window.location.origin + '/api';
           window.WEB_APP_URL = window.location.origin;
+          
+          console.log('⚠️ [INIT] Используются fallback значения:');
+          console.log('  API_BASE_URL:', window.API_BASE_URL);
+          console.log('  WEB_APP_URL:', window.WEB_APP_URL);
           
           // Загружаем JS файлы без hash
           const scripts = ['main', 'profile', 'swipe', 'card', 'api', 'utils', 'gift', 'match', 'pro'];
@@ -335,10 +358,43 @@
             const script = document.createElement('script');
             script.type = 'module';
             script.src = '/js/' + name + '.js';
+            script.onload = () => console.log(`  ✅ Загружен (fallback): /js/${name}.js`);
+            script.onerror = (err) => console.error(`  ❌ Ошибка загрузки (fallback) /js/${name}.js:`, err);
             document.body.appendChild(script);
           });
         }
       })();
+      
+      // Логирование для кнопки регистрации
+      document.addEventListener('DOMContentLoaded', () => {
+        console.log('🔵 [DOM] DOMContentLoaded - поиск кнопки join-button...');
+        const joinButton = document.getElementById('join-button');
+        if (joinButton) {
+          console.log('✅ [DOM] Кнопка join-button найдена:', joinButton);
+          console.log('  - ID:', joinButton.id);
+          console.log('  - Класс:', joinButton.className);
+          console.log('  - Текст:', joinButton.textContent);
+          
+          // Проверяем, есть ли уже обработчик
+          const hasHandler = joinButton.onclick !== null || joinButton.getAttribute('data-handler-attached') === 'true';
+          console.log('  - Обработчик уже есть:', hasHandler);
+          
+          if (!hasHandler) {
+            console.log('  🔵 [DOM] Добавление временного обработчика для логирования...');
+            joinButton.addEventListener('click', (e) => {
+              console.log('🔵 [BUTTON] Клик по кнопке join-button!');
+              console.log('  - Event:', e);
+              console.log('  - API_URL:', window.API_URL);
+              console.log('  - API_BASE_URL:', window.API_BASE_URL);
+              console.log('  - WEB_APP_URL:', window.WEB_APP_URL);
+              console.log('  - Telegram.WebApp:', window.Telegram?.WebApp);
+            }, { once: false });
+            joinButton.setAttribute('data-handler-attached', 'true');
+          }
+        } else {
+          console.error('❌ [DOM] Кнопка join-button НЕ найдена!');
+        }
+      });
       
       // Показываем контент после загрузки всех ресурсов
       window.addEventListener('load', function() {
