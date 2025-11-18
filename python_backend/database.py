@@ -3,9 +3,9 @@ database.py
 Поддержка PostgreSQL для Python бэкенда
 """
 from typing import Optional
-import psycopg2
-from psycopg2 import pool
-from psycopg2.extras import RealDictCursor
+import psycopg2  # type: ignore[reportMissingModuleSource]
+from psycopg2 import pool  # type: ignore[reportMissingModuleSource]
+from psycopg2.extras import RealDictCursor  # type: ignore[reportMissingModuleSource]
 from config import (
     DATABASE_URL, PGHOST, PGPORT, PGDATABASE, PGUSER, PGPASSWORD,
     IMAGES_DIR, LOG_DIR
