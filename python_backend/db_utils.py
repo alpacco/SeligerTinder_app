@@ -41,9 +41,18 @@ def adapt_sql_for_postgres(sql: str, params: List[Any]) -> Tuple[str, List[Any]]
     param_index = 1
     
     # Заменяем ? на $1, $2, $3...
+    # ВАЖНО: заменяем по одному, чтобы сохранить порядок
     while '?' in adapted_sql:
         adapted_sql = adapted_sql.replace('?', f'${param_index}', 1)
         param_index += 1
+    
+    # Проверяем, что количество параметров совпадает
+    expected_params = param_index - 1
+    if len(params) != expected_params:
+        raise ValueError(
+            f"Несоответствие количества параметров: SQL требует {expected_params}, "
+            f"передано {len(params)}. SQL: {sql}, params: {params}"
+        )
     
     # Обрабатываем INSERT OR IGNORE
     if 'INSERT OR IGNORE' in adapted_sql.upper():
@@ -90,7 +99,12 @@ async def db_get(sql: str, params: List[Any] = None) -> Optional[Dict[str, Any]]
     if params is None:
         params = []
     
+    # Логируем для отладки
+    print(f"[db_get] SQL: {sql}, params: {params}")
+    
     adapted_sql, adapted_params = adapt_sql_for_postgres(sql, params)
+    print(f"[db_get] Adapted SQL: {adapted_sql}, adapted_params: {adapted_params}")
+    
     pg_pool = get_pg_pool()
     conn = pg_pool.getconn()
     try:
@@ -98,6 +112,11 @@ async def db_get(sql: str, params: List[Any] = None) -> Optional[Dict[str, Any]]
         cur.execute(adapted_sql, adapted_params)
         row = cur.fetchone()
         return dict(row) if row else None
+    except Exception as e:
+        print(f"[db_get] Ошибка выполнения SQL: {e}")
+        print(f"[db_get] SQL: {adapted_sql}")
+        print(f"[db_get] Params: {adapted_params}")
+        raise
     finally:
         pg_pool.putconn(conn)
 

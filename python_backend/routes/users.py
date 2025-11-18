@@ -111,22 +111,36 @@ async def get_user_frontend(userId: str = Query(..., description="ID польз�
 async def join_user(user: UserCreate):
     """Зарегистрировать нового пользователя"""
     try:
+        # Валидация userId
+        if not user.userId:
+            raise HTTPException(status_code=400, detail="userId обязателен")
+        
+        print(f"[POST /api/join] Регистрация пользователя: userId={user.userId}, name={user.name}")
+        
         # Проверяем, существует ли пользователь
-        existing = await db_get("SELECT userId FROM users WHERE userId = ?", [user.userId])
+        existing = await db_get('SELECT "userId" FROM users WHERE "userId" = $1', [user.userId])
         
         if existing:
+            print(f"[POST /api/join] Пользователь уже существует: {user.userId}")
             return {"success": True, "message": "User already exists"}
         
         # Создаём нового пользователя
+        # Используем NOW() вместо datetime('now') для PostgreSQL
         await db_run(
-            """INSERT OR IGNORE INTO users (userId, name, username, photoUrl, gender, createdAt)
-               VALUES (?, ?, ?, ?, ?, datetime('now'))""",
+            """INSERT INTO users ("userId", name, username, "photoUrl", gender, "createdAt")
+               VALUES ($1, $2, $3, $4, $5, NOW())
+               ON CONFLICT ("userId") DO NOTHING""",
             [user.userId, user.name or "", user.username or "", user.photoUrl or "", user.gender or ""]
         )
         
+        print(f"[POST /api/join] Пользователь успешно зарегистрирован: {user.userId}")
         return {"success": True, "message": "User registered"}
+    except HTTPException:
+        raise
     except Exception as e:
         print(f"[POST /api/join] Ошибка: {e}")
+        import traceback
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
 
 
