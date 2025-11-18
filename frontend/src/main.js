@@ -186,52 +186,85 @@ function fillCard(cardEl, cand) {
   /* ------------------- Обработчики для экранов 1–4 ------------------- */
 
   // Обработчик для регистрации (screen‑1)
-  const joinButton = document.getElementById("join-button");
-  if (joinButton) {
-    joinButton.addEventListener("click", () => {
-      let tgUser = {};
-      if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
-        tgUser = tg.initDataUnsafe.user;
-      }
-      const registrationData = {
-        userId: String(tgUser.id || "UserID"),
-        name: tgUser.first_name || "Username",
-        username: tgUser.username || "",
-        photoUrl: (tgUser.photo_url && tgUser.photo_url.startsWith("http"))
-                  ? tgUser.photo_url
-                  : "/img/logo.svg",
-        gender: "", // заполнится далее
-        bio: ""
-      };
-      console.log("Отправка регистрации с данными:", registrationData);
-      fetch(`${API_URL}/join`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(registrationData)
-      })
-        .then(res => res.json())
-        .then(data => {
-          if (!data.success) throw new Error(data.error || "Неизвестная ошибка");
-          console.log("Регистрация прошла успешно:", data);
-          currentUser.registered = true;
-          showScreen("screen-gender");
-          // Инициализировать чат с ботом: сначала WebApp sendData, затем deep link
-          if (tg && tg.sendData) {
-            tg.sendData(JSON.stringify({ action: "register", userId: registrationData.userId }));
-          }
-          const deepLinkUrl = `https://t.me/SeligerTinderApp_bot?start=${registrationData.userId}`;
-          if (tg && tg.openLink) {
-            tg.openLink(deepLinkUrl);
-          } else {
-            window.open(deepLinkUrl, "_blank");
-          }
+  function setupJoinButton() {
+    console.log("🔵 [MAIN.JS] Настройка обработчика join-button...");
+    const joinButton = document.getElementById("join-button");
+    if (joinButton) {
+      console.log("✅ [MAIN.JS] Кнопка join-button найдена, добавляем обработчик");
+      console.log("  - API_URL:", API_URL);
+      console.log("  - currentUser:", currentUser);
+      console.log("  - showScreen:", typeof showScreen);
+      
+      joinButton.addEventListener("click", () => {
+        console.log("🔵 [MAIN.JS] Клик по join-button - начало обработки");
+        let tgUser = {};
+        if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
+          tgUser = tg.initDataUnsafe.user;
+          console.log("  - tgUser из initDataUnsafe:", tgUser);
+        } else {
+          console.warn("  ⚠️ tg.initDataUnsafe.user не найден");
+        }
+        
+        const registrationData = {
+          userId: String(tgUser.id || "UserID"),
+          name: tgUser.first_name || "Username",
+          username: tgUser.username || "",
+          photoUrl: (tgUser.photo_url && tgUser.photo_url.startsWith("http"))
+                    ? tgUser.photo_url
+                    : "/img/logo.svg",
+          gender: "", // заполнится далее
+          bio: ""
+        };
+        console.log("🔵 [MAIN.JS] Отправка регистрации с данными:", registrationData);
+        console.log("  - URL:", `${API_URL}/join`);
+        
+        fetch(`${API_URL}/join`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(registrationData)
         })
-        .catch(err => {
-          console.error("❌ Ошибка регистрации:", err);
-          alert("Ошибка регистрации: " + err.message);
-        });
-    });
+          .then(res => {
+            console.log("🔵 [MAIN.JS] Ответ от сервера:", res.status, res.statusText);
+            return res.json();
+          })
+          .then(data => {
+            console.log("🔵 [MAIN.JS] Данные от сервера:", data);
+            if (!data.success) throw new Error(data.error || "Неизвестная ошибка");
+            console.log("✅ [MAIN.JS] Регистрация прошла успешно:", data);
+            currentUser.registered = true;
+            console.log("🔵 [MAIN.JS] Вызов showScreen('screen-gender')");
+            showScreen("screen-gender");
+            // Инициализировать чат с ботом: сначала WebApp sendData, затем deep link
+            if (tg && tg.sendData) {
+              tg.sendData(JSON.stringify({ action: "register", userId: registrationData.userId }));
+            }
+            const deepLinkUrl = `https://t.me/SeligerTinderApp_bot?start=${registrationData.userId}`;
+            if (tg && tg.openLink) {
+              tg.openLink(deepLinkUrl);
+            } else {
+              window.open(deepLinkUrl, "_blank");
+            }
+          })
+          .catch(err => {
+            console.error("❌ [MAIN.JS] Ошибка регистрации:", err);
+            alert("Ошибка регистрации: " + err.message);
+          });
+      });
+      console.log("✅ [MAIN.JS] Обработчик join-button установлен");
+    } else {
+      console.error("❌ [MAIN.JS] Кнопка join-button НЕ найдена!");
+    }
   }
+  
+  // Устанавливаем обработчик сразу и после загрузки
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', setupJoinButton);
+  } else {
+    setupJoinButton();
+  }
+  
+  // Также пробуем установить после небольшой задержки (на случай если DOM еще не готов)
+  setTimeout(setupJoinButton, 500);
 // Получаем элементы кнопок выбора пола
 const maleBtn = document.getElementById("maleBtn");
 const femaleBtn = document.getElementById("femaleBtn");

@@ -365,35 +365,48 @@
         }
       })();
       
-      // Логирование для кнопки регистрации
-      document.addEventListener('DOMContentLoaded', () => {
-        console.log('🔵 [DOM] DOMContentLoaded - поиск кнопки join-button...');
+      // Логирование для кнопки регистрации и проверка обработчиков
+      function checkJoinButton() {
+        console.log('🔵 [DOM] Проверка кнопки join-button...');
         const joinButton = document.getElementById('join-button');
         if (joinButton) {
           console.log('✅ [DOM] Кнопка join-button найдена:', joinButton);
           console.log('  - ID:', joinButton.id);
           console.log('  - Класс:', joinButton.className);
           console.log('  - Текст:', joinButton.textContent);
+          console.log('  - API_URL:', window.API_URL);
+          console.log('  - API_BASE_URL:', window.API_BASE_URL);
           
-          // Проверяем, есть ли уже обработчик
-          const hasHandler = joinButton.onclick !== null || joinButton.getAttribute('data-handler-attached') === 'true';
-          console.log('  - Обработчик уже есть:', hasHandler);
+          // Проверяем обработчики событий
+          const handlers = getEventListeners ? getEventListeners(joinButton) : 'getEventListeners недоступен';
+          console.log('  - Обработчики событий:', handlers);
           
-          if (!hasHandler) {
-            console.log('  🔵 [DOM] Добавление временного обработчика для логирования...');
-            joinButton.addEventListener('click', (e) => {
-              console.log('🔵 [BUTTON] Клик по кнопке join-button!');
-              console.log('  - Event:', e);
-              console.log('  - API_URL:', window.API_URL);
-              console.log('  - API_BASE_URL:', window.API_BASE_URL);
-              console.log('  - WEB_APP_URL:', window.WEB_APP_URL);
-              console.log('  - Telegram.WebApp:', window.Telegram?.WebApp);
-            }, { once: false });
-            joinButton.setAttribute('data-handler-attached', 'true');
-          }
+          // Добавляем логирующий обработчик
+          joinButton.addEventListener('click', (e) => {
+            console.log('🔵 [BUTTON] Клик по кнопке join-button!');
+            console.log('  - Event:', e);
+            console.log('  - API_URL:', window.API_URL);
+            console.log('  - API_BASE_URL:', window.API_BASE_URL);
+            console.log('  - WEB_APP_URL:', window.WEB_APP_URL);
+            console.log('  - Telegram.WebApp:', window.Telegram?.WebApp);
+            console.log('  - window.showScreen:', typeof window.showScreen);
+            console.log('  - window.currentUser:', window.currentUser);
+          }, { once: false });
         } else {
           console.error('❌ [DOM] Кнопка join-button НЕ найдена!');
         }
+      }
+      
+      // Проверяем сразу и после загрузки DOM
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', checkJoinButton);
+      } else {
+        checkJoinButton();
+      }
+      
+      // Также проверяем после загрузки всех скриптов
+      window.addEventListener('load', () => {
+        setTimeout(checkJoinButton, 1000);
       });
       
       // Показываем контент после загрузки всех ресурсов
