@@ -15,10 +15,29 @@ PYTHON = "python3"
 npm_config_python = "python3"
 
 [phases.install]
-cmds = ["export PYTHON=$(which python3) && export npm_config_python=$(which python3) && npm i"]
+cmds = [
+  "export PYTHON=$(which python3) && export npm_config_python=$(which python3) && echo '🔍 Python path: $PYTHON' && npm i"
+]
 
 [phases.build]
-cmds = ["npm rebuild @u4/opencv4nodejs 2>&1 || echo '⚠️ OpenCV rebuild failed - face detection will be disabled'"]
+cmds = [
+  "echo '🔍 === OpenCV Build Debug Info ==='",
+  "echo '🔍 Python: $(which python3)'",
+  "echo '🔍 Python version: $(python3 --version)'",
+  "echo '🔍 GCC: $(which gcc)'",
+  "echo '🔍 GCC version: $(gcc --version | head -1)'",
+  "echo '🔍 CMake: $(which cmake)'",
+  "echo '🔍 CMake version: $(cmake --version | head -1)'",
+  "echo '🔍 pkg-config: $(which pkg-config)'",
+  "echo '🔍 Checking OpenCV installation...'",
+  "pkg-config --modversion opencv4 2>&1 || echo '⚠️ pkg-config opencv4 not found'",
+  "pkg-config --cflags opencv4 2>&1 || echo '⚠️ pkg-config opencv4 cflags not found'",
+  "pkg-config --libs opencv4 2>&1 || echo '⚠️ pkg-config opencv4 libs not found'",
+  "find /nix/store -name 'opencv*' -type d 2>/dev/null | head -5 || echo '⚠️ OpenCV not found in /nix/store'",
+  "find /nix/store -name 'opencv*.pc' 2>/dev/null | head -5 || echo '⚠️ OpenCV .pc files not found'",
+  "echo '🔍 Attempting OpenCV rebuild with verbose output...'",
+  "npm rebuild @u4/opencv4nodejs --verbose 2>&1 | tail -100 || echo '⚠️ OpenCV rebuild failed - face detection will be disabled'"
+]
 
 [start]
 cmd = "node start-all.js"
