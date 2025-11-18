@@ -9,7 +9,6 @@ from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse, JSONResponse
-from fastapi.templating import Jinja2Templates
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
@@ -117,12 +116,8 @@ if Path(IMAGES_DIR).exists():
     app.mount("/data/img", StaticFiles(directory=IMAGES_DIR), name="images")
 # Подарки больше не используются
 
-# Templates (для EJS -> Jinja2)
-templates_dir = Path(__file__).parent.parent / "views"
-if templates_dir.exists():
-    templates = Jinja2Templates(directory=str(templates_dir))
-else:
-    templates = None
+# HTML файл (простой статический HTML)
+html_file = Path(__file__).parent.parent / "public" / "index.html"
 
 # Импорт роутов
 from routes import users, likes, matches, photos, pro, stats, admin, goals, push
@@ -166,36 +161,37 @@ async def startup_event():
     print("✅ Backend server initialized")
 
 
+@app.get("/api/config")
+async def get_config():
+    """API endpoint для получения конфигурации фронтенда"""
+    if not WEB_APP_URL:
+        raise HTTPException(status_code=500, detail="WEB_APP_URL не настроен")
+    
+    web_app_url = WEB_APP_URL
+    api_base_url = f"{web_app_url}/api"
+    
+    # Загружаем hash-map.json для JS файлов
+    hash_map_path = public_dir / "hash-map.json"
+    hash_map = {}
+    if hash_map_path.exists():
+        import json
+        with open(hash_map_path) as f:
+            hash_map = json.load(f)
+    
+    return {
+        "webAppUrl": web_app_url,
+        "apiBaseUrl": api_base_url,
+        "hashMap": hash_map
+    }
+
+
 @app.get("/", response_class=HTMLResponse)
 async def root(request: Request):
-    """Главная страница"""
-    if templates:
-        # Используем WEB_APP_URL из конфигурации (обязательная переменная)
-        if not WEB_APP_URL:
-            raise HTTPException(status_code=500, detail="WEB_APP_URL не настроен")
-        web_app_url = WEB_APP_URL
-        api_base_url = f"{web_app_url}/api"
-        
-        # Загружаем hash-map.json для JS файлов
-        hash_map_path = public_dir / "hash-map.json"
-        hash_map = {}
-        if hash_map_path.exists():
-            import json
-            with open(hash_map_path) as f:
-                hash_map = json.load(f)
-        
-        return templates.TemplateResponse(
-            "index.j2",
-            {
-                "request": request,
-                "webAppUrl": web_app_url,
-                "apiBaseUrl": api_base_url,
-                "hashMap": hash_map,
-                "user": {},  # Можно получить из БД если нужно
-                "gifts": [],  # Подарки больше не используются
-            }
-        )
-    return HTMLResponse("<h1>SeligerTinder Backend</h1>")
+    """Главная страница - простой HTML"""
+    if html_file.exists():
+        with open(html_file, 'r', encoding='utf-8') as f:
+            return HTMLResponse(content=f.read())
+    return HTMLResponse("<h1>SeligerTinder Backend</h1><p>index.html not found</p>")
 
 
 @app.get("/api/health")
