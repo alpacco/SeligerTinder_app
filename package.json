@@ -12,7 +12,7 @@
     "start:bot": "node start-bot.js",
     "start:all": "node start-all.js",
     "build:prod": "vite build",
-    "postinstall": "npm rebuild sqlite3 opencv4nodejs",
+    "postinstall": "npm rebuild sqlite3 @u4/opencv4nodejs",
     "migrate": "node migrations/migrate.js"
   },
   "dependencies": {
