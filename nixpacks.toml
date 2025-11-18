@@ -7,8 +7,7 @@ nixPkgs = [
   "pkg-config",
   "opencv4",
   "gcc",
-  "cmake",
-  "make"
+  "cmake"
 ]
 
 [phases.install]
