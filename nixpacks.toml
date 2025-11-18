@@ -1,5 +1,15 @@
 [phases.setup]
-nixPkgs = ["nodejs_22", "npm-9_x", "python3", "python3Packages.pip", "pkg-config", "opencv"]
+nixPkgs = [
+  "nodejs_22",
+  "npm-9_x",
+  "python3",
+  "python3Packages.pip",
+  "pkg-config",
+  "opencv",
+  "gcc",
+  "make",
+  "cmake"
+]
 
 [phases.install]
 cmds = ["npm i"]
@@ -9,3 +19,6 @@ cmds = ["npm install"]
 
 [start]
 cmd = "node start-all.js"
+
+[variables]
+PYTHON = "/nix/store/*/bin/python3"
