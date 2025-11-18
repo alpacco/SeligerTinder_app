@@ -11,11 +11,11 @@ nixPkgs = [
 ]
 
 [variables]
-PYTHON = "/nix/store/*/bin/python3"
-npm_config_python = "/nix/store/*/bin/python3"
+PYTHON = "python3"
+npm_config_python = "python3"
 
 [phases.install]
-cmds = ["npm i"]
+cmds = ["export PYTHON=$(which python3) && export npm_config_python=$(which python3) && npm i"]
 
 [phases.build]
 cmds = ["npm rebuild @u4/opencv4nodejs || echo 'OpenCV rebuild skipped - will continue without face detection'"]
