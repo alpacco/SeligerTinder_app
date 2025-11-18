@@ -42,20 +42,21 @@ module.exports = (db) => {
 
       console.log(`[routes/matches.js] /api/matches - matchesArr (userIds):`, matchesArr);
       const placeholders = matchesArr.map(() => '?').join(',');
+      // SQL будет автоматически адаптирован в db-pg.js для PostgreSQL
       const sql = `
-        SELECT u.userId AS userId,
-               u.userId AS id,
+        SELECT u."userId" AS "userId",
+               u."userId" AS id,
                u.name,
                u.username,
-               COALESCE(u.photo1, u.photoUrl) AS avatar
+               COALESCE(u."photo1", u."photoUrl") AS avatar
         FROM users u
-        WHERE u.userId IN (${placeholders})
+        WHERE u."userId" IN (${placeholders})
       `;
       console.log(`[routes/matches.js] /api/matches - SQL:`, sql);
       const params = [...matchesArr];
       console.log(`[routes/matches.js] /api/matches - SQL params:`, params);
       const rows = await new Promise((resolve, reject) =>
-        db.all(sql, params, (err, rows) => err ? reject(err) : resolve(rows))
+        db.all(sql, params, (err, rows) => err ? reject(err) : resolve(rows || []))
       );
       console.log(`[routes/matches.js] /api/matches - SQL rows:`, rows.map(r => r.userId));
       console.log(`[routes/matches.js] /api/matches - matchesArr:`, matchesArr);

@@ -3,59 +3,72 @@ const express = require('express');
 const path = require('path');
 const fs = require('fs');
 const createError = require('http-errors');
+const { asyncHandler } = require('../middleware/errorHandler');
 
 function usersRouter(db) {
   const router = express.Router();
 
   // GET /api/users - Получить список всех пользователей (для админки)
-  router.get('/users', (req, res, next) => {
+  router.get('/users', asyncHandler(async (req, res, next) => {
     console.log('[GET /api/users] Запрос всех пользователей');
-    db.all('SELECT * FROM users', (err, rows) => {
-      if (err) {
-        console.error('[GET /api/users] Ошибка:', err);
-        // Возвращаем пустой массив при ошибке
-        return res.json({ success: false, data: [], error: err.message });
-      }
+    try {
+      const rows = await new Promise((resolve, reject) => {
+        db.all('SELECT * FROM users', [], (err, rows) => {
+          if (err) reject(err);
+          else resolve(rows || []);
+        });
+      });
       console.log('[GET /api/users] Успешно получено пользователей:', rows.length);
       res.json({ success: true, data: Array.isArray(rows) ? rows : [] });
-    });
-  });
+    } catch (err) {
+      console.error('[GET /api/users] Ошибка:', err);
+      // Возвращаем пустой массив при ошибке
+      res.json({ success: false, data: [], error: err.message });
+    }
+  }));
 
   // GET /api/user?userId=... - Получить данные конкретного пользователя
-  router.get('/user', (req, res, next) => {
+  router.get('/user', asyncHandler(async (req, res, next) => {
     const { userId } = req.query;
     console.log('[GET /api/users/get] userId = %s', userId);
     if (!userId) {
       console.warn('[GET /api/users/get] Ошибка: userId обязателен');
       return res.status(400).json({ success: false, error: 'userId required' });
     }
-    db.get('SELECT * FROM users WHERE userId = ?', [userId], (err, row) => {
-      if (err) {
-        console.error('[GET /api/users/get] Ошибка запроса:', err);
-        return next(err);
-      }
+    try {
+      const row = await new Promise((resolve, reject) => {
+        db.get('SELECT * FROM users WHERE userId = ?', [userId], (err, row) => {
+          if (err) reject(err);
+          else resolve(row);
+        });
+      });
       if (!row) {
         console.warn('[GET /api/users/get] Пользователь не найден:', userId);
         return res.status(404).json({ success: false, error: 'User not found' });
       }
       console.log('[GET /api/users/get] Успешно получен пользователь:', userId);
       res.json({ success: true, data: row });
-    });
-  });
+    } catch (err) {
+      console.error('[GET /api/users/get] Ошибка запроса:', err);
+      throw err;
+    }
+  }));
 
   // GET /api/getUser?userId=... - Получить данные пользователя (для фронтенда)
-  router.get('/getUser', (req, res, next) => {
+  router.get('/getUser', asyncHandler(async (req, res, next) => {
     const { userId } = req.query;
     console.log('[GET /api/getUser] userId = %s', userId);
     if (!userId) {
       console.warn('[GET /api/getUser] Ошибка: userId обязателен');
       return res.status(400).json({ success: false, error: 'userId required' });
     }
-    db.get('SELECT * FROM users WHERE userId = ?', [userId], (err, row) => {
-      if (err) {
-        console.error('[GET /api/getUser] Ошибка запроса:', err);
-        return next(err);
-      }
+    try {
+      const row = await new Promise((resolve, reject) => {
+        db.get('SELECT * FROM users WHERE userId = ?', [userId], (err, row) => {
+          if (err) reject(err);
+          else resolve(row);
+        });
+      });
       if (!row) {
         console.warn('[GET /api/getUser] Пользователь не найден:', userId);
         return res.status(404).json({ success: false, error: 'User not found' });
@@ -63,8 +76,11 @@ function usersRouter(db) {
       console.log('[GET /api/getUser] Успешно получен пользователь:', userId);
       console.log('[GET /api/getUser] Данные пользователя:', row);
       res.json({ success: true, data: row });
-    });
-  });
+    } catch (err) {
+      console.error('[GET /api/getUser] Ошибка запроса:', err);
+      throw err;
+    }
+  }));
 
   // GET /api/candidates?userId=...&oppositeGender=... - Получить кандидатов для свайпа
   router.get('/candidates', (req, res, next) => {
@@ -703,7 +719,7 @@ function usersRouter(db) {
   });
 
   // POST /api/join - Регистрация нового пользователя
-  router.post('/join', (req, res, next) => {
+  router.post('/join', asyncHandler(async (req, res, next) => {
     const { userId, username, name, age, gender, about, lookingFor, photo1 } = req.body;
     console.log('🔥 [API] /api/users/join called with:', req.body);
     console.log('[POST /api/join] for userId:', userId);
@@ -715,17 +731,22 @@ function usersRouter(db) {
     const sql = `INSERT INTO users (userId, username, name, age, gender, about, lookingFor, photo1, likes, dislikes, matches, goals, is_pro, pro_end, super_likes_count, needPhoto, warned) VALUES (?, ?, ?, ?, ?, ?, ?, ?, '[]', '[]', '[]', '[]', 0, NULL, 3, 0, 0)`;
     const params = [userId, username, name, age, gender, about, lookingFor, photo1];
 
-    db.run(sql, params, function(err) {
-      if (err) {
-        console.error('❌ [API] /api/users/join DB error:', err.message);
-        console.error(`[POST /api/join] DB error for ${req.body.userId}: ${err.message}`);
-        return res.status(500).json({ success: false, error: err.message });
-      }
-      console.log(`✅ [API] /api/users/join: пользователь ${req.body.name} (ID: ${req.body.userId}) добавлен, rowid=${this.lastID}`);
-      console.log(`[POST /api/join] User ${req.body.userId} created successfully, rowid=${this.lastID}`);
+    try {
+      const result = await new Promise((resolve, reject) => {
+        db.run(sql, params, function(err) {
+          if (err) reject(err);
+          else resolve({ lastID: this.lastID, changes: this.changes });
+        });
+      });
+      console.log(`✅ [API] /api/users/join: пользователь ${req.body.name} (ID: ${req.body.userId}) добавлен, rowid=${result.lastID}`);
+      console.log(`[POST /api/join] User ${req.body.userId} created successfully, rowid=${result.lastID}`);
       res.json({ success: true, userId: req.body.userId });
-    });
-  });
+    } catch (err) {
+      console.error('❌ [API] /api/users/join DB error:', err.message);
+      console.error(`[POST /api/join] DB error for ${req.body.userId}: ${err.message}`);
+      throw err;
+    }
+  }));
 
   // POST /api/updateGender - Обновить пол
   router.post('/updateGender', (req, res, next) => {
