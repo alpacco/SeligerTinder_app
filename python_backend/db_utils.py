@@ -143,7 +143,12 @@ async def db_run(sql: str, params: List[Any] = None) -> Dict[str, Any]:
     if params is None:
         params = []
     
+    # Логируем для отладки
+    print(f"[db_run] SQL: {sql}, params: {params}")
+    
     adapted_sql, adapted_params = adapt_sql_for_postgres(sql, params)
+    print(f"[db_run] Adapted SQL: {adapted_sql}, adapted_params: {adapted_params}")
+    
     pg_pool = get_pg_pool()
     conn = pg_pool.getconn()
     try:
@@ -153,6 +158,9 @@ async def db_run(sql: str, params: List[Any] = None) -> Dict[str, Any]:
         return {"lastID": cur.lastrowid if hasattr(cur, 'lastrowid') else None, "changes": cur.rowcount}
     except Exception as e:
         conn.rollback()
+        print(f"[db_run] Ошибка выполнения SQL: {e}")
+        print(f"[db_run] SQL: {adapted_sql}")
+        print(f"[db_run] Params: {adapted_params}")
         raise
     finally:
         pg_pool.putconn(conn)
