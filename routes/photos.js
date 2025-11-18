@@ -320,7 +320,7 @@ async function detectGenderFacePlusPlus(imageBuffer, apiKey, apiSecret) {
   }
 }
 
-function photosRouter(db, logger, IMG_DIR, BOT_TOKEN, visionClient) {
+function photosRouter(db, logger, IMG_DIR, BOT_TOKEN, opencvClient) {
   const router = express.Router();
 
   // Парсим JSON тела
@@ -361,24 +361,24 @@ function photosRouter(db, logger, IMG_DIR, BOT_TOKEN, visionClient) {
       if (visionClient) {
         try {
           hasFace = await faceDetector(tmpPath);
-          console.log(`[uploadPhoto] Vision: лицо найдено: ${hasFace}`);
+          console.log(`[uploadPhoto] OpenCV: лицо найдено: ${hasFace}`);
         } catch (err) {
-          console.error(`[uploadPhoto] Vision: ошибка при поиске лица:`, err);
+          console.error(`[uploadPhoto] OpenCV: ошибка при поиске лица:`, err);
           return res.status(500).json({ success: false, error: 'Ошибка сервиса распознавания лиц' });
         }
       } else {
-        console.warn('[uploadPhoto] Vision не работает, лицо не проверяется!');
+        console.warn('[uploadPhoto] OpenCV не работает, лицо не проверяется!');
       }
       if (!hasFace) {
         console.warn('[uploadPhoto] Лицо не обнаружено, файл не добавлен');
         return res.status(400).json({ success: false, error: 'Лицо не обнаружено. Загрузите другое фото.', needPhoto: 1 });
       }
-      // 2. Проверка на мемы/фейки через Vision
-      if (visionClient) {
-        const memeCheck = await isMemeOrFake(visionClient, buffer);
-        console.log(`[uploadPhoto] Vision: meme/fake check:`, memeCheck);
+      // 2. Проверка на мемы/фейки через OpenCV
+      if (opencvAvailable) {
+        const memeCheck = await isMemeOrFake(opencvClient, buffer);
+        console.log(`[uploadPhoto] OpenCV: meme/fake check:`, memeCheck);
         if (memeCheck.isMeme) {
-          console.warn(`[uploadPhoto] Vision: мем/фейк (${memeCheck.reason})`);
+          console.warn(`[uploadPhoto] OpenCV: мем/фейк (${memeCheck.reason})`);
           return res.status(400).json({ success: false, error: 'На фото обнаружен мем, фейк или кадр из фильма. Загрузите реальное фото.', needPhoto: 1 });
       }
       }
@@ -525,10 +525,10 @@ function photosRouter(db, logger, IMG_DIR, BOT_TOKEN, visionClient) {
             if (err) reject(err); else resolve();
           });
         });
-        console.log(`Google Vision работает, needPhoto установлен в 0 для пользователя ${userId}`);
+        console.log(`OpenCV работает, needPhoto установлен в 0 для пользователя ${userId}`);
       } else {
-        // Google Vision не работает, оставляем needPhoto = 1
-        console.log(`Google Vision не работает, needPhoto остается 1 для пользователя ${userId}`);
+        // OpenCV не работает, оставляем needPhoto = 1
+        console.log(`OpenCV не работает, needPhoto остается 1 для пользователя ${userId}`);
       }
       // Вернуть актуального пользователя
       const userRowFull = await new Promise((resolve, reject) =>

@@ -24,7 +24,7 @@ const express = require('express');
 const path = require('path');
 const fs = require('fs');
 const cors = require('cors');
-const vision = require('@google-cloud/vision');
+// OpenCV инициализируется в routes/photos.js
 const cron = require('node-cron');
 const dotenv = require('dotenv');
 const rateLimit = require('express-rate-limit');
