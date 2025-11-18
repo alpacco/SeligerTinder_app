@@ -132,3 +132,16 @@ __pycache__/
 *.egg-info/
 dist/
 build/
+
+# Frontend compiled files (собираются на сервере при деплое)
+public/js/*.js
+public/js/chunks/*.js
+public/css/*.css
+public/hash-map.json
+!public/js/*.min.js
+!public/css/*.min.css
+
+# Frontend build artifacts
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
