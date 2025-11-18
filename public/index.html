@@ -461,8 +461,25 @@
       
       // Также проверяем после загрузки всех скриптов
       window.addEventListener('load', () => {
-        setTimeout(checkJoinButton, 1000);
-        setTimeout(checkJoinButton, 2000); // Еще раз через 2 секунды
+        console.log('🔵 [DOM] window.load произошел');
+        console.log('  - window.showScreen:', typeof window.showScreen);
+        console.log('  - window.currentUser:', window.currentUser);
+        console.log('  - window.API_URL:', window.API_URL);
+        
+        setTimeout(() => {
+          console.log('🔵 [DOM] Проверка через 1000ms после load');
+          checkJoinButton();
+        }, 1000);
+        
+        setTimeout(() => {
+          console.log('🔵 [DOM] Проверка через 2000ms после load');
+          checkJoinButton();
+        }, 2000);
+        
+        setTimeout(() => {
+          console.log('🔵 [DOM] Проверка через 3000ms после load');
+          checkJoinButton();
+        }, 3000);
       });
       
       // Показываем контент после загрузки всех ресурсов

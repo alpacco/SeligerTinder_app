@@ -234,6 +234,7 @@ def main():
     """Запуск бота"""
     import sys
     import os
+    import traceback
     
     print("=" * 70)
     print("🤖 ЗАПУСК TELEGRAM BOT")
@@ -241,11 +242,29 @@ def main():
     print(f"📁 Рабочая директория: {os.getcwd()}")
     print(f"🐍 Python версия: {sys.version}")
     print(f"📦 Python путь: {sys.executable}")
+    print(f"📂 Файл bot.py: {__file__}")
+    print(f"📂 Существует ли bot.py: {os.path.exists(__file__)}")
+    print("=" * 70)
+    
+    # Проверяем переменные окружения
+    print("🔵 Проверка переменных окружения...")
+    print(f"  - BOT_TOKEN: {'установлен' if BOT_TOKEN else 'НЕ УСТАНОВЛЕН!'}")
+    print(f"  - WEB_APP_URL: {WEB_APP_URL if WEB_APP_URL else 'НЕ УСТАНОВЛЕН!'}")
+    print(f"  - API_URL: {API_URL if API_URL else 'НЕ УСТАНОВЛЕН!'}")
+    print(f"  - DEV_CHAT_ID: {DEV_CHAT_ID if DEV_CHAT_ID else 'не установлен'}")
+    
+    # Проверяем все переменные окружения
+    print("🔵 Все переменные окружения, начинающиеся с BOT, WEB, API, DEV:")
+    for key, value in os.environ.items():
+        if any(key.startswith(prefix) for prefix in ['BOT', 'WEB', 'API', 'DEV']):
+            print(f"  - {key}: {value[:20]}..." if len(str(value)) > 20 else f"  - {key}: {value}")
+    
     print("=" * 70)
     
     if not BOT_TOKEN:
         print("❌ BOT_TOKEN не установлен!")
         print("⚠️ Проверьте переменные окружения в Railway")
+        print("⚠️ Убедитесь, что BOT_TOKEN добавлен в Variables")
         return
     
     print(f"✅ BOT_TOKEN установлен (длина: {len(BOT_TOKEN)} символов)")
@@ -257,24 +276,42 @@ def main():
     
     try:
         print("🔵 Создание Application...")
-        application = Application.builder().token(BOT_TOKEN).build()
-        print("✅ Application создан")
+        print("  - Импорт telegram.ext...")
+        from telegram.ext import Application, CommandHandler, CallbackQueryHandler
+        print("  - Импорт успешен")
+        
+        print("  - Создание Application.builder()...")
+        builder = Application.builder()
+        print("  - Builder создан")
+        
+        print("  - Установка токена...")
+        builder = builder.token(BOT_TOKEN)
+        print("  - Токен установлен")
+        
+        print("  - Сборка Application...")
+        application = builder.build()
+        print("✅ Application создан успешно")
         
         # Регистрация команд
         print("🔵 Регистрация обработчиков команд...")
+        print("  - Регистрация /start...")
         application.add_handler(CommandHandler("start", start_command))
         print("✅ Команда /start зарегистрирована")
         
+        print("  - Регистрация /grantpro...")
         application.add_handler(CommandHandler("grantpro", grantpro_command))
         print("✅ Команда /grantpro зарегистрирована")
         
+        print("  - Регистрация /addbadge...")
         application.add_handler(CommandHandler("addbadge", addbadge_command))
         print("✅ Команда /addbadge зарегистрирована")
         
+        print("  - Регистрация /stats...")
         application.add_handler(CommandHandler("stats", stats_command))
         print("✅ Команда /stats зарегистрирована")
         
         # Регистрация callback handlers
+        print("  - Регистрация CallbackQueryHandler...")
         application.add_handler(CallbackQueryHandler(callback_handler))
         print("✅ CallbackQueryHandler зарегистрирован")
         
@@ -282,9 +319,14 @@ def main():
         print("=" * 70)
         print("✅ Все обработчики зарегистрированы")
         print("🔵 Запуск polling...")
+        print("  - allowed_updates: Update.ALL_TYPES")
+        print("  - drop_pending_updates: True")
+        print("  - close_loop: False")
         print("=" * 70)
         print("✅ Бот запущен и готов к работе!")
         print("⏳ Ожидание обновлений от Telegram...")
+        print("=" * 70)
+        print("💡 Попробуйте отправить команду /start боту в Telegram")
         print("=" * 70)
         
         # Запускаем polling с логированием
@@ -296,9 +338,18 @@ def main():
     except KeyboardInterrupt:
         print("\n⚠️ Получен сигнал остановки (Ctrl+C)")
         print("🛑 Остановка бота...")
+    except ImportError as e:
+        print(f"❌ Ошибка импорта: {e}")
+        print("=" * 70)
+        traceback.print_exc()
+        print("=" * 70)
+        print("🛑 Бот остановлен из-за ошибки импорта")
+        print("=" * 70)
+        raise
     except Exception as e:
         print(f"❌ Ошибка при запуске бота: {e}")
-        import traceback
+        print(f"   Тип ошибки: {type(e).__name__}")
+        print("=" * 70)
         traceback.print_exc()
         print("=" * 70)
         print("🛑 Бот остановлен из-за ошибки")

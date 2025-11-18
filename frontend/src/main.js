@@ -113,11 +113,21 @@ function renderPaginator(paginatorEl, count, activeIndex) {
   }
 }
 
+console.log("🔵 [MAIN.JS] Скрипт main.js загружен (до DOMContentLoaded)");
+console.log("  - document.readyState:", document.readyState);
+console.log("  - window.API_URL:", window.API_URL);
+console.log("  - window.API_BASE_URL:", window.API_BASE_URL);
+
 document.addEventListener("DOMContentLoaded", () => {
-  console.log("▶ DOMContentLoaded: init main.js...");
+  console.log("▶ [MAIN.JS] DOMContentLoaded: init main.js...");
+  console.log("  - document.readyState:", document.readyState);
+  console.log("  - API_URL:", API_URL);
+  console.log("  - currentUser:", currentUser);
+  console.log("  - typeof showScreen:", typeof showScreen);
   
   // Инициализируем showScreenImpl
-showScreenImpl = showScreen;
+  showScreenImpl = showScreen;
+  console.log("  - showScreenImpl установлен:", typeof showScreenImpl);
   
   let selectedCandidateId = null;
   const giftModal = document.getElementById("gift-modal");
@@ -132,21 +142,39 @@ showScreenImpl = showScreen;
   let viewingCandidate = null;
 
 function showScreen(screenId) {
+  console.log(`🔵 [MAIN.JS] showScreen вызвана с screenId: ${screenId}`);
   if (showScreenImpl) {
+    console.log("  - showScreenImpl существует, вызываем его");
     showScreenImpl(screenId);
   } else {
-    console.warn("showScreen вызвана до инициализации DOM");
+    console.warn("  ⚠️ showScreen вызвана до инициализации DOM");
+    // Fallback: переключаем экраны вручную
+    const allScreens = document.querySelectorAll('.screen');
+    allScreens.forEach(screen => screen.classList.remove('active'));
+    const targetScreen = document.getElementById(screenId);
+    if (targetScreen) {
+      targetScreen.classList.add('active');
+      console.log(`  ✅ Переключили на экран ${screenId} вручную`);
+    } else {
+      console.error(`  ❌ Экран ${screenId} не найден!`);
+    }
   }
 }
 
 // Делаем showScreen доступной глобально
+console.log("🔵 [MAIN.JS] Устанавливаем window.showScreen...");
 window.showScreen = showScreen;
+console.log("  ✅ window.showScreen установлен:", typeof window.showScreen);
 
 // Экспортируем currentUser в глобальную область
+console.log("🔵 [MAIN.JS] Устанавливаем window.currentUser...");
 window.currentUser = currentUser;
+console.log("  ✅ window.currentUser установлен:", window.currentUser);
 
 // Экспортируем API_URL в глобальную область
+console.log("🔵 [MAIN.JS] Устанавливаем window.API_URL...");
 window.API_URL = API_URL;
+console.log("  ✅ window.API_URL установлен:", window.API_URL);
 
 // Экспортируем showCandidate в глобальную область
 window.showCandidate = showCandidate;
@@ -187,13 +215,29 @@ function fillCard(cardEl, cand) {
 
   // Обработчик для регистрации (screen‑1)
   function setupJoinButton() {
-    console.log("🔵 [MAIN.JS] Настройка обработчика join-button...");
+    console.log("🔵 [MAIN.JS] setupJoinButton вызвана");
+    console.log("  - document.readyState:", document.readyState);
+    console.log("  - API_URL:", API_URL);
+    console.log("  - typeof showScreen:", typeof showScreen);
+    console.log("  - currentUser:", currentUser);
+    console.log("  - window.showScreen:", typeof window.showScreen);
+    console.log("  - window.currentUser:", window.currentUser);
+    
     const joinButton = document.getElementById("join-button");
     if (joinButton) {
       console.log("✅ [MAIN.JS] Кнопка join-button найдена, добавляем обработчик");
-      console.log("  - API_URL:", API_URL);
-      console.log("  - currentUser:", currentUser);
-      console.log("  - showScreen:", typeof showScreen);
+      console.log("  - joinButton:", joinButton);
+      console.log("  - joinButton.onclick:", joinButton.onclick);
+      
+      // Проверяем, есть ли уже обработчик
+      const hasExistingHandler = joinButton.getAttribute('data-main-handler') === 'true';
+      if (hasExistingHandler) {
+        console.log("  ⚠️ [MAIN.JS] Обработчик уже установлен, пропускаем");
+        return;
+      }
+      
+      joinButton.setAttribute('data-main-handler', 'true');
+      console.log("  🔵 [MAIN.JS] Добавляем обработчик click...");
       
       joinButton.addEventListener("click", () => {
         console.log("🔵 [MAIN.JS] Клик по join-button - начало обработки");
@@ -257,14 +301,36 @@ function fillCard(cardEl, cand) {
   }
   
   // Устанавливаем обработчик сразу и после загрузки
+  console.log("🔵 [MAIN.JS] Настройка вызова setupJoinButton...");
+  console.log("  - document.readyState:", document.readyState);
+  
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', setupJoinButton);
+    console.log("  🔵 [MAIN.JS] DOM еще загружается, ждем DOMContentLoaded");
+    document.addEventListener('DOMContentLoaded', () => {
+      console.log("  ✅ [MAIN.JS] DOMContentLoaded произошел, вызываем setupJoinButton");
+      setupJoinButton();
+    });
   } else {
+    console.log("  ✅ [MAIN.JS] DOM уже готов, вызываем setupJoinButton сразу");
     setupJoinButton();
   }
   
-  // Также пробуем установить после небольшой задержки (на случай если DOM еще не готов)
-  setTimeout(setupJoinButton, 500);
+  // Также пробуем установить после небольших задержек
+  console.log("  🔵 [MAIN.JS] Устанавливаем таймеры для повторных попыток...");
+  setTimeout(() => {
+    console.log("  🔵 [MAIN.JS] Таймер 500ms: вызываем setupJoinButton");
+    setupJoinButton();
+  }, 500);
+  
+  setTimeout(() => {
+    console.log("  🔵 [MAIN.JS] Таймер 1000ms: вызываем setupJoinButton");
+    setupJoinButton();
+  }, 1000);
+  
+  setTimeout(() => {
+    console.log("  🔵 [MAIN.JS] Таймер 2000ms: вызываем setupJoinButton");
+    setupJoinButton();
+  }, 2000);
 // Получаем элементы кнопок выбора пола
 const maleBtn = document.getElementById("maleBtn");
 const femaleBtn = document.getElementById("femaleBtn");
