@@ -162,8 +162,9 @@ console.log("  - document.readyState:", document.readyState);
 console.log("  - window.API_URL:", window.API_URL);
 console.log("  - window.API_BASE_URL:", window.API_BASE_URL);
 
-document.addEventListener("DOMContentLoaded", () => {
-  console.log("▶ [MAIN.JS] DOMContentLoaded: init main.js...");
+// Функция инициализации, которая будет вызвана когда DOM готов
+function initMainJS() {
+  console.log("▶ [MAIN.JS] initMainJS вызвана (DOM готов)...");
   console.log("  - document.readyState:", document.readyState);
   console.log("  - API_URL:", API_URL);
   console.log("  - currentUser:", currentUser);
@@ -1819,8 +1820,18 @@ showScreenImpl = showScreen;
     window.showCandidate = showCandidate;
     console.log("  ✅ window.showCandidate установлен");
   }
+}
 
-}); 
+// Вызываем initMainJS в зависимости от состояния документа
+if (document.readyState === 'loading') {
+  // DOM еще загружается, ждем DOMContentLoaded
+  document.addEventListener("DOMContentLoaded", initMainJS);
+  console.log("🔵 [MAIN.JS] DOM еще загружается, ждем DOMContentLoaded...");
+} else {
+  // DOM уже готов (interactive или complete), вызываем сразу
+  console.log("🔵 [MAIN.JS] DOM уже готов, вызываем initMainJS сразу...");
+  initMainJS();
+}
 
   // Скрыть бейджи like/nope
   function hideBadges(cardEl) {
