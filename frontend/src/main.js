@@ -16,7 +16,7 @@
 import './css/main.css';
 
 // Импортируем функции из profile.js
-import { initProfileEditScreen } from './profile.js';
+import { initProfileEditScreen, exitProfileEditMode, updateProfileScreen, enterProfileEditMode } from './profile.js';
 
 // Импортируем функции из pro.js
 import { renderProInfo, initProFeatures } from './pro.js';
@@ -26,6 +26,9 @@ import { showProModal, initProModalHandlers } from './pro-modal.js';
 
 // Убеждаемся, что функции доступны глобально
 window.initProfileEditScreen = initProfileEditScreen;
+window.exitProfileEditMode = exitProfileEditMode;
+window.updateProfileScreen = updateProfileScreen;
+window.enterProfileEditMode = enterProfileEditMode;
 window.renderProInfo = renderProInfo;
 window.initProFeatures = initProFeatures;
 window.showProModal = showProModal;
@@ -168,11 +171,16 @@ document.addEventListener("DOMContentLoaded", () => {
   const giftBackdrop = document.querySelector('.gift-backdrop');
   if (giftBackdrop) giftBackdrop.classList.remove('open');
   const singleCard = document.getElementById("singleCard");
+  // Экспортируем singleCard в window для использования в swipe.js
+  window.singleCard = singleCard;
   let candidates = [];
   let currentIndex = 0;
   let currentPhotoIndex = 0;
   let inMutualMatch = false;
   let viewingCandidate = null;
+  // Экспортируем переменные в window для использования в swipe.js
+  window.candidates = candidates;
+  window.currentIndex = currentIndex;
 
   // ВРЕМЕННАЯ функция showScreen (будет заменена настоящей позже)
   // Используем fallback для переключения экранов через классы
@@ -464,52 +472,13 @@ if (femaleBtn) {
 }
 
   // Обработчики для переключения экрана (например, переход на профайл, матчи)
-  // Обработчик для кнопки MATCHES (устанавливается глобально)
+  // Обработчик для кнопки MATCHES (как в старом коде - просто и сразу)
   const matchesButton = document.getElementById("matches-button");
   if (matchesButton) {
-    // Удаляем старые обработчики, если есть
-    const newMatchesBtn = matchesButton.cloneNode(true);
-    matchesButton.parentNode.replaceChild(newMatchesBtn, matchesButton);
-    
-    newMatchesBtn.addEventListener("click", () => {
-      console.log("▶ Клик по кнопке MATCHES");
-      updateMatchesCount();       // ← Обновляем число в бейдже
+    matchesButton.addEventListener("click", () => {
+      updateMatchesCount();
       showScreen("screen-matches");
     });
-    console.log("✅ Обработчик для matches-button установлен");
-  } else {
-    console.warn("⚠️ Кнопка matches-button не найдена");
-  }
-
-  // Обработчик для avatar_button (устанавливается глобально)
-  const avatarBtn = document.getElementById("avatar_button");
-  if (avatarBtn) {
-    avatarBtn.style.cursor = "pointer";
-    // Удаляем старые обработчики, если есть
-    const newAvatarBtn = avatarBtn.cloneNode(true);
-    avatarBtn.parentNode.replaceChild(newAvatarBtn, avatarBtn);
-    
-    newAvatarBtn.addEventListener("click", () => {
-      console.log("▶ Клик по avatar_button -> переход на screen-profile");
-      viewingCandidate = null;
-      showScreen("screen-profile");
-    });
-    console.log("✅ Обработчик для avatar_button установлен");
-  } else {
-    console.warn("⚠️ avatar_button не найден");
-  }
-  
-  // Также устанавливаем обработчик для .ava-frame (на случай, если id изменился)
-  const avatarFrame = document.querySelector("#screen-swipe .ava-frame");
-  if (avatarFrame && !avatarFrame.hasAttribute('data-handler-added')) {
-    avatarFrame.setAttribute('data-handler-added', 'true');
-    avatarFrame.style.cursor = "pointer";
-    avatarFrame.addEventListener("click", () => {
-      console.log("▶ Клик по .ava-frame -> переход на screen-profile");
-      viewingCandidate = null;
-      showScreen("screen-profile");
-    });
-    console.log("✅ Обработчик для .ava-frame установлен");
   }
 // Для экрана Matches (screen4)
 const matchesBackBtn = document.getElementById("back-button");
@@ -816,41 +785,27 @@ if (profileEditBackBtn) {
   
   // animateCardOut function removed
 
-    // +++ Обработка клика по кнопкам «лайк» / «дизлайк» (устанавливается глобально)
-    // Эти кнопки должны быть в HTML (как в старом коде)
-    window.setupLikeDislikeHandlers = function() {
-      const likeBtnControl = document.querySelector(".like_d");
-      const dislikeBtnControl = document.querySelector(".dislike_d");
-      
-      if (likeBtnControl && !likeBtnControl.hasAttribute('data-handler-added')) {
-        likeBtnControl.setAttribute('data-handler-added', 'true');
-        likeBtnControl.addEventListener("click", () => {
-          console.log("▶ Клик по кнопке Like");
-          if (!candidates || candidates.length === 0 || currentIndex >= candidates.length) {
-            showCandidate();
-          } else {
-            doLike();
-          }
-        });
-        console.log("✅ Обработчик для .like_d установлен");
-      }
-      
-      if (dislikeBtnControl && !dislikeBtnControl.hasAttribute('data-handler-added')) {
-        dislikeBtnControl.setAttribute('data-handler-added', 'true');
-        dislikeBtnControl.addEventListener("click", () => {
-          console.log("▶ Клик по кнопке Dislike");
-          if (!candidates || candidates.length === 0 || currentIndex >= candidates.length) {
-            showCandidate();
-          } else {
-            doDislike();
-          }
-        });
-        console.log("✅ Обработчик для .dislike_d установлен");
-      }
-    };
-    
-    // Устанавливаем обработчики сразу
-    window.setupLikeDislikeHandlers();
+    // +++ Обработка клика по кнопкам «лайк» / «дизлайк» (как в старом коде - просто и сразу)
+    const likeBtnControl = document.querySelector(".like_d");
+    const dislikeBtnControl = document.querySelector(".dislike_d");
+    if (likeBtnControl) {
+      likeBtnControl.addEventListener("click", () => {
+        if (!candidates || candidates.length === 0 || currentIndex >= candidates.length) {
+          showCandidate();
+        } else {
+          doLike();
+        }
+      });
+    }
+    if (dislikeBtnControl) {
+      dislikeBtnControl.addEventListener("click", () => {
+        if (!candidates || candidates.length === 0 || currentIndex >= candidates.length) {
+          showCandidate();
+        } else {
+          doDislike();
+        }
+      });
+    }
 
     async function doDislike() {
       const topUserId = singleCard.dataset.userId;
@@ -870,7 +825,10 @@ if (profileEditBackBtn) {
       singleCard.style.transition = "transform 0.5s ease";
       singleCard.style.transform = `translate(-1000px, 0) rotate(-45deg)`;
       setTimeout(() => {
-        if (idx >= 0) candidates.splice(idx, 1);
+        if (idx >= 0) {
+          candidates.splice(idx, 1);
+          window.candidates = candidates;
+        }
         moveToNextCandidate();
         updateMatchesCount();
       }, 500);
@@ -905,6 +863,7 @@ if (profileEditBackBtn) {
     // Если нужно фото — просто показываем заглушку
     if (currentUser.needPhoto === 1) {
       candidates = [];
+      window.candidates = candidates;
       showCandidate();
       updateMatchesCount();
       return;
@@ -925,12 +884,16 @@ if (profileEditBackBtn) {
           Number(c.needPhoto || 0) === 0
         );
         currentIndex = 0;
+        // Синхронизируем с window для swipe.js
+        window.candidates = candidates;
+        window.currentIndex = currentIndex;
       }
       showCandidate();
       updateMatchesCount();
     } catch (err) {
       console.error("❌ loadCandidates:", err);
       candidates = [];
+      window.candidates = candidates;
       showCandidate();
       updateMatchesCount();
     }
@@ -960,6 +923,7 @@ if (profileEditBackBtn) {
         singleCard.style.transform = `translate(1000px, 0) rotate(45deg)`;
         setTimeout(() => {
           candidates.splice(idx, 1);
+          window.candidates = candidates;
           moveToNextCandidate();
           updateMatchesCount();
         }, 500);
@@ -973,7 +937,10 @@ if (profileEditBackBtn) {
     if (inMutualMatch) {
       // Remove the matched candidate so it won't be shown again
       const idx = candidates.findIndex(c => String(c.id) === singleCard.dataset.userId);
-      if (idx >= 0) candidates.splice(idx, 1);
+      if (idx >= 0) {
+        candidates.splice(idx, 1);
+        window.candidates = candidates;
+      }
     }
     inMutualMatch = false;
     singleCard.style.transition = 'none';
@@ -1040,39 +1007,14 @@ function showScreen(screenId) {
       updateSwipeScreen();
       updateMatchesCount();
       
-      // Attach profile navigation to the avatar frame (если еще не установлен)
+      // Attach profile navigation to the avatar frame (как в старом коде - внутри showScreen)
       const avatarFrame = document.querySelector("#screen-swipe .ava-frame");
-      if (avatarFrame && !avatarFrame.hasAttribute('data-handler-added')) {
-        avatarFrame.setAttribute('data-handler-added', 'true');
+      if (avatarFrame) {
         avatarFrame.style.cursor = "pointer";
         avatarFrame.addEventListener("click", () => {
-          console.log("▶ Клик по .ava-frame (в showScreen) -> переход на screen-profile");
           viewingCandidate = null;
           showScreen("screen-profile");
         });
-      }
-      
-      // Проверяем наличие кнопок лайк/дизлайк в HTML
-      const likeBtn = document.querySelector(".like_d");
-      const dislikeBtn = document.querySelector(".dislike_d");
-      
-      if (!likeBtn || !dislikeBtn) {
-        // Кнопок нет в HTML - создаем их через setupSwipeControls
-        console.log("⚠️ Кнопки лайк/дизлайк не найдены в HTML, создаем через setupSwipeControls");
-        if (window.setupSwipeControls) {
-          window.setupSwipeControls();
-        }
-      } else {
-        // Кнопки есть в HTML - показываем их (если не needPhoto)
-        // И сбрасываем атрибут data-handler-added, чтобы обработчики установились заново
-        likeBtn.removeAttribute('data-handler-added');
-        dislikeBtn.removeAttribute('data-handler-added');
-        likeBtn.style.display = currentUser.needPhoto ? "none" : "flex";
-        dislikeBtn.style.display = currentUser.needPhoto ? "none" : "flex";
-        // Устанавливаем обработчики заново
-        if (typeof window.setupLikeDislikeHandlers === 'function') {
-          setTimeout(window.setupLikeDislikeHandlers, 100);
-        }
       }
       
       // Потом подгружаем актуального пользователя и кандидатов
@@ -1080,6 +1022,7 @@ function showScreen(screenId) {
         .then(() => {
           if (currentUser.needPhoto === 1) {
             candidates = [];
+            window.candidates = candidates;
             showCandidate();
             updateMatchesCount();
           } else {
@@ -1095,6 +1038,12 @@ function showScreen(screenId) {
   }
 
   if (screenId === "screen-profile") {
+    // Если это профиль кандидата (viewingCandidate), показываем его профиль
+    if (viewingCandidate) {
+      showCandidateProfile(viewingCandidate);
+      return;
+    }
+    
     // Восстановить заголовок «Ваш профиль»
     const headerTitle = document.querySelector('#screen-profile .profile-header h2');
     if (headerTitle) headerTitle.textContent = 'Ваш профиль';
@@ -1124,6 +1073,13 @@ function showScreen(screenId) {
       })
       .catch(err => console.error("Ошибка загрузки профиля:", err));
   }
+
+  if (screenId === "screen-profile-edit") {
+    // Инициализируем экран редактирования профиля
+    if (typeof window.initProfileEditScreen === 'function') {
+      window.initProfileEditScreen();
+    }
+  }
 }
 
   function updateWelcomeScreen() {
@@ -1150,61 +1106,7 @@ function showScreen(screenId) {
         }
       }
   
-  // Обновление экрана профиля (screen‑5)
-  function updateProfileScreen() {
-    const picture = document.getElementById("profileCard");
-    const userInfo = document.querySelector("#screen-profile .user-info");
-    const profBio = document.querySelector("#screen-profile .user-bio");
-    const paginator = document.querySelector("#screen-profile .paginator");
-    if (picture && userInfo) {
-      const oldBadge = userInfo.querySelector(".badge-wrapper");
-      if (oldBadge) oldBadge.remove();
-      // Update name and age in the name-age-container
-      const nameEl = userInfo.querySelector(".name-age-container .user-name");
-      if (nameEl) {
-        nameEl.textContent = currentUser.name;
-      }
-      const ageEl = userInfo.querySelector(".name-age-container .user-age");
-      if (ageEl) {
-        if (!currentUser.hideAge && currentUser.age) {
-          ageEl.textContent = `${currentUser.age} лет`;
-          ageEl.style.display = "";
-            } else {
-          ageEl.style.display = "none";
-        }
-      }
-      if (currentUser.badge && currentUser.badge.trim() !== "") {
-        const badgeDiv = document.createElement("div");
-        badgeDiv.className = "badge-wrapper";
-        badgeDiv.innerHTML = `<img src="https://sta-black-dim.waw.amverum.cloud${currentUser.badge}" alt="Badge" class="badge-image">`;
-        // Вставляем бейдж перед именем
-        userInfo.prepend(badgeDiv);
-      }
-    }
-
-    if (profBio) { profBio.textContent = currentUser.bio; }
-    function renderProfilePaginator(count, idx) {
-      if (!paginator) return;
-      renderPaginator(paginator, count, idx);
-    }
-    let photosArr = currentUser.photos || [];
-    let currentProfileIndex = 0;
-    if (picture) {
-      picture.style.backgroundImage = `url('${photosArr.length > 0 ? photosArr[0] : "/img/photo.svg"}')`;
-      picture.onclick = () => {
-        if (photosArr.length < 2) return;
-        currentProfileIndex = (currentProfileIndex + 1) % photosArr.length;
-        picture.style.backgroundImage = `url('${photosArr[currentProfileIndex]}')`;
-        renderProfilePaginator(photosArr.length, currentProfileIndex);
-      };
-    }
-    renderProfilePaginator(photosArr.length, 0);
-    
-    // Обновляем PRO-информацию
-    if (window.renderProInfo) {
-      window.renderProInfo(currentUser);
-    }
-  }
+  // Обновление экрана профиля (screen‑5) - функция импортируется из profile.js
 async function renderMatches() {
   const matchesListEl = document.getElementById("matches-list");
   if (!matchesListEl) return;
@@ -1400,23 +1302,30 @@ if (headerTitle) headerTitle.textContent = 'Ваш Match';
       });
     }
 
+    // Обработчики для кнопок "Написать" и "Подарок" (удаляем старые, добавляем новые)
     const writeBtn = document.getElementById("candidate-write-btn");
     if (writeBtn) {
-      writeBtn.onclick = () => {
+      const newWriteBtn = writeBtn.cloneNode(true);
+      writeBtn.parentNode.replaceChild(newWriteBtn, writeBtn);
+      
+      newWriteBtn.addEventListener("click", () => {
         if (match.username) {
           window.open(`https://t.me/${match.username}`, "_blank");
         } else {
           window.Telegram.WebApp.showAlert("Пользователь не указал username");
         }
-      };
+      });
     }
 
     const giftBtn = document.getElementById("candidate-gift-btn");
     if (giftBtn) {
-      giftBtn.onclick = () => {
+      const newGiftBtn = giftBtn.cloneNode(true);
+      giftBtn.parentNode.replaceChild(newGiftBtn, giftBtn);
+      
+      newGiftBtn.addEventListener("click", () => {
         selectedCandidateId = match.id;
         showGiftModal();
-      };
+      });
     }
   }
   // === Инициализация gift-modal as bottom sheet ===
@@ -1669,8 +1578,11 @@ ageToggleIcon.addEventListener("click", () => {
       });
     });
   }
-  const cancelBtn = document.getElementById("edit-cancel-button");
-  const saveBtn = document.getElementById("edit-save-button");
+  // Проверяем оба варианта ID (для совместимости)
+  const cancelBtn = document.getElementById("cancel-edit-button") 
+                    || document.getElementById("edit-cancel-button");
+  const saveBtn = document.getElementById("save-edit-button")
+                  || document.getElementById("edit-save-button");
   if (cancelBtn) {
     cancelBtn.addEventListener("click", () => {
       console.log("▶ Нажата кнопка 'Отмена'");

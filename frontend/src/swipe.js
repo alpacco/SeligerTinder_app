@@ -44,14 +44,31 @@ export function showPreviousCandidate() {
 }
 
 export function setupSwipeControls() {
+  // ВАЖНО: Кнопки лайк/дизлайк уже есть в HTML footer, не создаем их здесь!
+  // Эта функция создает только PRO-кнопки (Back, SuperLike) в cards-btns внутри footer
   const swipeScreen = document.getElementById("screen-swipe");
-  let cardsBtns = swipeScreen.querySelector(".cards-btns");
+  if (!swipeScreen) return;
+  
+  // Кнопки лайк/дизлайк находятся в footer.cards-footer > .cards-btns
+  // PRO-кнопки (Back, SuperLike) добавляются в тот же .cards-btns
+  const cardsFooter = swipeScreen.querySelector(".cards-footer");
+  if (!cardsFooter) return;
+  
+  let cardsBtns = cardsFooter.querySelector(".cards-btns");
   if (!cardsBtns) {
+    // Если cards-btns нет, создаем его (но кнопки лайк/дизлайк уже должны быть в HTML)
     cardsBtns = document.createElement("div");
     cardsBtns.className = "cards-btns";
-    swipeScreen.appendChild(cardsBtns);
+    cardsFooter.appendChild(cardsBtns);
   }
-  cardsBtns.innerHTML = "";
+  
+  // Удаляем только PRO-кнопки, если они были созданы ранее
+  // НЕ трогаем кнопки лайк/дизлайк - они в HTML
+  const existingBackBtn = cardsBtns.querySelector(".back-cnd-btn");
+  const existingSuperBtn = cardsBtns.querySelector(".superlike_d");
+  if (existingBackBtn) existingBackBtn.remove();
+  if (existingSuperBtn) existingSuperBtn.remove();
+  
   // Back button for PRO users
   if (window.currentUser.is_pro) {
     const backBtn = document.createElement("button");
@@ -68,38 +85,7 @@ export function setupSwipeControls() {
     });
     cardsBtns.appendChild(backBtn);
   }
-  // Dislike button
-  const dislikeBtn = document.createElement("button");
-  dislikeBtn.className = "dislike_d";
-  dislikeBtn.innerHTML = `<svg class="dislike-icon" width="36" height="36" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><rect class="st0" x="29.5" y="14.61" width="5" height="34.78" rx="2.5" ry="2.5" transform="translate(-13.25 32) rotate(-45)"/><rect class="st0" x="14.61" y="29.5" width="34.78" height="5" rx="2.5" ry="2.5" transform="translate(-13.25 32) rotate(-45)"/></svg>`;
-  cardsBtns.appendChild(dislikeBtn);
-  // Dislike click handler
-  dislikeBtn.addEventListener('click', () => {
-
-    if (!window.candidates || window.candidates.length === 0 || window.currentIndex >= window.candidates.length) {
-
-      window.showCandidate && window.showCandidate();
-    } else {
-
-      window.doDislike && window.doDislike();
-    }
-  });
-  // Like button
-  const likeBtn = document.createElement("button");
-  likeBtn.className = "like_d";
-  likeBtn.innerHTML = `<svg class="like-icon" width="36" height="36" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><path class="st0" d="M40.2,19.3c-5.1-0.5-7.5,2.5-8.2,3.5c-0.6-1-3.1-4-8.2-3.5c-5.4,0.6-10.8,7-5.7,15.6c4.2,6.9,13.6,11.9,13.9,12.1l0,0l0,0l0,0l0,0c0.2-0.1,9.7-5.1,13.9-12.1C51,26.3,45.6,19.9,40.2,19.3L40.2,19.3z"/></svg>`;
-  cardsBtns.appendChild(likeBtn);
-  // Like click handler
-  likeBtn.addEventListener('click', () => {
-
-    if (!window.candidates || window.candidates.length === 0 || window.currentIndex >= window.candidates.length) {
-
-      window.showCandidate && window.showCandidate();
-    } else {
-
-      window.doLike && window.doLike();
-    }
-  });
+  
   // Super-Like for PRO users
   if (window.currentUser.is_pro) {
     const superBtn = document.createElement("button");
@@ -225,9 +211,10 @@ export function showCandidate() {
     singleCard.classList.remove('card-appear');
     singleCard.removeEventListener('animationend', handler);
   });
+  // Показываем/скрываем кнопки лайк/дизлайк (они уже есть в HTML)
   document.querySelectorAll(".like_d, .dislike_d")
     .forEach(b => b.style.display = window.currentUser.needPhoto ? "none" : "flex");
-  // Для PRO показываем Back и SuperLike
+  // Для PRO показываем Back и SuperLike (если они были созданы)
   if (window.currentUser.is_pro && !window.currentUser.needPhoto) {
     document.querySelectorAll(".back-cnd-btn, .superlike_d").forEach(b => b.style.display = "flex");
   }

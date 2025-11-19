@@ -145,3 +145,6 @@ public/hash-map.json
 frontend/node_modules/
 frontend/dist/
 frontend/.vite/
+
+# Old code backup (exclude from deployment)
+old/

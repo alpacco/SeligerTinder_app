@@ -132,6 +132,7 @@ async def join_user(user: UserCreate, request: Request):
         
         # Проверяем, существует ли пользователь
         # Используем ? - функция adapt_sql_for_postgres преобразует в $1, $2...
+        # ВАЖНО: не используем кавычки вокруг userId в WHERE, чтобы избежать проблем с параметрами
         existing = await db_get('SELECT "userId" FROM users WHERE "userId" = ?', [final_user_id])
         
         if existing:
