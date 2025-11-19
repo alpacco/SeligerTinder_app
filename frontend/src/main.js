@@ -818,7 +818,7 @@ if (profileEditBackBtn) {
 
     // +++ Обработка клика по кнопкам «лайк» / «дизлайк» (устанавливается глобально)
     // Эти кнопки должны быть в HTML (как в старом коде)
-    function setupLikeDislikeHandlers() {
+    window.setupLikeDislikeHandlers = function() {
       const likeBtnControl = document.querySelector(".like_d");
       const dislikeBtnControl = document.querySelector(".dislike_d");
       
@@ -847,20 +847,10 @@ if (profileEditBackBtn) {
         });
         console.log("✅ Обработчик для .dislike_d установлен");
       }
-    }
+    };
     
     // Устанавливаем обработчики сразу
-    setupLikeDislikeHandlers();
-    
-    // Также устанавливаем обработчики при переключении на экран свайпов
-    // (на случай, если кнопки были пересозданы)
-    const originalShowScreen = showScreen;
-    showScreen = function(screenId) {
-      originalShowScreen(screenId);
-      if (screenId === "screen-swipe") {
-        setTimeout(setupLikeDislikeHandlers, 100);
-      }
-    };
+    window.setupLikeDislikeHandlers();
 
     async function doDislike() {
       const topUserId = singleCard.dataset.userId;
@@ -1080,8 +1070,8 @@ function showScreen(screenId) {
         likeBtn.style.display = currentUser.needPhoto ? "none" : "flex";
         dislikeBtn.style.display = currentUser.needPhoto ? "none" : "flex";
         // Устанавливаем обработчики заново
-        if (typeof setupLikeDislikeHandlers === 'function') {
-          setTimeout(setupLikeDislikeHandlers, 100);
+        if (typeof window.setupLikeDislikeHandlers === 'function') {
+          setTimeout(window.setupLikeDislikeHandlers, 100);
         }
       }
       
