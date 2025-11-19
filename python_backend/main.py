@@ -374,6 +374,15 @@ async def get_config():
         print(f"  - Найдено JS файлов: {len(js_files)}")
         if js_files:
             print(f"  - Примеры файлов: {[f.name for f in js_files[:5]]}")
+            # Проверяем наличие файлов из hash-map
+            if hash_map:
+                for name, filename in hash_map.items():
+                    if not filename.endswith('.css'):  # Пропускаем CSS
+                        file_path = js_dir / filename
+                        if file_path.exists():
+                            print(f"  ✅ {name} -> {filename} (найден)")
+                        else:
+                            print(f"  ❌ {name} -> {filename} (НЕ НАЙДЕН!)")
         else:
             print(f"  ⚠️ JS файлы НЕ НАЙДЕНЫ в {js_dir}")
     else:

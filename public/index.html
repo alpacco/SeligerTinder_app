@@ -397,23 +397,53 @@
             }
           }
           
-          // Загружаем JS файлы с cache busting
+          // Загружаем JS файлы с cache busting и обработкой ошибок
           const APP_VERSION = '2025-01-19-v3';
           const scripts = ['main', 'profile', 'swipe', 'card', 'api', 'utils', 'gift', 'match', 'pro'];
           console.log('🔵 [INIT] Загрузка JS файлов...');
           console.log('🔄 [CACHE] Версия приложения:', APP_VERSION);
-          scripts.forEach(name => {
-            const filename = config.hashMap && config.hashMap[name] ? config.hashMap[name] : `${name}.js`;
-            // Добавляем версию для обхода кэша
-            const scriptUrl = '/js/' + filename + '?v=' + APP_VERSION;
+          
+          // Функция для загрузки скрипта с fallback
+          function loadScriptWithFallback(name, hashMap, version) {
+            const filename = hashMap && hashMap[name] ? hashMap[name] : `${name}.js`;
+            const scriptUrl = '/js/' + filename + '?v=' + version;
+            const fallbackUrl = '/js/' + name + '.js?v=' + version;
+            
             console.log(`  📦 Загрузка: ${scriptUrl}`);
             
             const script = document.createElement('script');
             script.type = 'module';
             script.src = scriptUrl;
-            script.onload = () => console.log(`  ✅ Загружен: ${scriptUrl}`);
-            script.onerror = (err) => console.error(`  ❌ Ошибка загрузки ${scriptUrl}:`, err);
+            
+            script.onload = () => {
+              console.log(`  ✅ Загружен: ${scriptUrl}`);
+            };
+            
+            script.onerror = (err) => {
+              console.error(`  ❌ Ошибка загрузки ${scriptUrl}:`, err);
+              
+              // Если файл с hash не найден, пробуем без hash
+              if (hashMap && hashMap[name]) {
+                console.log(`  🔄 Пробуем fallback: ${fallbackUrl}`);
+                const fallbackScript = document.createElement('script');
+                fallbackScript.type = 'module';
+                fallbackScript.src = fallbackUrl;
+                fallbackScript.onload = () => console.log(`  ✅ Загружен (fallback): ${fallbackUrl}`);
+                fallbackScript.onerror = (fallbackErr) => {
+                  console.error(`  ❌ Ошибка загрузки fallback ${fallbackUrl}:`, fallbackErr);
+                  console.error(`  ⚠️ Критическая ошибка: файл ${name}.js не найден ни с hash, ни без hash!`);
+                };
+                document.body.appendChild(fallbackScript);
+              } else {
+                console.error(`  ⚠️ Критическая ошибка: файл ${name}.js не найден!`);
+              }
+            };
+            
             document.body.appendChild(script);
+          }
+          
+          scripts.forEach(name => {
+            loadScriptWithFallback(name, config.hashMap, APP_VERSION);
           });
           console.log('✅ [INIT] Все JS файлы добавлены в DOM');
         } catch (error) {
@@ -427,7 +457,7 @@
           console.log('  API_BASE_URL:', window.API_BASE_URL);
           console.log('  WEB_APP_URL:', window.WEB_APP_URL);
           
-          // Загружаем JS файлы без hash (fallback с версией)
+          // Загружаем JS файлы без hash (fallback с версией и обработкой ошибок)
           const APP_VERSION_FALLBACK = '2025-01-19-v3';
           const scripts = ['main', 'profile', 'swipe', 'card', 'api', 'utils', 'gift', 'match', 'pro'];
           scripts.forEach(name => {
@@ -435,7 +465,14 @@
             script.type = 'module';
             script.src = '/js/' + name + '.js?v=' + APP_VERSION_FALLBACK;
             script.onload = () => console.log(`  ✅ Загружен (fallback): /js/${name}.js`);
-            script.onerror = (err) => console.error(`  ❌ Ошибка загрузки (fallback) /js/${name}.js:`, err);
+            script.onerror = (err) => {
+              console.error(`  ❌ Ошибка загрузки (fallback) /js/${name}.js:`, err);
+              console.error(`  ⚠️ Критическая ошибка: файл ${name}.js не найден!`);
+              // Показываем пользователю ошибку только для критических файлов
+              if (name === 'main') {
+                console.error('  🚨 КРИТИЧЕСКАЯ ОШИБКА: main.js не загружен! Приложение может не работать!');
+              }
+            };
             document.body.appendChild(script);
           });
         }
