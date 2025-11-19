@@ -661,6 +661,18 @@
         console.log('  - window.currentUser:', window.currentUser);
         console.log('  - window.API_URL:', window.API_URL);
         
+        // Устанавливаем обработчики для всех кнопок после загрузки
+        setTimeout(() => {
+          console.log('🔵 [DOM] Установка обработчиков кнопок после загрузки...');
+          
+          // Устанавливаем обработчики для экрана выбора пола
+          if (typeof window.setupGenderScreenHandlers === 'function') {
+            window.setupGenderScreenHandlers();
+          }
+          
+          checkJoinButton();
+        }, 500);
+        
         setTimeout(() => {
           console.log('🔵 [DOM] Проверка через 1000ms после load');
           checkJoinButton();
