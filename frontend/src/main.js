@@ -387,37 +387,15 @@ function fillCard(cardEl, cand) {
     }
   }
   
-  // Устанавливаем обработчик сразу и после загрузки
-  console.log("🔵 [MAIN.JS] Настройка вызова setupJoinButton...");
-  console.log("  - document.readyState:", document.readyState);
+  // Вызываем setupJoinButton сразу, так как мы уже внутри DOMContentLoaded
+  console.log("🔵 [MAIN.JS] Вызываем setupJoinButton (DOM уже готов)...");
+  setupJoinButton();
   
-  if (document.readyState === 'loading') {
-    console.log("  🔵 [MAIN.JS] DOM еще загружается, ждем DOMContentLoaded");
-    document.addEventListener('DOMContentLoaded', () => {
-      console.log("  ✅ [MAIN.JS] DOMContentLoaded произошел, вызываем setupJoinButton");
-      setupJoinButton();
-    });
-  } else {
-    console.log("  ✅ [MAIN.JS] DOM уже готов, вызываем setupJoinButton сразу");
-    setupJoinButton();
-  }
-  
-  // Также пробуем установить после небольших задержек
-  console.log("  🔵 [MAIN.JS] Устанавливаем таймеры для повторных попыток...");
+  // Также пробуем установить после небольшой задержки на случай, если кнопка появится позже
   setTimeout(() => {
-    console.log("  🔵 [MAIN.JS] Таймер 500ms: вызываем setupJoinButton");
+    console.log("  🔵 [MAIN.JS] Повторная попытка setupJoinButton через 500ms");
     setupJoinButton();
   }, 500);
-  
-  setTimeout(() => {
-    console.log("  🔵 [MAIN.JS] Таймер 1000ms: вызываем setupJoinButton");
-    setupJoinButton();
-  }, 1000);
-  
-  setTimeout(() => {
-    console.log("  🔵 [MAIN.JS] Таймер 2000ms: вызываем setupJoinButton");
-    setupJoinButton();
-  }, 2000);
 // Получаем элементы кнопок выбора пола
 const maleBtn = document.getElementById("maleBtn");
 const femaleBtn = document.getElementById("femaleBtn");
