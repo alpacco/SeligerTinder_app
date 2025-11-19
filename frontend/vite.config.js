@@ -40,7 +40,7 @@ export default defineConfig({
       },
     },
   },
-  publicDir: '../public',
+  publicDir: 'public', // Статические файлы из frontend/public/ будут скопированы в public/
   plugins: [
     {
       name: 'generate-hash-map',
