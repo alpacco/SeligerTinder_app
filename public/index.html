@@ -469,9 +469,14 @@
             console.log('  - window.currentUser:', window.currentUser);
             
             // Если обработчик из main.js не установился, вызываем напрямую
+            // НО: даже если showScreen есть, обработчик из main.js может не сработать
+            // Поэтому всегда вызываем fallback логику
             if (typeof window.showScreen === 'function' && window.currentUser) {
-              console.log('✅ [BUTTON] Используем обработчик из main.js');
-            } else {
+              console.log('✅ [BUTTON] window.showScreen доступен, но вызываем fallback для надежности');
+            }
+            
+            // ВСЕГДА вызываем fallback логику (даже если есть обработчик из main.js)
+            {
               console.warn('⚠️ [BUTTON] Обработчик из main.js не установлен, пытаемся вызвать напрямую');
               // Пробуем вызвать регистрацию напрямую
               if (window.API_URL) {

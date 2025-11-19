@@ -345,8 +345,25 @@ function fillCard(cardEl, cand) {
             if (!data.success) throw new Error(data.error || "Неизвестная ошибка");
             console.log("✅ [MAIN.JS] Регистрация прошла успешно:", data);
             currentUser.registered = true;
+            window.currentUser = currentUser; // Обновляем глобальную переменную
             console.log("🔵 [MAIN.JS] Вызов showScreen('screen-gender')");
-            showScreen("screen-gender");
+            console.log("  - typeof showScreen:", typeof showScreen);
+            console.log("  - typeof window.showScreen:", typeof window.showScreen);
+            // Используем window.showScreen для надежности
+            if (typeof window.showScreen === 'function') {
+              window.showScreen("screen-gender");
+            } else if (typeof showScreen === 'function') {
+              showScreen("screen-gender");
+            } else {
+              console.error("❌ [MAIN.JS] showScreen не доступна!");
+              // Fallback: переключаем вручную
+              document.querySelectorAll('.screen').forEach(s => s.style.display = 'none');
+              const genderScreen = document.getElementById('screen-gender');
+              if (genderScreen) {
+                genderScreen.style.display = 'block';
+                console.log("✅ [MAIN.JS] Экран переключен вручную");
+              }
+            }
             // Инициализировать чат с ботом: сначала WebApp sendData, затем deep link
             if (tg && tg.sendData) {
               tg.sendData(JSON.stringify({ action: "register", userId: registrationData.userId }));
