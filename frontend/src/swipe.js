@@ -1157,4 +1157,25 @@ function hideSwipeSkeleton() {
     skeleton.remove();
   }
 } 
-window.showCandidate = showCandidate; 
+
+// Экспортируем все функции в window для глобального доступа
+window.showCandidate = showCandidate;
+window.setupSwipeControls = setupSwipeControls;
+window.setupSwipeHandlers = setupSwipeHandlers;
+window.doLike = doLike;
+window.doDislike = doDislike;
+window.moveToNextCandidate = moveToNextCandidate;
+window.onMutualLike = onMutualLike;
+window.onSuperMatch = onSuperMatch;
+window.onSuperPending = onSuperPending;
+window.onSuperRejected = onSuperRejected;
+window.updateMatchesCount = updateMatchesCount;
+window.loadCandidates = loadCandidates;
+window.initSwipeScreen = initSwipeScreen;
+window.updateSwipeScreen = updateSwipeScreen;
+window.showPreviousCandidate = showPreviousCandidate;
+window.customHideBadges = customHideBadges;
+window.customRenderPaginator = customRenderPaginator;
+window.cyclePhoto = cyclePhoto;
+window.openChat = openChat;
+window.showToast = showToast; 
