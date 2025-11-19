@@ -374,8 +374,10 @@ async def get_config():
         print(f"  - Найдено JS файлов: {len(js_files)}")
         if js_files:
             print(f"  - Примеры файлов: {[f.name for f in js_files[:5]]}")
-            # Проверяем наличие файлов из hash-map
+            # Проверяем наличие файлов из hash-map и исправляем, если файл не найден
             if hash_map:
+                import json
+                hash_map_updated = False
                 for name, filename in hash_map.items():
                     if not filename.endswith('.css'):  # Пропускаем CSS
                         file_path = js_dir / filename
@@ -383,6 +385,26 @@ async def get_config():
                             print(f"  ✅ {name} -> {filename} (найден)")
                         else:
                             print(f"  ❌ {name} -> {filename} (НЕ НАЙДЕН!)")
+                            # Пробуем найти файл с другим hash
+                            pattern = f"{name}.*.js"
+                            matching_files = list(js_dir.glob(pattern))
+                            if matching_files:
+                                new_filename = matching_files[0].name
+                                print(f"  🔄 Найден альтернативный файл: {new_filename}")
+                                hash_map[name] = new_filename
+                                hash_map_updated = True
+                            else:
+                                print(f"  ⚠️ Альтернативный файл для {name} не найден!")
+                
+                # Обновляем hash-map.json, если были изменения
+                if hash_map_updated:
+                    hash_map_path = public_dir / "hash-map.json"
+                    try:
+                        with open(hash_map_path, 'w', encoding='utf-8') as f:
+                            json.dump(hash_map, f, indent=2, ensure_ascii=False)
+                        print(f"  ✅ hash-map.json обновлен с исправленными именами файлов")
+                    except Exception as e:
+                        print(f"  ❌ Ошибка обновления hash-map.json: {e}")
         else:
             print(f"  ⚠️ JS файлы НЕ НАЙДЕНЫ в {js_dir}")
     else:
