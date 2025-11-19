@@ -311,9 +311,15 @@ function fillCard(cardEl, cand) {
         console.log("🔵 [MAIN.JS] Отправка регистрации с данными:", registrationData);
         console.log("  - URL:", `${API_URL}/join`);
         
+        // Отправляем Telegram initData в заголовке для валидации на сервере
+        const headers = { "Content-Type": "application/json" };
+        if (tg && tg.initData) {
+          headers["X-Telegram-Init-Data"] = tg.initData;
+        }
+        
         fetch(`${API_URL}/join`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: headers,
           body: JSON.stringify(registrationData)
         })
           .then(res => {
