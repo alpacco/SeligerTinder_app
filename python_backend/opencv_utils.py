@@ -50,9 +50,9 @@ def check_face_in_photo(image_buffer: bytes) -> Tuple[bool, int]:
     print(f"🔍 [OpenCV] check_face_in_photo вызвана, размер буфера: {len(image_buffer)} байт")
     
     if not opencv_available or face_cascade is None:
-        print("⚠️ [OpenCV] OpenCV недоступен, пропускаем проверку лица")
-        logger.warning("OpenCV недоступен, пропускаем проверку лица")
-        return True, 1  # Возвращаем успех, чтобы не блокировать
+        print("❌ [OpenCV] OpenCV недоступен, НЕ пропускаем проверку - возвращаем False")
+        logger.warning("OpenCV недоступен, возвращаем False для проверки лица")
+        return False, 0  # Возвращаем False, чтобы требовать фото с лицом
     
     try:
         print("🔍 [OpenCV] Декодируем изображение из буфера...")
@@ -63,7 +63,7 @@ def check_face_in_photo(image_buffer: bytes) -> Tuple[bool, int]:
         if img is None or img.size == 0:
             print("❌ [OpenCV] Не удалось декодировать изображение из буфера")
             logger.error("Не удалось декодировать изображение из буфера")
-            return True, 1  # Возвращаем успех при ошибке
+            return False, 0  # Возвращаем False при ошибке декодирования
         
         print(f"🔍 [OpenCV] Изображение декодировано, размер: {img.shape}")
         
@@ -73,11 +73,13 @@ def check_face_in_photo(image_buffer: bytes) -> Tuple[bool, int]:
         
         # Детектируем лица
         print("🔍 [OpenCV] Начинаем детекцию лиц...")
+        print(f"🔍 [OpenCV] Параметры детекции: scaleFactor=1.1, minNeighbors=3, minSize=(50, 50)")
         faces = face_cascade.detectMultiScale(
             gray,
-            scaleFactor=1.1,
-            minNeighbors=5,
-            minSize=(30, 30)
+            scaleFactor=1.1,  # Масштаб для поиска (меньше = точнее, но медленнее)
+            minNeighbors=3,   # Минимум соседей для подтверждения (меньше = больше ложных срабатываний, но находит больше лиц)
+            minSize=(50, 50), # Минимальный размер лица в пикселях (увеличено для лучшей точности)
+            flags=cv2.CASCADE_SCALE_IMAGE
         )
         
         face_count = len(faces)
@@ -96,7 +98,7 @@ def check_face_in_photo(image_buffer: bytes) -> Tuple[bool, int]:
         logger.error(f"Ошибка при проверке лица через OpenCV: {e}")
         import traceback
         print(f"❌ [OpenCV] Traceback: {traceback.format_exc()}")
-        return True, 1  # Возвращаем успех при ошибке
+        return False, 0  # Возвращаем False при ошибке, чтобы требовать фото с лицом
 
 
 def is_meme_or_fake(image_buffer: bytes) -> dict:
