@@ -491,7 +491,8 @@
                       }
                       
                       // Универсальная функция для установки обработчиков кнопок экрана выбора пола
-                      function setupGenderScreenHandlers() {
+                      // Делаем её глобальной, чтобы можно было вызвать после загрузки
+                      window.setupGenderScreenHandlers = function() {
                         const maleBtn = document.getElementById('maleBtn');
                         const femaleBtn = document.getElementById('femaleBtn');
                         const continueButton = document.getElementById('continue-button');
@@ -587,7 +588,7 @@
                           });
                           console.log('✅ [BUTTON] Обработчик для continue-button установлен');
                         }
-                      }
+                      };
                       
                       // Пробуем использовать window.showScreen если доступна
                       if (typeof window.showScreen === 'function') {
@@ -596,7 +597,9 @@
                         // Обновляем UI после переключения
                         setTimeout(() => {
                           updateGenderScreenUI();
-                          setupGenderScreenHandlers();
+                          if (typeof window.setupGenderScreenHandlers === 'function') {
+                            window.setupGenderScreenHandlers();
+                          }
                         }, 100);
                       } else {
                         console.warn('⚠️ [BUTTON] window.showScreen не доступна, переключаем вручную');
@@ -619,7 +622,11 @@
                           updateGenderScreenUI();
                           
                           // Устанавливаем обработчики кнопок выбора пола
-                          setTimeout(setupGenderScreenHandlers, 200);
+                          setTimeout(() => {
+                            if (typeof window.setupGenderScreenHandlers === 'function') {
+                              window.setupGenderScreenHandlers();
+                            }
+                          }, 200);
                         } else {
                           console.error('❌ [BUTTON] Не найдены экраны для переключения');
                         }
