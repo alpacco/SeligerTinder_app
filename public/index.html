@@ -490,12 +490,114 @@
                         }
                       }
                       
+                      // Универсальная функция для установки обработчиков кнопок экрана выбора пола
+                      function setupGenderScreenHandlers() {
+                        const maleBtn = document.getElementById('maleBtn');
+                        const femaleBtn = document.getElementById('femaleBtn');
+                        const continueButton = document.getElementById('continue-button');
+                        
+                        // Обработчик для кнопки МУЖЧИНА
+                        if (maleBtn && !maleBtn.hasAttribute('data-listener-added')) {
+                          maleBtn.setAttribute('data-listener-added', 'true');
+                          maleBtn.addEventListener('click', function() {
+                            console.log('🔵 [BUTTON] Клик по кнопке МУЖЧИНА');
+                            maleBtn.classList.add('active');
+                            if (femaleBtn) femaleBtn.classList.remove('active');
+                            if (window.currentUser) {
+                              window.currentUser.gender = 'male';
+                              console.log('✅ [BUTTON] Пол установлен: male');
+                            }
+                          });
+                          console.log('✅ [BUTTON] Обработчик для maleBtn установлен');
+                        }
+                        
+                        // Обработчик для кнопки ЖЕНЩИНА
+                        if (femaleBtn && !femaleBtn.hasAttribute('data-listener-added')) {
+                          femaleBtn.setAttribute('data-listener-added', 'true');
+                          femaleBtn.addEventListener('click', function() {
+                            console.log('🔵 [BUTTON] Клик по кнопке ЖЕНЩИНА');
+                            femaleBtn.classList.add('active');
+                            if (maleBtn) maleBtn.classList.remove('active');
+                            if (window.currentUser) {
+                              window.currentUser.gender = 'female';
+                              console.log('✅ [BUTTON] Пол установлен: female');
+                            }
+                          });
+                          console.log('✅ [BUTTON] Обработчик для femaleBtn установлен');
+                        }
+                        
+                        // Обработчик для кнопки "ПРОДОЛЖИТЬ"
+                        if (continueButton && !continueButton.hasAttribute('data-listener-added')) {
+                          continueButton.setAttribute('data-listener-added', 'true');
+                          continueButton.addEventListener('click', async function() {
+                            console.log('🔵 [BUTTON] Клик по кнопке ПРОДОЛЖИТЬ');
+                            
+                            // Проверяем, выбран ли пол
+                            if (!window.currentUser || !window.currentUser.gender || 
+                                (window.currentUser.gender !== 'male' && window.currentUser.gender !== 'female')) {
+                              alert('Пожалуйста, выберите свой пол, нажав одну из кнопок "МУЖЧИНА" или "ЖЕНЩИНА".');
+                              return;
+                            }
+                            
+                            console.log('✅ [BUTTON] Пол выбран:', window.currentUser.gender);
+                            
+                            // Отправляем запрос на обновление пола в БД
+                            try {
+                              const API_URL = window.API_URL || window.API_BASE_URL || 'https://web-production-4bcda.up.railway.app/api';
+                              const response = await fetch(`${API_URL}/updateGender`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                  userId: window.currentUser.userId,
+                                  gender: window.currentUser.gender,
+                                  photoUrl: window.currentUser.photoUrl || ''
+                                })
+                              });
+                              
+                              const result = await response.json();
+                              
+                              if (!result.success) {
+                                alert('Ошибка обновления пола: ' + (result.error || 'Неизвестная ошибка'));
+                                return;
+                              }
+                              
+                              console.log('✅ [BUTTON] Пол успешно сохранен в БД');
+                              
+                              // Переходим на экран свайпов
+                              if (typeof window.showScreen === 'function') {
+                                window.showScreen('screen-swipe');
+                              } else {
+                                // Переключаем вручную
+                                const allScreens = document.querySelectorAll('.screen');
+                                allScreens.forEach(screen => {
+                                  screen.classList.remove('active');
+                                  screen.style.display = 'none';
+                                });
+                                const swipeScreen = document.getElementById('screen-swipe');
+                                if (swipeScreen) {
+                                  swipeScreen.classList.add('active');
+                                  swipeScreen.style.display = 'block';
+                                  console.log('✅ [BUTTON] Переключили на экран свайпов');
+                                }
+                              }
+                            } catch (err) {
+                              console.error('❌ [BUTTON] Ошибка обновления пола:', err);
+                              alert('Ошибка обновления пола: ' + err.message);
+                            }
+                          });
+                          console.log('✅ [BUTTON] Обработчик для continue-button установлен');
+                        }
+                      }
+                      
                       // Пробуем использовать window.showScreen если доступна
                       if (typeof window.showScreen === 'function') {
                         console.log('✅ [BUTTON] Используем window.showScreen для переключения экрана');
                         window.showScreen('screen-gender');
                         // Обновляем UI после переключения
-                        setTimeout(updateGenderScreenUI, 100);
+                        setTimeout(() => {
+                          updateGenderScreenUI();
+                          setupGenderScreenHandlers();
+                        }, 100);
                       } else {
                         console.warn('⚠️ [BUTTON] window.showScreen не доступна, переключаем вручную');
                         // Переключаем экран вручную (как в showScreen)
@@ -516,39 +618,8 @@
                           // Обновляем UI экрана выбора пола
                           updateGenderScreenUI();
                           
-                          // Устанавливаем обработчики кнопок выбора пола, если они еще не установлены
-                          setTimeout(() => {
-                            const maleBtn = document.getElementById('maleBtn');
-                            const femaleBtn = document.getElementById('femaleBtn');
-                            
-                            if (maleBtn && !maleBtn.hasAttribute('data-listener-added')) {
-                              maleBtn.setAttribute('data-listener-added', 'true');
-                              maleBtn.addEventListener('click', function() {
-                                console.log('🔵 [BUTTON] Клик по кнопке МУЖЧИНА');
-                                maleBtn.classList.add('active');
-                                if (femaleBtn) femaleBtn.classList.remove('active');
-                                if (window.currentUser) {
-                                  window.currentUser.gender = 'male';
-                                  console.log('✅ [BUTTON] Пол установлен: male');
-                                }
-                              });
-                              console.log('✅ [BUTTON] Обработчик для maleBtn установлен');
-                            }
-                            
-                            if (femaleBtn && !femaleBtn.hasAttribute('data-listener-added')) {
-                              femaleBtn.setAttribute('data-listener-added', 'true');
-                              femaleBtn.addEventListener('click', function() {
-                                console.log('🔵 [BUTTON] Клик по кнопке ЖЕНЩИНА');
-                                femaleBtn.classList.add('active');
-                                if (maleBtn) maleBtn.classList.remove('active');
-                                if (window.currentUser) {
-                                  window.currentUser.gender = 'female';
-                                  console.log('✅ [BUTTON] Пол установлен: female');
-                                }
-                              });
-                              console.log('✅ [BUTTON] Обработчик для femaleBtn установлен');
-                            }
-                          }, 200);
+                          // Устанавливаем обработчики кнопок выбора пола
+                          setTimeout(setupGenderScreenHandlers, 200);
                         } else {
                           console.error('❌ [BUTTON] Не найдены экраны для переключения');
                         }
