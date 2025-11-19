@@ -1050,18 +1050,8 @@ function showScreen(screenId) {
     console.log("  - currentUser:", currentUser);
     console.log("  - currentUser.name:", currentUser?.name);
     
-    // Обновляем имя пользователя на экране приветствия
-    const welcomeUserName = document.querySelector('#screen-welcome .user-name');
-    if (welcomeUserName && currentUser && currentUser.name) {
-      welcomeUserName.textContent = currentUser.name;
-      console.log("  ✅ Имя пользователя обновлено:", currentUser.name);
-    } else {
-      console.warn("  ⚠️ Не удалось обновить имя пользователя:", {
-        welcomeUserName: !!welcomeUserName,
-        currentUser: !!currentUser,
-        userName: currentUser?.name
-      });
-    }
+    // Используем глобальную функцию updateWelcomeScreenName
+    updateWelcomeScreenName();
   }
   function updateGenderScreen() {
     const smallAvatar = document.querySelector("#screen-gender .user-avatar-small");
