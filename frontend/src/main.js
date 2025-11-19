@@ -20,7 +20,8 @@ console.log('🔄 [CACHE] Время загрузки:', new Date().toISOString(
 console.log('🔄 [CACHE] Уникальный ID:', Math.random().toString(36).substr(2, 9));
 
 // Импортируем CSS (Vite обработает и скомпилирует)
-import './css/main.css';
+// CSS не собирается через Vite, загружается напрямую из /css/main.css
+// import './css/main.css';
 
 // Импортируем функции из profile.js
 import { initProfileEditScreen, exitProfileEditMode, updateProfileScreen, enterProfileEditMode } from './profile.js';

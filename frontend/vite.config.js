@@ -1,6 +1,6 @@
 import { defineConfig } from 'vite';
 import { resolve } from 'path';
-import { writeFileSync, copyFileSync } from 'fs';
+import { writeFileSync, copyFileSync, mkdirSync, cpSync } from 'fs';
 
 export default defineConfig({
   build: {
@@ -29,9 +29,7 @@ export default defineConfig({
         assetFileNames: (assetInfo) => {
           const info = assetInfo.name.split('.');
           const ext = info[info.length - 1];
-          if (/\.(css)$/.test(assetInfo.name)) {
-            return `css/[name].[hash].${ext}`;
-          }
+          // CSS не обрабатывается через Vite, копируется отдельно
           if (/\.(png|jpe?g|svg|gif|tiff|bmp|ico)$/i.test(assetInfo.name)) {
             return `img/[name].[hash].${ext}`;
           }
@@ -57,13 +55,7 @@ export default defineConfig({
               hashMap[nameMatch[1]] = fileName.replace('js/', '');
             }
           }
-          // Обрабатываем CSS файлы
-          if (chunk.type === 'asset' && fileName.endsWith('.css')) {
-            const nameMatch = fileName.match(/^css\/([^.]+)\./);
-            if (nameMatch) {
-              hashMap[`${nameMatch[1]}-css`] = fileName.replace('css/', '');
-            }
-          }
+          // CSS файлы не обрабатываются через Vite, копируются отдельно
         }
         
         // Записываем hash-map.json
@@ -83,6 +75,23 @@ export default defineConfig({
           console.log('✅ Copied index.html to public/');
         } catch (error) {
           console.error('❌ Error copying index.html:', error);
+        }
+      }
+    },
+    {
+      name: 'copy-css-files',
+      closeBundle() {
+        // Копируем CSS файлы из src/css/ в public/css/ после сборки
+        const cssSourceDir = resolve(__dirname, 'src/css');
+        const cssTargetDir = resolve(__dirname, '../public/css');
+        try {
+          // Создаем директорию, если её нет
+          mkdirSync(cssTargetDir, { recursive: true });
+          // Копируем всю директорию css
+          cpSync(cssSourceDir, cssTargetDir, { recursive: true });
+          console.log('✅ Copied CSS files to public/css/');
+        } catch (error) {
+          console.error('❌ Error copying CSS files:', error);
         }
       }
     }
