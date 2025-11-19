@@ -176,6 +176,150 @@ async def stats_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("❌ Ошибка при получении статистики.")
 
 
+async def delete_user_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Команда /delete_user - удаление профиля пользователя"""
+    user_id = update.effective_user.id if update.effective_user else None
+    username = update.effective_user.username if update.effective_user else None
+    print(f"🔵 [BOT] Команда /delete_user от пользователя {user_id} (@{username})")
+    
+    args = context.args
+    target_user_id = str(user_id)  # По умолчанию удаляем свой профиль
+    
+    # Если указан userId и пользователь - админ, удаляем указанный профиль
+    if args and len(args) > 0:
+        if DEV_CHAT_ID and update.effective_user.id != DEV_CHAT_ID:
+            await update.message.reply_text("❌ Удаление чужого профиля доступно только администратору.")
+            return
+        target_user_id = args[0]
+    
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                f"{API_URL}/delete_user",
+                json={"userId": target_user_id}
+            )
+            response.raise_for_status()
+            result = response.json()
+            
+            if result.get("success"):
+                if target_user_id == str(user_id):
+                    await update.message.reply_text("✅ Ваш профиль удалён. Чтобы начать заново, отправьте /start")
+                else:
+                    await update.message.reply_text(f"✅ Профиль пользователя {target_user_id} удалён.")
+            else:
+                await update.message.reply_text(f"❌ Не удалось удалить профиль: {result.get('error')}")
+    except Exception as e:
+        print(f"❌ Ошибка /delete_user: {e}")
+        await update.message.reply_text("❌ Ошибка при удалении профиля.")
+
+
+async def clear_photos_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Команда /clear_photos - очистка всех фотографий пользователя"""
+    user_id = update.effective_user.id if update.effective_user else None
+    username = update.effective_user.username if update.effective_user else None
+    print(f"🔵 [BOT] Команда /clear_photos от пользователя {user_id} (@{username})")
+    
+    args = context.args
+    target_user_id = str(user_id)  # По умолчанию очищаем свои фото
+    
+    # Если указан userId и пользователь - админ, очищаем фото указанного пользователя
+    if args and len(args) > 0:
+        if DEV_CHAT_ID and update.effective_user.id != DEV_CHAT_ID:
+            await update.message.reply_text("❌ Очистка фото другого пользователя доступна только администратору.")
+            return
+        target_user_id = args[0]
+    
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                f"{API_URL}/photos/clear_photos",
+                json={"userId": target_user_id}
+            )
+            response.raise_for_status()
+            result = response.json()
+            
+            if result.get("success"):
+                if target_user_id == str(user_id):
+                    await update.message.reply_text("✅ Все ваши фотографии удалены.")
+                else:
+                    await update.message.reply_text(f"✅ Фотографии пользователя {target_user_id} удалены.")
+            else:
+                await update.message.reply_text(f"❌ Не удалось очистить фото: {result.get('error')}")
+    except Exception as e:
+        print(f"❌ Ошибка /clear_photos: {e}")
+        await update.message.reply_text("❌ Ошибка при очистке фотографий.")
+
+
+async def masssend_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Команда /masssend - массовая рассылка сообщений (только для админа)"""
+    user_id = update.effective_user.id if update.effective_user else None
+    username = update.effective_user.username if update.effective_user else None
+    print(f"🔵 [BOT] Команда /masssend от пользователя {user_id} (@{username})")
+    
+    if DEV_CHAT_ID and update.effective_user.id != DEV_CHAT_ID:
+        await update.message.reply_text("❌ Команда /masssend доступна только администратору.")
+        return
+    
+    args = context.args
+    if len(args) < 1:
+        await update.message.reply_text(
+            "Использование: /masssend <сообщение>\n\n"
+            "Пример: /masssend Привет всем пользователям!"
+        )
+        return
+    
+    message_text = " ".join(args)
+    
+    try:
+        async with httpx.AsyncClient() as client:
+            # Получаем список всех пользователей
+            response = await client.get(f"{API_URL}/users")
+            response.raise_for_status()
+            users_result = response.json()
+            
+            if not users_result.get("success"):
+                await update.message.reply_text("❌ Не удалось получить список пользователей.")
+                return
+            
+            users = users_result.get("users", [])
+            if not users:
+                await update.message.reply_text("❌ Пользователи не найдены.")
+                return
+            
+            # Отправляем сообщение каждому пользователю
+            success_count = 0
+            error_count = 0
+            
+            await update.message.reply_text(f"📤 Начинаю рассылку сообщения {len(users)} пользователям...")
+            
+            for user in users:
+                user_id_str = str(user.get("userId", ""))
+                if not user_id_str:
+                    continue
+                
+                try:
+                    await context.bot.send_message(
+                        chat_id=int(user_id_str),
+                        text=message_text
+                    )
+                    success_count += 1
+                except Exception as e:
+                    print(f"⚠️ Ошибка отправки сообщения пользователю {user_id_str}: {e}")
+                    error_count += 1
+                
+                # Небольшая задержка, чтобы не превысить лимиты Telegram
+                await asyncio.sleep(0.05)
+            
+            await update.message.reply_text(
+                f"✅ Рассылка завершена!\n"
+                f"📊 Успешно отправлено: {success_count}\n"
+                f"❌ Ошибок: {error_count}"
+            )
+    except Exception as e:
+        print(f"❌ Ошибка /masssend: {e}")
+        await update.message.reply_text("❌ Ошибка при массовой рассылке.")
+
+
 async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Обработчик callback запросов"""
     query = update.callback_query
@@ -307,6 +451,18 @@ def create_bot_application():
         print("  - Регистрация /stats...")
         application.add_handler(CommandHandler("stats", stats_command))
         print("✅ Команда /stats зарегистрирована")
+        
+        print("  - Регистрация /delete_user...")
+        application.add_handler(CommandHandler("delete_user", delete_user_command))
+        print("✅ Команда /delete_user зарегистрирована")
+        
+        print("  - Регистрация /clear_photos...")
+        application.add_handler(CommandHandler("clear_photos", clear_photos_command))
+        print("✅ Команда /clear_photos зарегистрирована")
+        
+        print("  - Регистрация /masssend...")
+        application.add_handler(CommandHandler("masssend", masssend_command))
+        print("✅ Команда /masssend зарегистрирована")
         
         # Регистрация callback handlers
         print("  - Регистрация CallbackQueryHandler...")
