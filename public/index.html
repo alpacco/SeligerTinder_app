@@ -465,15 +465,36 @@
                     console.log('🔵 [BUTTON] Ответ от сервера:', data);
                     if (data.success) {
                       console.log('✅ [BUTTON] Регистрация успешна!');
-                      // Пробуем переключить экран
-                      const genderScreen = document.getElementById('screen-gender');
-                      const welcomeScreen = document.getElementById('screen-welcome');
-                      if (genderScreen && welcomeScreen) {
-                        welcomeScreen.classList.remove('active');
-                        genderScreen.classList.add('active');
-                        console.log('✅ [BUTTON] Переключили на экран выбора пола');
+                      
+                      // Обновляем currentUser
+                      if (window.currentUser) {
+                        window.currentUser.registered = true;
+                        console.log('✅ [BUTTON] currentUser.registered установлен в true');
+                      }
+                      
+                      // Пробуем использовать window.showScreen если доступна
+                      if (typeof window.showScreen === 'function') {
+                        console.log('✅ [BUTTON] Используем window.showScreen для переключения экрана');
+                        window.showScreen('screen-gender');
                       } else {
-                        console.error('❌ [BUTTON] Не найдены экраны для переключения');
+                        console.warn('⚠️ [BUTTON] window.showScreen не доступна, переключаем вручную');
+                        // Переключаем экран вручную (как в showScreen)
+                        const allScreens = document.querySelectorAll('.screen');
+                        allScreens.forEach(screen => {
+                          screen.classList.remove('active');
+                          screen.style.display = 'none';
+                        });
+                        const genderScreen = document.getElementById('screen-gender');
+                        const welcomeScreen = document.getElementById('screen-welcome');
+                        if (genderScreen && welcomeScreen) {
+                          welcomeScreen.classList.remove('active');
+                          welcomeScreen.style.display = 'none';
+                          genderScreen.classList.add('active');
+                          genderScreen.style.display = 'flex';
+                          console.log('✅ [BUTTON] Переключили на экран выбора пола (вручную)');
+                        } else {
+                          console.error('❌ [BUTTON] Не найдены экраны для переключения');
+                        }
                       }
                     } else {
                       alert('Ошибка регистрации: ' + (data.error || 'Неизвестная ошибка'));
