@@ -109,16 +109,42 @@ export function handlePhotoAddition() {
     const formData = new FormData();
     formData.append('file', file);
     formData.append('userId', window.currentUser.userId);
+    
+    // Определяем photoIndex (находим первый свободный слот)
+    const currentPhotos = window.currentUser.photos || [];
+    let photoIndex = '1';
+    if (currentPhotos.length >= 1 && currentPhotos[0]) photoIndex = '2';
+    if (currentPhotos.length >= 2 && currentPhotos[1]) photoIndex = '3';
+    formData.append('photoIndex', photoIndex);
+    
+    console.log(`🔵 [handlePhotoAddition] Загружаем фото: userId=${window.currentUser.userId}, photoIndex=${photoIndex}`);
+    
     if (window.tg && window.tg.showProgressBar) window.tg.showProgressBar();
     try {
-      const response = await fetch(`${window.API_URL}/webUploadPhoto`, {
+      const response = await fetch(`${window.API_URL}/upload`, {
         method: 'POST',
         body: formData
       });
+      
+      console.log(`🔵 [handlePhotoAddition] Ответ от сервера: status=${response.status}`);
       const result = await response.json();
-      if (result.success && result.url) {
+      console.log(`🔵 [handlePhotoAddition] Результат:`, result);
+      
+      if (result.success && result.photoUrl) {
         window.currentUser.photos = window.currentUser.photos || [];
-        window.currentUser.photos.push(result.url);
+        // Обновляем или добавляем фото в нужный слот
+        const index = parseInt(photoIndex) - 1;
+        if (window.currentUser.photos[index]) {
+          window.currentUser.photos[index] = result.photoUrl;
+        } else {
+          window.currentUser.photos.push(result.photoUrl);
+        }
+        // Обновляем needPhoto из результата
+        if (result.needPhoto !== undefined) {
+          window.currentUser.needPhoto = result.needPhoto;
+          console.log(`🔵 [handlePhotoAddition] needPhoto обновлен: ${result.needPhoto}, hasFace: ${result.hasFace}`);
+        }
+        
         // --- Главное исправление: всегда обновлять профиль и UI ---
         if (window.loadUserData) await window.loadUserData();
         if (isCard && window.initProfileEditScreen) {
@@ -131,7 +157,9 @@ export function handlePhotoAddition() {
           window.updateProfileScreen();
         }
       } else {
-        alert('Ошибка загрузки фото: ' + (result.error || 'Неизвестная ошибка'));
+        const errorMsg = result.error || result.detail || 'Неизвестная ошибка';
+        console.error(`❌ [handlePhotoAddition] Ошибка загрузки фото: ${errorMsg}`);
+        alert('Ошибка загрузки фото: ' + errorMsg);
         if (isCard) {
           addEl.innerHTML = '';
           addEl.classList.remove('loading');

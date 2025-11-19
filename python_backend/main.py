@@ -166,6 +166,15 @@ html_file = Path(__file__).parent.parent / "public" / "index.html"
 # Импорт роутов
 from routes import users, likes, matches, photos, pro, stats, admin, goals, push
 
+# Импортируем opencv_utils для инициализации OpenCV при старте
+try:
+    import opencv_utils
+    print("✅ OpenCV модуль импортирован, инициализация выполнена")
+except Exception as e:
+    print(f"⚠️ Ошибка импорта OpenCV модуля: {e}")
+    import traceback
+    traceback.print_exc()
+
 app.include_router(users.router, prefix="/api", tags=["users"])
 app.include_router(likes.router, prefix="/api", tags=["likes"])
 app.include_router(matches.router, prefix="/api", tags=["matches"])

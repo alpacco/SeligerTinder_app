@@ -85,8 +85,10 @@ async def upload_photo(
     except HTTPException:
         raise
     except Exception as e:
-        print(f"Ошибка загрузки фото: {e}")
-        raise HTTPException(status_code=500, detail="Ошибка загрузки фотографии")
+        print(f"❌ [PHOTOS] Ошибка загрузки фото: {e}")
+        import traceback
+        print(f"❌ [PHOTOS] Traceback: {traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail=f"Ошибка загрузки фотографии: {str(e)}")
 
 
 @router.post("/uploadUrl")
