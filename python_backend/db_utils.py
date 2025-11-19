@@ -111,7 +111,9 @@ async def db_get(sql: str, params: List[Any] = None) -> Optional[Dict[str, Any]]
     conn = pg_pool.getconn()
     try:
         cur = conn.cursor(cursor_factory=RealDictCursor)
-        cur.execute(adapted_sql, adapted_params)
+        # Преобразуем список параметров в кортеж для psycopg2
+        params_tuple = tuple(adapted_params) if adapted_params else ()
+        cur.execute(adapted_sql, params_tuple)
         row = cur.fetchone()
         return dict(row) if row else None
     except Exception as e:
@@ -155,7 +157,9 @@ async def db_run(sql: str, params: List[Any] = None) -> Dict[str, Any]:
     conn = pg_pool.getconn()
     try:
         cur = conn.cursor()
-        cur.execute(adapted_sql, adapted_params)
+        # Преобразуем список параметров в кортеж для psycopg2
+        params_tuple = tuple(adapted_params) if adapted_params else ()
+        cur.execute(adapted_sql, params_tuple)
         conn.commit()
         return {"lastID": cur.lastrowid if hasattr(cur, 'lastrowid') else None, "changes": cur.rowcount}
     except Exception as e:
@@ -176,7 +180,9 @@ async def db_transaction(operations: List[Tuple[str, List[Any]]]) -> None:
         cur = conn.cursor()
         for sql, params in operations:
             adapted_sql, adapted_params = adapt_sql_for_postgres(sql, params)
-            cur.execute(adapted_sql, adapted_params)
+            # Преобразуем список параметров в кортеж для psycopg2
+            params_tuple = tuple(adapted_params) if adapted_params else ()
+            cur.execute(adapted_sql, params_tuple)
         conn.commit()
     except Exception as e:
         conn.rollback()
