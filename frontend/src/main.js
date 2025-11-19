@@ -1049,20 +1049,47 @@ function showScreen(screenId) {
       // Сначала обновляем UI (аватар, имя, бейдж)
       updateSwipeScreen();
       updateMatchesCount();
-      // Attach profile navigation to the avatar frame
+      
+      // Attach profile navigation to the avatar frame (если еще не установлен)
       const avatarFrame = document.querySelector("#screen-swipe .ava-frame");
-      if (avatarFrame) {
+      if (avatarFrame && !avatarFrame.hasAttribute('data-handler-added')) {
+        avatarFrame.setAttribute('data-handler-added', 'true');
         avatarFrame.style.cursor = "pointer";
         avatarFrame.addEventListener("click", () => {
-    viewingCandidate = null;       // сбрасываем кандидата
-          showScreen("screen-profile");  // и открываем свой профиль
+          console.log("▶ Клик по .ava-frame (в showScreen) -> переход на screen-profile");
+          viewingCandidate = null;
+          showScreen("screen-profile");
         });
       }
+      
+      // Проверяем наличие кнопок лайк/дизлайк в HTML
+      const likeBtn = document.querySelector(".like_d");
+      const dislikeBtn = document.querySelector(".dislike_d");
+      
+      if (!likeBtn || !dislikeBtn) {
+        // Кнопок нет в HTML - создаем их через setupSwipeControls
+        console.log("⚠️ Кнопки лайк/дизлайк не найдены в HTML, создаем через setupSwipeControls");
+        if (window.setupSwipeControls) {
+          window.setupSwipeControls();
+        }
+      } else {
+        // Кнопки есть в HTML - показываем их (если не needPhoto)
+        // И сбрасываем атрибут data-handler-added, чтобы обработчики установились заново
+        likeBtn.removeAttribute('data-handler-added');
+        dislikeBtn.removeAttribute('data-handler-added');
+        likeBtn.style.display = currentUser.needPhoto ? "none" : "flex";
+        dislikeBtn.style.display = currentUser.needPhoto ? "none" : "flex";
+        // Устанавливаем обработчики заново
+        if (typeof setupLikeDislikeHandlers === 'function') {
+          setTimeout(setupLikeDislikeHandlers, 100);
+        }
+      }
+      
       // Потом подгружаем актуального пользователя и кандидатов
       loadUserData()
         .then(() => {
           if (currentUser.needPhoto === 1) {
-          candidates = [];
+            candidates = [];
             showCandidate();
             updateMatchesCount();
           } else {
