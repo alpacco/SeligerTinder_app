@@ -7,6 +7,8 @@ from typing import Optional, Dict
 import aiofiles
 from pathlib import Path
 import httpx
+import io
+from PIL import Image
 from db_utils import db_get, db_run
 from opencv_utils import check_face_in_photo, is_meme_or_fake
 from config import IMAGES_DIR, HTTP_TIMEOUT, HTTP_MAX_REDIRECTS
@@ -18,6 +20,16 @@ from middleware.security import (
     sanitize_path,
     validate_url
 )
+
+# Поддержка HEIC формата
+try:
+    from pillow_heif import register_heif_opener
+    register_heif_opener()
+    print("✅ Поддержка HEIC формата включена")
+except ImportError:
+    print("⚠️ pillow-heif не установлен, поддержка HEIC отключена")
+except Exception as e:
+    print(f"⚠️ Ошибка инициализации HEIC: {e}")
 
 router = APIRouter()
 
