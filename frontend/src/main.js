@@ -1776,8 +1776,19 @@ ageToggleIcon.addEventListener("click", () => {
           currentUser.photos.push(d.photoUrl || "/img/logo.svg");
         }
         currentUser.photoUrl = currentUser.photos[0];
-        currentUser.likes    = JSON.parse(d.likes    || "[]");
-        currentUser.dislikes = JSON.parse(d.dislikes || "[]");
+        // Парсим likes и dislikes, если они строки, иначе используем как есть
+        try {
+          currentUser.likes = typeof d.likes === 'string' ? JSON.parse(d.likes || "[]") : (d.likes || []);
+        } catch (e) {
+          console.warn("⚠️ [loadUserData] Ошибка парсинга likes:", e);
+          currentUser.likes = [];
+        }
+        try {
+          currentUser.dislikes = typeof d.dislikes === 'string' ? JSON.parse(d.dislikes || "[]") : (d.dislikes || []);
+        } catch (e) {
+          console.warn("⚠️ [loadUserData] Ошибка парсинга dislikes:", e);
+          currentUser.dislikes = [];
+        }
         currentUser.badge    = d.badge    || "";
         currentUser.needPhoto = Number(d.needPhoto || 0);
         currentUser.is_pro    = Number(d.is_pro) === 1;

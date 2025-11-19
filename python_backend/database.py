@@ -78,9 +78,20 @@ async def create_postgres_tables():
                 pro_start TIMESTAMP WITH TIME ZONE,
                 pro_end TIMESTAMP WITH TIME ZONE,
                 "last_login" TIMESTAMP WITH TIME ZONE,
-                super_likes_count INTEGER DEFAULT 0
+                super_likes_count INTEGER DEFAULT 0,
+                "hideAge" INTEGER DEFAULT 0
             );
         """)
+        
+        # Добавляем колонку hideAge, если её нет (для существующих БД)
+        try:
+            cur.execute("""
+                ALTER TABLE users 
+                ADD COLUMN IF NOT EXISTS "hideAge" INTEGER DEFAULT 0;
+            """)
+            print("✅ Колонка hideAge добавлена или уже существует")
+        except Exception as e:
+            print(f"⚠️ Ошибка при добавлении колонки hideAge (возможно, уже существует): {e}")
         
         # Таблица dislikes
         cur.execute("""
