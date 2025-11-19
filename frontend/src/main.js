@@ -611,15 +611,31 @@ if (profileEditBackBtn) {
     if (!candidates || candidates.length === 0 || currentIndex >= candidates.length) {
       singleCard.style.backgroundImage = "none";
       singleCard.style.backgroundColor = "#fff";
+      // Если needPhoto=1, показываем "Загрузите фото", иначе "Пригласить"
+      const buttonText = currentUser && currentUser.needPhoto === 1 ? "Загрузите фото" : "Пригласить";
+      const buttonId = currentUser && currentUser.needPhoto === 1 ? "add-photo-swipe-btn" : "invite-button";
       singleCard.innerHTML = `
         <div class="no-users invite-wrapper">
           <h3>Нет новых пользователей</h3>
-          <button id="invite-button" class="invite-button">Пригласить</button>
+          <button id="${buttonId}" class="invite-button">${buttonText}</button>
         </div>
       `;
       singleCard.style.boxShadow = "none";
       document.querySelectorAll(".like_d, .dislike_d").forEach(b => b.style.display = "none");
-      document.getElementById("invite-button").addEventListener("click", shareInvite);
+      const btn = document.getElementById(buttonId);
+      if (btn) {
+        if (currentUser && currentUser.needPhoto === 1) {
+          // Если needPhoto=1, открываем модалку для загрузки фото
+          btn.addEventListener("click", function() {
+            if (window.handlePhotoAddition) {
+              window.handlePhotoAddition.call(btn);
+            }
+          });
+        } else {
+          // Иначе - приглашение
+          btn.addEventListener("click", shareInvite);
+        }
+      }
       return;
     }
   
@@ -996,6 +1012,11 @@ function showScreen(screenId) {
   }
   el.style.display = "block";
   console.log(`▶ Переход на экран: ${screenId}`);
+
+  // Обновляем PRO-информацию при переключении на экраны profile и matches
+  if ((screenId === "screen-profile" || screenId === "screen-matches") && window.renderProInfo && window.currentUser) {
+    window.renderProInfo(window.currentUser);
+  }
 
   // 3. Специальная логика для каждого экрана:
   if (screenId === "screen-welcome") {
@@ -1708,7 +1729,20 @@ ageToggleIcon.addEventListener("click", () => {
       if (isLocal) return;
       try {
         const resp = await fetch(`${API_URL}/getUser?userId=${currentUser.userId}`);
-        const json = await resp.json();
+        // Проверяем, что ответ не пустой
+        const text = await resp.text();
+        if (!text || text.trim() === '') {
+          console.warn("⚠️ loadUserData: пустой ответ от сервера");
+          return;
+        }
+        let json;
+        try {
+          json = JSON.parse(text);
+        } catch (parseErr) {
+          console.error("❌ loadUserData: ошибка парсинга JSON:", parseErr);
+          console.error("  Ответ сервера:", text);
+          return;
+        }
         if (!json.success) return;
 
         const d = json.data;
@@ -1754,6 +1788,11 @@ ageToggleIcon.addEventListener("click", () => {
         // Инициализируем PRO-функции
         if (window.initProFeatures) {
           window.initProFeatures(currentUser);
+        }
+        
+        // Убеждаемся, что renderProInfo вызывается для обновления header-pro-info
+        if (window.renderProInfo) {
+          window.renderProInfo(currentUser);
         }
       } catch (err) {
         console.error("❌ loadUserData:", err);

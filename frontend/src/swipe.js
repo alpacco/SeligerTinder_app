@@ -189,16 +189,32 @@ export function showCandidate() {
 
     newCard.style.backgroundImage = "none";
     newCard.style.backgroundColor = "#fff";
+    // Если needPhoto=1, показываем "Загрузите фото", иначе "Пригласить"
+    const buttonText = window.currentUser && window.currentUser.needPhoto === 1 ? "Загрузите фото" : "Пригласить";
+    const buttonId = window.currentUser && window.currentUser.needPhoto === 1 ? "add-photo-swipe-btn" : "invite-button";
     newCard.innerHTML = `
       <div class="no-users invite-wrapper">
         <h3>Нет новых пользователей</h3>
-        <button id="invite-button" class="invite-button">Пригласить</button>
+        <button id="${buttonId}" class="invite-button">${buttonText}</button>
       </div>
     `;
     newCard.style.boxShadow = "none";
     newCard.className = "card";
     document.querySelectorAll(".back-cnd-btn, .superlike_d, .like_d, .dislike_d").forEach(b => b.style.display = "none");
-    newCard.querySelector("#invite-button").addEventListener("click", window.shareInvite);
+    const btn = newCard.querySelector(`#${buttonId}`);
+    if (btn) {
+      if (window.currentUser && window.currentUser.needPhoto === 1) {
+        // Если needPhoto=1, открываем модалку для загрузки фото
+        btn.addEventListener("click", function() {
+          if (window.handlePhotoAddition) {
+            window.handlePhotoAddition.call(btn);
+          }
+        });
+      } else {
+        // Иначе - приглашение
+        btn.addEventListener("click", window.shareInvite);
+      }
+    }
     return;
   }
   // Обычная карточка

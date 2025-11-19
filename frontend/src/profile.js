@@ -392,7 +392,10 @@ export function initProfileEditScreen() {
         ageInput.style.filter = "none";
         if (ageLabel) ageLabel.style.color = "";
         currentUser.hideAge = false;
+        window.currentUser.hideAge = false;
         console.log('[AGE TOGGLE][DEBUG] После открытия: disabled=', ageInput.disabled, 'hasAttr=', ageInput.hasAttribute('disabled'));
+        // Сохраняем на сервер
+        saveHideAgeToServer(false);
       } else {
         ageToggleIcon.style.backgroundImage = "url('/img/eye_close.svg')";
         ageInput.disabled = true;
@@ -419,7 +422,10 @@ export function initProfileEditScreen() {
         ageInput.style.filter = "grayscale(100%)";
         if (ageLabel) ageLabel.style.color = "#999";
         currentUser.hideAge = true;
+        window.currentUser.hideAge = true;
         console.log('[AGE TOGGLE][DEBUG] После скрытия: disabled=', ageInput.disabled, 'hasAttr=', ageInput.hasAttribute('disabled'));
+        // Сохраняем на сервер
+        saveHideAgeToServer(true);
       }
       console.log('[AGE TOGGLE] После: currentUser.hideAge:', currentUser.hideAge, 'ageInput.disabled:', ageInput.disabled, 'ageLabel.color:', ageLabel && ageLabel.style.color);
     };
@@ -630,7 +636,8 @@ export function initProfileEditScreen() {
         bio:    newBio,
         age:    newAge,
         photos: currentUser.photos,
-        goals:  selectedGoals
+        goals:  selectedGoals,
+        hideAge: currentUser.hideAge || false
       };
       fetch(`${window.API_URL}/updateProfile`, {
         method:  "POST",
@@ -841,6 +848,32 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // --- ДОБАВИТЬ: функция для обновления пользователя после изменений ---
+// Функция для сохранения hideAge на сервер
+async function saveHideAgeToServer(hideAge) {
+  try {
+    const currentUser = window.currentUser;
+    if (!currentUser || !currentUser.userId) return;
+    
+    const response = await fetch(`${window.API_URL}/updateProfile`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        userId: currentUser.userId,
+        hideAge: hideAge
+      })
+    });
+    
+    const result = await response.json();
+    if (result.success) {
+      console.log('[AGE TOGGLE] hideAge сохранен на сервер:', hideAge);
+    } else {
+      console.error('[AGE TOGGLE] Ошибка сохранения hideAge:', result.error);
+    }
+  } catch (err) {
+    console.error('[AGE TOGGLE] Ошибка запроса сохранения hideAge:', err);
+  }
+}
+
 async function refreshCurrentUser() {
   try {
     const userId = window.currentUser?.userId;
