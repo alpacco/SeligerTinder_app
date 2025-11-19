@@ -45,12 +45,12 @@
       100% { transform: rotate(360deg); }
     }
   </style>
-  <link rel="stylesheet" href="/css/main.css?v=2025-01-19-v3" id="main-css-link" />
+  <link rel="stylesheet" href="/css/main.css?v=2025-01-19-v4" id="main-css-link" />
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script>
     // Версия приложения для обхода кэша Telegram
     // ВАЖНО: версия должна быть СТАТИЧЕСКОЙ, иначе будет бесконечная перезагрузка!
-    const APP_VERSION = '2025-01-19-v3';
+    const APP_VERSION = '2025-01-19-v4';
     
     // Принудительная перезагрузка при изменении версии
     (function forceReloadIfVersionChanged() {
@@ -398,7 +398,7 @@
           }
           
           // Загружаем JS файлы с cache busting и обработкой ошибок
-          const APP_VERSION = '2025-01-19-v3';
+          const APP_VERSION = '2025-01-19-v4';
           const scripts = ['main', 'profile', 'swipe', 'card', 'api', 'utils', 'gift', 'match', 'pro'];
           console.log('🔵 [INIT] Загрузка JS файлов...');
           console.log('🔄 [CACHE] Версия приложения:', APP_VERSION);
@@ -458,7 +458,7 @@
           console.log('  WEB_APP_URL:', window.WEB_APP_URL);
           
           // Загружаем JS файлы без hash (fallback с версией и обработкой ошибок)
-          const APP_VERSION_FALLBACK = '2025-01-19-v3';
+          const APP_VERSION_FALLBACK = '2025-01-19-v4';
           const scripts = ['main', 'profile', 'swipe', 'card', 'api', 'utils', 'gift', 'match', 'pro'];
           scripts.forEach(name => {
             const script = document.createElement('script');
