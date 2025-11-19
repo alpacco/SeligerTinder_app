@@ -130,9 +130,13 @@ async def db_get(sql: str, params: List[Any] = None) -> Optional[Dict[str, Any]]
         print(f"  - adapted_sql.count('$1'): {adapted_sql.count('$1')}")
         
         # psycopg2 принимает параметры как список или кортеж
-        # Пробуем передать как список (как в db_all)
+        # Пробуем передать как кортеж (может быть проблема в RealDictCursor)
         if adapted_params:
-            cur.execute(adapted_sql, adapted_params)
+            # Преобразуем список в кортеж для psycopg2
+            params_tuple = tuple(adapted_params)
+            print(f"  - params_tuple: {params_tuple}")
+            print(f"  - type(params_tuple): {type(params_tuple)}")
+            cur.execute(adapted_sql, params_tuple)
         else:
             cur.execute(adapted_sql)
         row = cur.fetchone()
