@@ -92,6 +92,9 @@ async def get_user_frontend(userId: str = Query(..., description="ID польз�
             "bio": row.get("bio", ""),
             "age": row.get("age", 0),
             "photos": photos,
+            "photo1": row.get("photo1", ""),  # Добавляем отдельные поля для совместимости
+            "photo2": row.get("photo2", ""),
+            "photo3": row.get("photo3", ""),
             "badge": row.get("badge", ""),
             "likes": safe_json_parse(row.get("likes", "[]")),
             "dislikes": safe_json_parse(row.get("dislikes", "[]")),

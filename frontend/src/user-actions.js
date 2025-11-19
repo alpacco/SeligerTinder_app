@@ -55,17 +55,24 @@ export async function loadUserData() {
     currentUser.bio      = d.bio      || currentUser.bio;
     currentUser.age      = d.age      || currentUser.age;
     
-    // Правильно загружаем фото из photo1, photo2, photo3 (как в main.js)
-    currentUser.photos = [];
-    // Заполняем массив по порядку, пропуская пустые слоты
-    if (d.photo1 && d.photo1.trim() && d.photo1 !== '/img/logo.svg' && d.photo1 !== '/img/avatar.svg') {
-      currentUser.photos.push(d.photo1);
-    }
-    if (d.photo2 && d.photo2.trim() && d.photo2 !== '/img/logo.svg' && d.photo2 !== '/img/avatar.svg') {
-      currentUser.photos.push(d.photo2);
-    }
-    if (d.photo3 && d.photo3.trim() && d.photo3 !== '/img/logo.svg' && d.photo3 !== '/img/avatar.svg') {
-      currentUser.photos.push(d.photo3);
+    // Используем массив photos из ответа, если он есть, иначе формируем из photo1, photo2, photo3
+    if (d.photos && Array.isArray(d.photos) && d.photos.length > 0) {
+      // Фильтруем дефолтные фото
+      currentUser.photos = d.photos.filter(photo => 
+        photo && photo.trim() && photo !== '/img/logo.svg' && photo !== '/img/avatar.svg'
+      );
+    } else {
+      // Fallback: формируем из photo1, photo2, photo3
+      currentUser.photos = [];
+      if (d.photo1 && d.photo1.trim() && d.photo1 !== '/img/logo.svg' && d.photo1 !== '/img/avatar.svg') {
+        currentUser.photos.push(d.photo1);
+      }
+      if (d.photo2 && d.photo2.trim() && d.photo2 !== '/img/logo.svg' && d.photo2 !== '/img/avatar.svg') {
+        currentUser.photos.push(d.photo2);
+      }
+      if (d.photo3 && d.photo3.trim() && d.photo3 !== '/img/logo.svg' && d.photo3 !== '/img/avatar.svg') {
+        currentUser.photos.push(d.photo3);
+      }
     }
     
     // Если нет фото, используем photoUrl как fallback
