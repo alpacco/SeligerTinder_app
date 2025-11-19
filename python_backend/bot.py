@@ -232,7 +232,7 @@ async def clear_photos_command(update: Update, context: ContextTypes.DEFAULT_TYP
     try:
         async with httpx.AsyncClient() as client:
             response = await client.post(
-                f"{API_URL}/photos/clear_photos",
+                f"{API_URL}/photos/clear",
                 json={"userId": target_user_id}
             )
             response.raise_for_status()
