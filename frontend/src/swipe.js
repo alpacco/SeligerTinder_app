@@ -1152,7 +1152,7 @@ function hideSwipeSkeleton() {
 } 
 
 // Экспортируем все функции в window для глобального доступа
-window.showCandidate = showCandidate;
+window.showCandidate = showCandidate; 
 window.setupSwipeControls = setupSwipeControls;
 window.setupSwipeHandlers = setupSwipeHandlers;
 window.doLike = doLike;

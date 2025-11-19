@@ -138,6 +138,7 @@ public/js/*.js
 public/js/chunks/*.js
 public/css/*.css
 public/hash-map.json
+public/index.html
 !public/js/*.min.js
 !public/css/*.min.css
 

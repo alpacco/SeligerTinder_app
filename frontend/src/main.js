@@ -169,7 +169,7 @@ document.addEventListener("DOMContentLoaded", () => {
   console.log("  - typeof showScreen:", typeof showScreen);
   
   // Инициализируем showScreenImpl
-  showScreenImpl = showScreen;
+showScreenImpl = showScreen;
   console.log("  - showScreenImpl установлен:", typeof showScreenImpl);
   
   let selectedCandidateId = null;
@@ -203,10 +203,10 @@ document.addEventListener("DOMContentLoaded", () => {
       targetScreen.classList.add('active');
       targetScreen.style.display = 'flex';
       console.log(`  ✅ Переключили на экран ${screenId} (fallback)`);
-    } else {
+  } else {
       console.error(`  ❌ Экран ${screenId} не найден!`);
-    }
   }
+}
 
   // Устанавливаем временную функцию в window (будет заменена позже)
   console.log("🔵 [MAIN.JS] Устанавливаем временный window.showScreen (fallback)...");
@@ -216,8 +216,8 @@ document.addEventListener("DOMContentLoaded", () => {
   // window.currentUser и window.API_URL уже установлены выше (до DOMContentLoaded)
   // Обновляем их на случай, если что-то изменилось
   console.log("🔵 [MAIN.JS] Обновляем window.currentUser и window.API_URL...");
-  window.currentUser = currentUser;
-  window.API_URL = API_URL;
+window.currentUser = currentUser;
+window.API_URL = API_URL;
   window.API_BASE_URL = API_URL;
   window.WEB_APP_URL = WEB_APP_URL;
   console.log("  ✅ window.currentUser обновлён:", window.currentUser);
@@ -287,8 +287,8 @@ function fillCard(cardEl, cand) {
     console.log("  - window.showScreen:", typeof window.showScreen);
     console.log("  - window.currentUser:", window.currentUser);
     
-    const joinButton = document.getElementById("join-button");
-    if (joinButton) {
+  const joinButton = document.getElementById("join-button");
+  if (joinButton) {
       console.log("✅ [MAIN.JS] Кнопка join-button найдена, добавляем обработчик");
       console.log("  - joinButton:", joinButton);
       console.log("  - joinButton.onclick:", joinButton.onclick);
@@ -303,26 +303,26 @@ function fillCard(cardEl, cand) {
       joinButton.setAttribute('data-main-handler', 'true');
       console.log("  🔵 [MAIN.JS] Добавляем обработчик click...");
       
-      joinButton.addEventListener("click", () => {
+    joinButton.addEventListener("click", () => {
         console.log("🔵 [MAIN.JS] Клик по join-button - начало обработки");
-        let tgUser = {};
-        if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
-          tgUser = tg.initDataUnsafe.user;
+      let tgUser = {};
+      if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
+        tgUser = tg.initDataUnsafe.user;
           console.log("  - tgUser из initDataUnsafe:", tgUser);
         } else {
           console.warn("  ⚠️ tg.initDataUnsafe.user не найден");
-        }
+      }
         
-        const registrationData = {
-          userId: String(tgUser.id || "UserID"),
-          name: tgUser.first_name || "Username",
-          username: tgUser.username || "",
-          photoUrl: (tgUser.photo_url && tgUser.photo_url.startsWith("http"))
-                    ? tgUser.photo_url
-                    : "/img/logo.svg",
-          gender: "", // заполнится далее
-          bio: ""
-        };
+      const registrationData = {
+        userId: String(tgUser.id || "UserID"),
+        name: tgUser.first_name || "Username",
+        username: tgUser.username || "",
+        photoUrl: (tgUser.photo_url && tgUser.photo_url.startsWith("http"))
+                  ? tgUser.photo_url
+                  : "/img/logo.svg",
+        gender: "", // заполнится далее
+        bio: ""
+      };
         console.log("🔵 [MAIN.JS] Отправка регистрации с данными:", registrationData);
         console.log("  - URL:", `${API_URL}/join`);
         
@@ -332,20 +332,20 @@ function fillCard(cardEl, cand) {
           headers["X-Telegram-Init-Data"] = tg.initData;
         }
         
-        fetch(`${API_URL}/join`, {
-          method: "POST",
+      fetch(`${API_URL}/join`, {
+        method: "POST",
           headers: headers,
-          body: JSON.stringify(registrationData)
-        })
+        body: JSON.stringify(registrationData)
+      })
           .then(res => {
             console.log("🔵 [MAIN.JS] Ответ от сервера:", res.status, res.statusText);
             return res.json();
           })
-          .then(data => {
+        .then(data => {
             console.log("🔵 [MAIN.JS] Данные от сервера:", data);
-            if (!data.success) throw new Error(data.error || "Неизвестная ошибка");
+          if (!data.success) throw new Error(data.error || "Неизвестная ошибка");
             console.log("✅ [MAIN.JS] Регистрация прошла успешно:", data);
-            currentUser.registered = true;
+          currentUser.registered = true;
             window.currentUser = currentUser; // Обновляем глобальную переменную
             console.log("🔵 [MAIN.JS] Вызов showScreen('screen-gender')");
             console.log("  - typeof showScreen:", typeof showScreen);
@@ -354,7 +354,7 @@ function fillCard(cardEl, cand) {
             if (typeof window.showScreen === 'function') {
               window.showScreen("screen-gender");
             } else if (typeof showScreen === 'function') {
-              showScreen("screen-gender");
+          showScreen("screen-gender");
             } else {
               console.error("❌ [MAIN.JS] showScreen не доступна!");
               // Fallback: переключаем вручную
@@ -365,22 +365,22 @@ function fillCard(cardEl, cand) {
                 console.log("✅ [MAIN.JS] Экран переключен вручную");
               }
             }
-            // Инициализировать чат с ботом: сначала WebApp sendData, затем deep link
-            if (tg && tg.sendData) {
-              tg.sendData(JSON.stringify({ action: "register", userId: registrationData.userId }));
-            }
-            const deepLinkUrl = `https://t.me/SeligerTinderApp_bot?start=${registrationData.userId}`;
-            if (tg && tg.openLink) {
-              tg.openLink(deepLinkUrl);
-            } else {
-              window.open(deepLinkUrl, "_blank");
-            }
-          })
-          .catch(err => {
+          // Инициализировать чат с ботом: сначала WebApp sendData, затем deep link
+          if (tg && tg.sendData) {
+            tg.sendData(JSON.stringify({ action: "register", userId: registrationData.userId }));
+          }
+          const deepLinkUrl = `https://t.me/SeligerTinderApp_bot?start=${registrationData.userId}`;
+          if (tg && tg.openLink) {
+            tg.openLink(deepLinkUrl);
+          } else {
+            window.open(deepLinkUrl, "_blank");
+          }
+        })
+        .catch(err => {
             console.error("❌ [MAIN.JS] Ошибка регистрации:", err);
-            alert("Ошибка регистрации: " + err.message);
-          });
-      });
+          alert("Ошибка регистрации: " + err.message);
+        });
+    });
       console.log("✅ [MAIN.JS] Обработчик join-button установлен");
     } else {
       console.error("❌ [MAIN.JS] Кнопка join-button НЕ найдена!");
@@ -1045,7 +1045,7 @@ function showScreen(screenId) {
       loadUserData()
         .then(() => {
           if (currentUser.needPhoto === 1) {
-            candidates = [];
+          candidates = [];
             window.candidates = candidates;
             showCandidate();
             updateMatchesCount();
@@ -1714,7 +1714,7 @@ ageToggleIcon.addEventListener("click", () => {
         window.currentUser = currentUser;
         // Обновляем имя на главном экране
         updateWelcomeScreenName();
-        
+
         console.log("✅ checkIfRegistered: пользователь найден и данные загружены");
         return true;
       } catch (err) {
@@ -1827,7 +1827,7 @@ ageToggleIcon.addEventListener("click", () => {
     }, 5 * 60 * 1000);
 
   // Присваиваем реализацию showScreen переменной showScreenImpl
-  showScreenImpl = showScreen;
+showScreenImpl = showScreen;
   
   // КРИТИЧНО: Заменяем window.showScreen на настоящую реализацию
   console.log("🔵 [MAIN.JS] Заменяем window.showScreen на настоящую реализацию...");

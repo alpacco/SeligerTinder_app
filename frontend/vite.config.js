@@ -1,6 +1,6 @@
 import { defineConfig } from 'vite';
 import { resolve } from 'path';
-import { writeFileSync } from 'fs';
+import { writeFileSync, copyFileSync } from 'fs';
 
 export default defineConfig({
   build: {
@@ -70,6 +70,20 @@ export default defineConfig({
         const hashMapPath = resolve(options.dir || '../public', 'hash-map.json');
         writeFileSync(hashMapPath, JSON.stringify(hashMap, null, 2));
         console.log('✅ Generated hash-map.json');
+      }
+    },
+    {
+      name: 'copy-index-html',
+      closeBundle() {
+        // Копируем index.html в public/ после сборки
+        const indexHtmlPath = resolve(__dirname, 'index.html');
+        const publicIndexHtmlPath = resolve(__dirname, '../public/index.html');
+        try {
+          copyFileSync(indexHtmlPath, publicIndexHtmlPath);
+          console.log('✅ Copied index.html to public/');
+        } catch (error) {
+          console.error('❌ Error copying index.html:', error);
+        }
       }
     }
   ]

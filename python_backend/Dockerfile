@@ -14,7 +14,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Копируем код приложения
 COPY python_backend/ ./python_backend/
-COPY views/ ./views/
 COPY public/ ./public/
 
 # Создаем необходимые директории
