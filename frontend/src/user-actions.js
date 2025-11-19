@@ -17,7 +17,30 @@ export async function loadUserData() {
   try {
     console.log("📥 [loadUserData] Запрашиваем /api/getUser");
     const resp = await fetch(`${currentUser.API_URL || window.API_URL}/getUser?userId=${currentUser.userId}`);
-    const json = await resp.json();
+    
+    // Проверяем статус ответа
+    if (!resp.ok) {
+      console.error(`❌ [loadUserData] HTTP ошибка: ${resp.status} ${resp.statusText}`);
+      return;
+    }
+    
+    // Читаем текст ответа
+    const text = await resp.text();
+    if (!text || text.trim().length === 0) {
+      console.error("❌ [loadUserData] Пустой ответ от сервера");
+      return;
+    }
+    
+    // Парсим JSON
+    let json;
+    try {
+      json = JSON.parse(text);
+    } catch (parseError) {
+      console.error("❌ [loadUserData] Ошибка парсинга JSON:", parseError);
+      console.error("❌ [loadUserData] Текст ответа:", text.substring(0, 200));
+      return;
+    }
+    
     console.log("📥 [loadUserData] Ответ сервера:", json);
     if (!json || !json.success) {
       console.log("📥 [loadUserData] Неуспешный ответ, пропускаем");
@@ -31,27 +54,62 @@ export async function loadUserData() {
     currentUser.gender   = d.gender;
     currentUser.bio      = d.bio      || currentUser.bio;
     currentUser.age      = d.age      || currentUser.age;
-    currentUser.photos   = [];
-    if (d.photo1) currentUser.photos.push(d.photo1);
-    if (d.photo2) currentUser.photos.push(d.photo2);
-    if (d.photo3) currentUser.photos.push(d.photo3);
-    console.log('📥 [loadUserData] После photo1/2/3:', currentUser.photos);
-    if (currentUser.photos.length === 0) {
-      currentUser.photos.push(d.photoUrl || "/img/logo.svg");
-      console.log('📥 [loadUserData] После photoUrl fallback:', currentUser.photos);
+    
+    // Правильно загружаем фото из photo1, photo2, photo3 (как в main.js)
+    currentUser.photos = [];
+    // Заполняем массив по порядку, пропуская пустые слоты
+    if (d.photo1 && d.photo1.trim() && d.photo1 !== '/img/logo.svg' && d.photo1 !== '/img/avatar.svg') {
+      currentUser.photos.push(d.photo1);
     }
-    if (currentUser.photos.length === 0) {
-      if (d.photoUrl) currentUser.photos.push(d.photoUrl);
-      if (d.photoUrl2) currentUser.photos.push(d.photoUrl2);
-      if (d.photoUrl3) currentUser.photos.push(d.photoUrl3);
-      console.log('📥 [loadUserData] После photoUrl2/3:', currentUser.photos);
+    if (d.photo2 && d.photo2.trim() && d.photo2 !== '/img/logo.svg' && d.photo2 !== '/img/avatar.svg') {
+      currentUser.photos.push(d.photo2);
     }
-    currentUser.photoUrl = currentUser.photos[0];
-    currentUser.likes    = JSON.parse(d.likes    || "[]");
-    currentUser.dislikes = JSON.parse(d.dislikes || "[]");
-    currentUser.badge    = d.badge    || "";
-    currentUser.goals = JSON.parse(d.goals || "[]");
-    currentUser.goals = Array.isArray(json.data.goals) ? json.data.goals : currentUser.goals;
+    if (d.photo3 && d.photo3.trim() && d.photo3 !== '/img/logo.svg' && d.photo3 !== '/img/avatar.svg') {
+      currentUser.photos.push(d.photo3);
+    }
+    
+    // Если нет фото, используем photoUrl как fallback
+    if (currentUser.photos.length === 0) {
+      const fallbackUrl = d.photoUrl || "/img/logo.svg";
+      if (fallbackUrl && fallbackUrl !== '/img/logo.svg' && fallbackUrl !== '/img/avatar.svg') {
+        currentUser.photos.push(fallbackUrl);
+      }
+    }
+    
+    // Устанавливаем photoUrl из первого фото или из d.photoUrl
+    currentUser.photoUrl = currentUser.photos.length > 0 ? currentUser.photos[0] : (d.photoUrl || "/img/logo.svg");
+    
+    console.log('✅ [loadUserData] photos загружены:', currentUser.photos, 'photoUrl:', currentUser.photoUrl);
+    
+    // Парсим likes и dislikes с проверкой типа
+    try {
+      currentUser.likes = typeof d.likes === 'string' ? JSON.parse(d.likes || "[]") : (d.likes || []);
+    } catch (e) {
+      console.warn("⚠️ [loadUserData] Ошибка парсинга likes:", e);
+      currentUser.likes = [];
+    }
+    try {
+      currentUser.dislikes = typeof d.dislikes === 'string' ? JSON.parse(d.dislikes || "[]") : (d.dislikes || []);
+    } catch (e) {
+      console.warn("⚠️ [loadUserData] Ошибка парсинга dislikes:", e);
+      currentUser.dislikes = [];
+    }
+    
+    currentUser.badge = d.badge || "";
+    
+    // Парсим goals с проверкой
+    try {
+      if (Array.isArray(d.goals)) {
+        currentUser.goals = d.goals;
+      } else if (typeof d.goals === 'string') {
+        currentUser.goals = JSON.parse(d.goals || "[]");
+      } else {
+        currentUser.goals = [];
+      }
+    } catch (e) {
+      console.warn("⚠️ [loadUserData] Ошибка парсинга goals:", e);
+      currentUser.goals = [];
+    }
     
     // Проверяем, что pro доступен
     if (window.pro && window.pro.updateProStatus) {
@@ -60,6 +118,10 @@ export async function loadUserData() {
     
     currentUser.superLikesCount = Number(json.data.super_likes_count) || 0;
     currentUser.needPhoto = Number(d.needPhoto || 0);
+    currentUser.is_pro = Number(d.is_pro) === 1;
+    currentUser.pro_end = d.pro_end;
+    currentUser.hideAge = Number(d.hideAge || 0) === 1;
+    
     if (currentUser.is_pro) {
       console.log("▶ Allocating 3 SuperLikes for PRO user");
       currentUser.superLikesCount = 3;
@@ -68,7 +130,7 @@ export async function loadUserData() {
     if (stored !== null) {
       currentUser.superLikesCount = parseInt(stored, 10);
     }
-    console.log("📥 [loadUserData] currentUser обновлён:", currentUser);
+    console.log("✅ [loadUserData] currentUser обновлён:", currentUser);
   } catch (err) {
     console.error("❌ [loadUserData] Ошибка:", err);
   }
