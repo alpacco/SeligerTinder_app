@@ -32,26 +32,28 @@ def safe_json_parse(value: Any, default: Any = None) -> Any:
 
 def adapt_sql_for_postgres(sql: str, params: List[Any]) -> Tuple[str, List[Any]]:
     """
-    Адаптирует SQL запрос для PostgreSQL:
-    - Заменяет ? на $1, $2, $3...
+    Адаптирует SQL запрос для PostgreSQL через psycopg2:
+    - Заменяет ? на %s (psycopg2 использует %s, а не $1, $2...)
     - Обрабатывает INSERT OR IGNORE -> INSERT ... ON CONFLICT DO NOTHING
     - Добавляет кавычки к camelCase идентификаторам
+    
+    ВАЖНО: psycopg2 использует %s для параметров, а не $1, $2...
+    Это стандартная практика для psycopg2!
     """
     adapted_sql = sql
-    param_index = 1
     
-    # Заменяем ? на $1, $2, $3...
-    # ВАЖНО: заменяем по одному, чтобы сохранить порядок
-    while '?' in adapted_sql:
-        adapted_sql = adapted_sql.replace('?', f'${param_index}', 1)
-        param_index += 1
+    # Заменяем ? на %s (psycopg2 использует %s для параметров)
+    # ВАЖНО: заменяем все ? на %s, psycopg2 сам обработает порядок параметров
+    adapted_sql = adapted_sql.replace('?', '%s')
+    
+    # Подсчитываем количество параметров для проверки
+    param_count = adapted_sql.count('%s')
     
     # Проверяем, что количество параметров совпадает
-    expected_params = param_index - 1
-    if len(params) != expected_params:
+    if len(params) != param_count:
         raise ValueError(
-            f"Несоответствие количества параметров: SQL требует {expected_params}, "
-            f"передано {len(params)}. SQL: {sql}, params: {params}"
+            f"Несоответствие количества параметров: SQL требует {param_count} (%s), "
+            f"передано {len(params)}. SQL: {sql}, adapted_sql: {adapted_sql}, params: {params}"
         )
     
     # Обрабатываем INSERT OR IGNORE
@@ -83,7 +85,7 @@ def adapt_sql_for_postgres(sql: str, params: List[Any]) -> Tuple[str, List[Any]]
                 )
     
     # Добавляем кавычки к camelCase идентификаторам (только если их еще нет)
-    # ВАЖНО: делаем это ПОСЛЕ замены ? на $1, $2, чтобы не затронуть параметры
+    # ВАЖНО: делаем это ПОСЛЕ замены ? на %s, чтобы не затронуть параметры
     camel_case_fields = [
         'userId', 'photoUrl', 'createdAt', 'needPhoto', 'is_pro', 'pro_end', 'pro_start',
         'last_login', 'pushSent', 'super_likes_count', 'lookingFor', 'photoBot'
