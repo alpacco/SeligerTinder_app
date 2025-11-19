@@ -33,23 +33,32 @@ def check_face_in_photo(image_buffer: bytes) -> Tuple[bool, int]:
     Returns:
         Tuple[bool, int]: (успех, количество лиц)
     """
+    print(f"🔍 [OpenCV] check_face_in_photo вызвана, размер буфера: {len(image_buffer)} байт")
+    
     if not opencv_available or face_cascade is None:
+        print("⚠️ [OpenCV] OpenCV недоступен, пропускаем проверку лица")
         logger.warning("OpenCV недоступен, пропускаем проверку лица")
         return True, 1  # Возвращаем успех, чтобы не блокировать
     
     try:
+        print("🔍 [OpenCV] Декодируем изображение из буфера...")
         # Декодируем изображение из буфера
         nparr = np.frombuffer(image_buffer, np.uint8)
         img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
         
         if img is None or img.size == 0:
+            print("❌ [OpenCV] Не удалось декодировать изображение из буфера")
             logger.error("Не удалось декодировать изображение из буфера")
             return True, 1  # Возвращаем успех при ошибке
         
+        print(f"🔍 [OpenCV] Изображение декодировано, размер: {img.shape}")
+        
         # Конвертируем в grayscale
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        print("🔍 [OpenCV] Изображение конвертировано в grayscale")
         
         # Детектируем лица
+        print("🔍 [OpenCV] Начинаем детекцию лиц...")
         faces = face_cascade.detectMultiScale(
             gray,
             scaleFactor=1.1,
@@ -58,15 +67,21 @@ def check_face_in_photo(image_buffer: bytes) -> Tuple[bool, int]:
         )
         
         face_count = len(faces)
+        print(f"✅ [OpenCV] Детекция завершена. Найдено лиц: {face_count}")
         logger.info(f"OpenCV: найдено лиц: {face_count}")
         
         if face_count == 0:
+            print("⚠️ [OpenCV] Лицо не найдено на фото!")
             return False, 0
         
+        print(f"✅ [OpenCV] Лицо найдено! Количество: {face_count}")
         return True, face_count
         
     except Exception as e:
+        print(f"❌ [OpenCV] Ошибка при проверке лица: {e}")
         logger.error(f"Ошибка при проверке лица через OpenCV: {e}")
+        import traceback
+        print(f"❌ [OpenCV] Traceback: {traceback.format_exc()}")
         return True, 1  # Возвращаем успех при ошибке
 
 

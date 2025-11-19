@@ -57,22 +57,28 @@ async def upload_photo(
             await f.write(content)
         
         # Проверяем лицо через OpenCV
+        print(f"🔍 [PHOTOS] Проверяем лицо через OpenCV для userId={userId}, photoIndex={photoIndex}")
         has_face, face_count = check_face_in_photo(content)
+        print(f"🔍 [PHOTOS] Результат проверки: has_face={has_face}, face_count={face_count}")
         
         # Обновляем БД (безопасно, используя параметризованный запрос)
         column = f"photo{photoIndex}"
         photo_url = f"/data/img/{userId}/{filename}"
+        need_photo = 0 if has_face else 1
         
+        print(f"🔍 [PHOTOS] Обновляем БД: {column}={photo_url}, needPhoto={need_photo}")
         await db_run(
             f'UPDATE users SET "{column}" = ?, needPhoto = ? WHERE "userId" = ?',
-            [photo_url, 0 if has_face else 1, userId]
+            [photo_url, need_photo, userId]
         )
+        print(f"✅ [PHOTOS] БД обновлена. needPhoto установлен в {need_photo}")
         
         return {
             "success": True,
             "photoUrl": photo_url,
             "hasFace": has_face,
-            "faceCount": face_count
+            "faceCount": face_count,
+            "needPhoto": need_photo
         }
     except HTTPException:
         raise

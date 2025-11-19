@@ -1728,22 +1728,39 @@ ageToggleIcon.addEventListener("click", () => {
     async function loadUserData() {
       if (isLocal) return;
       try {
+        console.log(`🔵 [loadUserData] Загружаем данные для userId=${currentUser.userId}`);
         const resp = await fetch(`${API_URL}/getUser?userId=${currentUser.userId}`);
+        console.log(`🔵 [loadUserData] Ответ получен, status=${resp.status}, statusText=${resp.statusText}`);
+        
+        // Проверяем статус ответа
+        if (!resp.ok) {
+          console.error(`❌ [loadUserData] HTTP ошибка: ${resp.status} ${resp.statusText}`);
+          return;
+        }
+        
         // Проверяем, что ответ не пустой
         const text = await resp.text();
+        console.log(`🔵 [loadUserData] Текст ответа получен, длина=${text.length}`);
+        
         if (!text || text.trim() === '') {
           console.warn("⚠️ loadUserData: пустой ответ от сервера");
           return;
         }
+        
         let json;
         try {
           json = JSON.parse(text);
+          console.log(`✅ [loadUserData] JSON распарсен успешно, success=${json.success}`);
         } catch (parseErr) {
           console.error("❌ loadUserData: ошибка парсинга JSON:", parseErr);
-          console.error("  Ответ сервера:", text);
+          console.error("  Ответ сервера (первые 500 символов):", text.substring(0, 500));
           return;
         }
-        if (!json.success) return;
+        
+        if (!json.success) {
+          console.warn(`⚠️ [loadUserData] json.success=false, error=${json.error || 'unknown'}`);
+          return;
+        }
 
         const d = json.data;
         currentUser.name     = d.name     || currentUser.name;
@@ -1765,6 +1782,9 @@ ageToggleIcon.addEventListener("click", () => {
         currentUser.needPhoto = Number(d.needPhoto || 0);
         currentUser.is_pro    = Number(d.is_pro) === 1;
         currentUser.pro_end   = d.pro_end;
+        currentUser.hideAge   = Number(d.hideAge || 0) === 1;
+        
+        console.log(`✅ [loadUserData] Данные загружены: needPhoto=${currentUser.needPhoto}, hideAge=${currentUser.hideAge}, is_pro=${currentUser.is_pro}`);
         
         // Загружаем цели пользователя
         try {

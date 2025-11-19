@@ -98,6 +98,8 @@ async def get_user_frontend(userId: str = Query(..., description="ID польз�
             "matches": safe_json_parse(row.get("matches", "[]")),
             "is_pro": row.get("is_pro", 0),
             "pro_end": row.get("pro_end"),
+            "needPhoto": row.get("needPhoto", 0),
+            "hideAge": row.get("hideAge", 0),
         }
         
         return {"success": True, "data": user_data}
@@ -424,6 +426,25 @@ async def update_profile(data: Dict[str, Any] = Body(...)):
     if "goals" in data:
         updates.append("goals = ?")
         params.append(json.dumps(data["goals"]))
+    if "age" in data and data["age"] is not None:
+        updates.append("age = ?")
+        params.append(data["age"])
+    if "hideAge" in data:
+        updates.append('"hideAge" = ?')
+        params.append(1 if data["hideAge"] else 0)
+    if "photos" in data:
+        # Обновляем photo1, photo2, photo3 из массива photos
+        photos = data["photos"]
+        if isinstance(photos, list):
+            if len(photos) > 0:
+                updates.append("photo1 = ?")
+                params.append(photos[0])
+            if len(photos) > 1:
+                updates.append("photo2 = ?")
+                params.append(photos[1])
+            if len(photos) > 2:
+                updates.append("photo3 = ?")
+                params.append(photos[2])
     
     if not updates:
         raise HTTPException(status_code=400, detail="Нет полей для обновления")
