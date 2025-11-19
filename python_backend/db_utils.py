@@ -119,15 +119,32 @@ async def db_get(sql: str, params: List[Any] = None) -> Optional[Dict[str, Any]]
     conn = pg_pool.getconn()
     try:
         cur = conn.cursor(cursor_factory=RealDictCursor)
-        # Преобразуем список параметров в кортеж для psycopg2
-        params_tuple = tuple(adapted_params) if adapted_params else ()
-        cur.execute(adapted_sql, params_tuple)
+        # Детальное логирование перед выполнением
+        print(f"[db_get] ПЕРЕД execute:")
+        print(f"  - adapted_sql (repr): {repr(adapted_sql)}")
+        print(f"  - adapted_sql (str): {adapted_sql}")
+        print(f"  - adapted_params: {adapted_params}")
+        print(f"  - type(adapted_params): {type(adapted_params)}")
+        print(f"  - len(adapted_params): {len(adapted_params) if adapted_params else 0}")
+        print(f"  - '$1' in adapted_sql: {'$1' in adapted_sql}")
+        print(f"  - adapted_sql.count('$1'): {adapted_sql.count('$1')}")
+        
+        # psycopg2 принимает параметры как список или кортеж
+        # Пробуем передать как список (как в db_all)
+        if adapted_params:
+            cur.execute(adapted_sql, adapted_params)
+        else:
+            cur.execute(adapted_sql)
         row = cur.fetchone()
         return dict(row) if row else None
     except Exception as e:
         print(f"[db_get] Ошибка выполнения SQL: {e}")
-        print(f"[db_get] SQL: {adapted_sql}")
+        print(f"[db_get] SQL (repr): {repr(adapted_sql)}")
+        print(f"[db_get] SQL (str): {adapted_sql}")
         print(f"[db_get] Params: {adapted_params}")
+        print(f"[db_get] Type of params: {type(adapted_params)}")
+        import traceback
+        traceback.print_exc()
         raise
     finally:
         pg_pool.putconn(conn)
@@ -165,9 +182,11 @@ async def db_run(sql: str, params: List[Any] = None) -> Dict[str, Any]:
     conn = pg_pool.getconn()
     try:
         cur = conn.cursor()
-        # Преобразуем список параметров в кортеж для psycopg2
-        params_tuple = tuple(adapted_params) if adapted_params else ()
-        cur.execute(adapted_sql, params_tuple)
+        # psycopg2 принимает параметры как список или кортеж
+        if adapted_params:
+            cur.execute(adapted_sql, adapted_params)
+        else:
+            cur.execute(adapted_sql)
         conn.commit()
         return {"lastID": cur.lastrowid if hasattr(cur, 'lastrowid') else None, "changes": cur.rowcount}
     except Exception as e:
@@ -188,9 +207,11 @@ async def db_transaction(operations: List[Tuple[str, List[Any]]]) -> None:
         cur = conn.cursor()
         for sql, params in operations:
             adapted_sql, adapted_params = adapt_sql_for_postgres(sql, params)
-            # Преобразуем список параметров в кортеж для psycopg2
-            params_tuple = tuple(adapted_params) if adapted_params else ()
-            cur.execute(adapted_sql, params_tuple)
+            # psycopg2 принимает параметры как список или кортеж
+            if adapted_params:
+                cur.execute(adapted_sql, adapted_params)
+            else:
+                cur.execute(adapted_sql)
         conn.commit()
     except Exception as e:
         conn.rollback()
