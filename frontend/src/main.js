@@ -13,7 +13,7 @@
  *****************************************************************************/
 
 // Версия приложения для обхода кэша Telegram
-const APP_VERSION = '2025-01-19-handlers-fix-v1';
+const APP_VERSION = '2025-01-19-cache-update-' + Date.now();
 console.log('🔄 [CACHE] main.js загружен, версия:', APP_VERSION);
 console.log('🔄 [CACHE] Время загрузки:', new Date().toISOString());
 console.log('🔄 [CACHE] Уникальный ID:', Math.random().toString(36).substr(2, 9));
