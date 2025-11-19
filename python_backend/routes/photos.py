@@ -30,10 +30,12 @@ async def upload_photo(
     photoIndex: Optional[str] = Form(None)
 ):
     """Загрузить фотографию (с валидацией безопасности)"""
+    print(f"🔵 [PHOTOS] /api/upload вызван: userId={userId}, photoIndex={photoIndex}, filename={file.filename}")
     try:
         # Валидация входных данных
         userId = validate_user_id(userId)
         photoIndex = validate_photo_index(photoIndex)
+        print(f"🔵 [PHOTOS] Валидация пройдена: userId={userId}, photoIndex={photoIndex}")
         
         # Читаем содержимое файла
         content = await file.read()
