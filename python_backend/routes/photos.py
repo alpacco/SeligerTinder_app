@@ -40,8 +40,36 @@ async def upload_photo(
         # Читаем содержимое файла
         content = await file.read()
         
+        # Конвертируем HEIC в JPEG если нужно
+        try:
+            image = Image.open(io.BytesIO(content))
+            if image.format == 'HEIF' or image.format == 'HEIC' or (file.filename and file.filename.lower().endswith(('.heic', '.heif'))):
+                print(f"🔍 [PHOTOS] Обнаружен HEIC файл, конвертируем в JPEG...")
+                # Конвертируем в RGB (HEIC может быть в других цветовых пространствах)
+                if image.mode != 'RGB':
+                    image = image.convert('RGB')
+                # Сохраняем как JPEG
+                jpeg_buffer = io.BytesIO()
+                image.save(jpeg_buffer, format='JPEG', quality=90)
+                content = jpeg_buffer.getvalue()
+                print(f"✅ [PHOTOS] HEIC успешно конвертирован в JPEG, размер: {len(content)} байт")
+        except Exception as e:
+            print(f"⚠️ [PHOTOS] Ошибка при обработке изображения (возможно, не HEIC): {e}")
+            # Продолжаем с оригинальным контентом
+        
         # Валидация файла
         validate_image_content(content)
+        
+        # Проверяем, нужно ли загрузить в photo1 (если photo1 пустой или photoUrl дефолтный)
+        row = await db_get('SELECT "photo1", "photoUrl" FROM users WHERE "userId" = ?', [userId])
+        photo1 = (row.get("photo1") or "").strip() if row else ""
+        photoUrl = (row.get("photoUrl") or "").strip() if row else ""
+        
+        # Если photo1 пустой или photoUrl это дефолтный логотип, загружаем в photo1
+        default_photo_urls = ["/img/logo.svg", "/img/avatar.svg", ""]
+        if not photoIndex or (not photo1 and (not photoUrl or photoUrl in default_photo_urls)):
+            photoIndex = "1"
+            print(f"🔍 [PHOTOS] photo1 пустой или photoUrl дефолтный, загружаем в photo1")
         
         # Определяем имя файла безопасно
         if photoIndex:
@@ -69,10 +97,19 @@ async def upload_photo(
         need_photo = 0 if has_face else 1
         
         print(f"🔍 [PHOTOS] Обновляем БД: {column}={photo_url}, needPhoto={need_photo}")
-        await db_run(
-            f'UPDATE users SET "{column}" = ?, needPhoto = ? WHERE "userId" = ?',
-            [photo_url, need_photo, userId]
-        )
+        
+        # Если загружаем в photo1 и лицо найдено, обновляем также photoUrl
+        update_fields = [f'"{column}" = ?', 'needPhoto = ?']
+        update_params = [photo_url, need_photo]
+        
+        if photoIndex == "1" and has_face:
+            update_fields.append('"photoUrl" = ?')
+            update_params.append(photo_url)
+            print(f"🔍 [PHOTOS] Также обновляем photoUrl, так как загружаем в photo1 с лицом")
+        
+        update_params.append(userId)
+        sql = f'UPDATE users SET {", ".join(update_fields)} WHERE "userId" = ?'
+        await db_run(sql, update_params)
         print(f"✅ [PHOTOS] БД обновлена. needPhoto установлен в {need_photo}")
         
         return {

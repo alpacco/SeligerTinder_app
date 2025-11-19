@@ -111,10 +111,23 @@ export function handlePhotoAddition() {
     formData.append('userId', window.currentUser.userId);
     
     // Определяем photoIndex (находим первый свободный слот)
+    // Если photo1 пустой или photoUrl дефолтный, загружаем в photo1
     const currentPhotos = window.currentUser.photos || [];
+    const photoUrl = window.currentUser.photoUrl || '';
+    const defaultPhotoUrls = ['/img/logo.svg', '/img/avatar.svg', ''];
+    const isDefaultPhotoUrl = !photoUrl || defaultPhotoUrls.includes(photoUrl);
+    
     let photoIndex = '1';
-    if (currentPhotos.length >= 1 && currentPhotos[0]) photoIndex = '2';
-    if (currentPhotos.length >= 2 && currentPhotos[1]) photoIndex = '3';
+    // Если photo1 пустой или photoUrl дефолтный, всегда загружаем в photo1
+    if (currentPhotos.length === 0 || !currentPhotos[0] || isDefaultPhotoUrl) {
+      photoIndex = '1';
+      console.log(`🔵 [handlePhotoAddition] photo1 пустой или photoUrl дефолтный, загружаем в photo1`);
+    } else if (currentPhotos.length >= 1 && currentPhotos[0]) {
+      photoIndex = '2';
+      if (currentPhotos.length >= 2 && currentPhotos[1]) {
+        photoIndex = '3';
+      }
+    }
     formData.append('photoIndex', photoIndex);
     
     console.log(`🔵 [handlePhotoAddition] Загружаем фото: userId=${window.currentUser.userId}, photoIndex=${photoIndex}`);

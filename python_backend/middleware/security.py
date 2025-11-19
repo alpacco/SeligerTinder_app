@@ -101,9 +101,10 @@ def validate_image_content(content: bytes) -> None:
         # Пытаемся открыть как изображение
         image = Image.open(io.BytesIO(content))
         
-        # Проверяем формат
-        if image.format not in ['JPEG', 'PNG', 'WEBP']:
-            raise HTTPException(status_code=400, detail="Неподдерживаемый формат изображения")
+        # Проверяем формат (добавлена поддержка HEIC/HEIF)
+        supported_formats = ['JPEG', 'PNG', 'WEBP', 'HEIF', 'HEIC']
+        if image.format not in supported_formats:
+            raise HTTPException(status_code=400, detail=f"Неподдерживаемый формат изображения: {image.format}")
         
         # Проверяем размеры (защита от слишком больших изображений)
         if image.width > MAX_IMAGE_DIMENSION or image.height > MAX_IMAGE_DIMENSION:
