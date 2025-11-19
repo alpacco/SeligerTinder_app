@@ -82,13 +82,15 @@ def adapt_sql_for_postgres(sql: str, params: List[Any]) -> Tuple[str, List[Any]]
                     adapted_sql[values_end:]
                 )
     
-    # Добавляем кавычки к camelCase идентификаторам
+    # Добавляем кавычки к camelCase идентификаторам (только если их еще нет)
     camel_case_fields = [
         'userId', 'photoUrl', 'createdAt', 'needPhoto', 'is_pro', 'pro_end', 'pro_start',
         'last_login', 'pushSent', 'super_likes_count', 'lookingFor', 'photoBot'
     ]
     for field in camel_case_fields:
-        pattern = rf'\b{field}\b'
+        # Ищем поле, которое НЕ уже в кавычках
+        # Используем negative lookbehind и negative lookahead для проверки отсутствия кавычек
+        pattern = rf'(?<!"){re.escape(field)}(?!")'
         adapted_sql = re.sub(pattern, f'"{field}"', adapted_sql)
     
     return adapted_sql, params
