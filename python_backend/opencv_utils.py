@@ -10,16 +10,30 @@ import logging
 logger = logging.getLogger(__name__)
 
 # Инициализация каскада для детекции лиц
+print("🔍 [OpenCV] Начинаем инициализацию OpenCV...")
 try:
-    face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_alt2.xml')
+    print("🔍 [OpenCV] Импорт cv2 успешен, версия:", cv2.__version__)
+    cascade_path = cv2.data.haarcascades + 'haarcascade_frontalface_alt2.xml'
+    print(f"🔍 [OpenCV] Загружаем каскад: {cascade_path}")
+    face_cascade = cv2.CascadeClassifier(cascade_path)
     if face_cascade.empty():
+        print("⚠️ [OpenCV] Первый каскад пустой, пробуем fallback...")
         # Fallback на другой каскад
-        face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
+        fallback_path = cv2.data.haarcascades + 'haarcascade_frontalface_default.xml'
+        print(f"🔍 [OpenCV] Загружаем fallback каскад: {fallback_path}")
+        face_cascade = cv2.CascadeClassifier(fallback_path)
+        if face_cascade.empty():
+            print("❌ [OpenCV] Fallback каскад тоже пустой!")
+            raise Exception("Оба каскада пустые")
     opencv_available = True
+    print("✅ [OpenCV] OpenCV инициализирован успешно, каскад загружен")
     logger.info("✅ OpenCV инициализирован успешно")
 except Exception as e:
     opencv_available = False
     face_cascade = None
+    print(f"❌ [OpenCV] OpenCV недоступен: {e}")
+    import traceback
+    print(f"❌ [OpenCV] Traceback: {traceback.format_exc()}")
     logger.warning(f"⚠️ OpenCV недоступен: {e}")
 
 
