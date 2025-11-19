@@ -103,6 +103,34 @@ if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
   console.log("🔍 tg.initDataUnsafe.user:", !!tg?.initDataUnsafe?.user);
 }
 
+// Устанавливаем window.currentUser и window.API_URL СРАЗУ (до DOMContentLoaded)
+// Это нужно для того, чтобы имя отображалось на главном экране и проверка регистрации работала
+console.log("🔵 [MAIN.JS] Устанавливаем window.currentUser и window.API_URL СРАЗУ...");
+window.currentUser = currentUser;
+window.API_URL = API_URL;
+window.API_BASE_URL = API_URL;
+window.WEB_APP_URL = WEB_APP_URL;
+console.log("  ✅ window.currentUser установлен:", window.currentUser);
+console.log("  ✅ window.API_URL установлен:", window.API_URL);
+
+// Обновляем имя на главном экране сразу, если DOM уже готов
+function updateWelcomeScreenName() {
+  if (document.readyState === 'loading') {
+    // DOM еще не готов, попробуем позже
+    setTimeout(updateWelcomeScreenName, 100);
+    return;
+  }
+  
+  const welcomeUserName = document.querySelector('#screen-welcome .user-name');
+  if (welcomeUserName && currentUser && currentUser.name && currentUser.name !== "Username") {
+    welcomeUserName.textContent = currentUser.name;
+    console.log("  ✅ Имя пользователя обновлено на главном экране:", currentUser.name);
+  }
+}
+
+// Пытаемся обновить имя сразу
+updateWelcomeScreenName();
+
 // Универсальная функция генерации пагинатора
 function renderPaginator(paginatorEl, count, activeIndex) {
   paginatorEl.innerHTML = "";
@@ -170,15 +198,15 @@ document.addEventListener("DOMContentLoaded", () => {
   window.showScreen = showScreenFallback;
   console.log("  ✅ window.showScreen установлен (временный):", typeof window.showScreen);
 
-  // Экспортируем currentUser в глобальную область СРАЗУ
-  console.log("🔵 [MAIN.JS] Устанавливаем window.currentUser...");
+  // window.currentUser и window.API_URL уже установлены выше (до DOMContentLoaded)
+  // Обновляем их на случай, если что-то изменилось
+  console.log("🔵 [MAIN.JS] Обновляем window.currentUser и window.API_URL...");
   window.currentUser = currentUser;
-  console.log("  ✅ window.currentUser установлен:", window.currentUser);
-
-  // Экспортируем API_URL в глобальную область СРАЗУ
-  console.log("🔵 [MAIN.JS] Устанавливаем window.API_URL...");
   window.API_URL = API_URL;
-  console.log("  ✅ window.API_URL установлен:", window.API_URL);
+  window.API_BASE_URL = API_URL;
+  window.WEB_APP_URL = WEB_APP_URL;
+  console.log("  ✅ window.currentUser обновлён:", window.currentUser);
+  console.log("  ✅ window.API_URL обновлён:", window.API_URL);
   
   // Обновляем экран приветствия сразу после установки currentUser
   // (если экран уже виден)
@@ -1675,6 +1703,11 @@ ageToggleIcon.addEventListener("click", () => {
           currentUser.goals = [];
         }
 
+        // Обновляем window.currentUser после загрузки данных
+        window.currentUser = currentUser;
+        // Обновляем имя на главном экране
+        updateWelcomeScreenName();
+        
         console.log("✅ checkIfRegistered: пользователь найден и данные загружены");
         return true;
       } catch (err) {
@@ -1725,6 +1758,11 @@ ageToggleIcon.addEventListener("click", () => {
           console.error("❌ Ошибка загрузки целей:", err);
           currentUser.goals = [];
         }
+        
+        // Обновляем window.currentUser после загрузки данных
+        window.currentUser = currentUser;
+        // Обновляем имя на главном экране
+        updateWelcomeScreenName();
         
         // Инициализируем PRO-функции
         if (window.initProFeatures) {
