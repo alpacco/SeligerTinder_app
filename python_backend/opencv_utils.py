@@ -27,6 +27,7 @@ try:
             raise Exception("Оба каскада пустые")
     opencv_available = True
     print("✅ [OpenCV] OpenCV инициализирован успешно, каскад загружен")
+    print(f"✅ [OpenCV] Проверка каскада: face_cascade is not None = {face_cascade is not None}, empty() = {face_cascade.empty()}")
     logger.info("✅ OpenCV инициализирован успешно")
 except Exception as e:
     opencv_available = False
