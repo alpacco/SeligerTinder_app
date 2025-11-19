@@ -2,18 +2,19 @@
 routes/users.py
 Роуты для управления пользователями
 """
-from fastapi import APIRouter, Query, HTTPException, Body
+from fastapi import APIRouter, Query, HTTPException, Body, Request
 from typing import Optional, List, Dict, Any
 from pydantic import BaseModel, Field
 from db_utils import db_get, db_all, db_run, safe_json_parse
 from middleware.security import validate_user_id
+from middleware.auth import get_telegram_user_id
 import json
 
 router = APIRouter()
 
 
 class UserCreate(BaseModel):
-    userId: str
+    userId: Optional[str] = None  # Опционально, если не передан - используется Telegram ID
     name: Optional[str] = None
     username: Optional[str] = ""
     photoUrl: Optional[str] = ""
@@ -108,21 +109,33 @@ async def get_user_frontend(userId: str = Query(..., description="ID польз�
 
 
 @router.post("/join")
-async def join_user(user: UserCreate):
-    """Зарегистрировать нового пользователя"""
+async def join_user(user: UserCreate, request: Request):
+    """Зарегистрировать нового пользователя по Telegram ID"""
     try:
-        # Валидация userId
-        if not user.userId:
-            raise HTTPException(status_code=400, detail="userId обязателен")
+        # Получаем Telegram ID из запроса (основной идентификатор)
+        telegram_id = get_telegram_user_id(request)
         
-        print(f"[POST /api/join] Регистрация пользователя: userId={user.userId}, name={user.name}")
+        # Определяем userId: если передан в запросе - используем его, иначе - Telegram ID
+        if user.userId:
+            final_user_id = user.userId
+            print(f"[POST /api/join] userId передан в запросе: {final_user_id}")
+        elif telegram_id:
+            final_user_id = telegram_id
+            print(f"[POST /api/join] userId не передан, используем Telegram ID: {final_user_id}")
+        else:
+            raise HTTPException(
+                status_code=400, 
+                detail="userId обязателен. Передайте userId в теле запроса или Telegram ID через заголовки/initData"
+            )
+        
+        print(f"[POST /api/join] Регистрация пользователя: userId={final_user_id}, telegram_id={telegram_id}, name={user.name}")
         
         # Проверяем, существует ли пользователь
         # Используем ? - функция adapt_sql_for_postgres преобразует в $1, $2...
-        existing = await db_get('SELECT "userId" FROM users WHERE "userId" = ?', [user.userId])
+        existing = await db_get('SELECT "userId" FROM users WHERE "userId" = ?', [final_user_id])
         
         if existing:
-            print(f"[POST /api/join] Пользователь уже существует: {user.userId}")
+            print(f"[POST /api/join] Пользователь уже существует: {final_user_id}")
             return {"success": True, "message": "User already exists"}
         
         # Создаём нового пользователя
@@ -132,11 +145,11 @@ async def join_user(user: UserCreate):
             """INSERT INTO users ("userId", name, username, "photoUrl", gender, "createdAt")
                VALUES (?, ?, ?, ?, ?, NOW())
                ON CONFLICT ("userId") DO NOTHING""",
-            [user.userId, user.name or "", user.username or "", user.photoUrl or "", user.gender or ""]
+            [final_user_id, user.name or "", user.username or "", user.photoUrl or "", user.gender or ""]
         )
         
-        print(f"[POST /api/join] Пользователь успешно зарегистрирован: {user.userId}")
-        return {"success": True, "message": "User registered"}
+        print(f"[POST /api/join] Пользователь успешно зарегистрирован: {final_user_id}")
+        return {"success": True, "message": "User registered", "userId": final_user_id}
     except HTTPException:
         raise
     except Exception as e:
