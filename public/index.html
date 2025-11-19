@@ -47,6 +47,40 @@
   </style>
   <link rel="stylesheet" href="/css/main.css" id="main-css-link" />
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <script>
+    // Устанавливаем window.currentUser СРАЗУ из Telegram, если доступен
+    // Это нужно для того, чтобы имя отображалось на главном экране
+    (function() {
+      if (window.Telegram && window.Telegram.WebApp) {
+        const tg = window.Telegram.WebApp;
+        if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+          const u = tg.initDataUnsafe.user;
+          window.currentUser = {
+            userId: String(u.id || "UserID"),
+            name: u.first_name || "Username",
+            username: u.username || "",
+            photoUrl: (u.photo_url && u.photo_url.startsWith("http")) ? u.photo_url : "/img/logo.svg",
+            registered: false
+          };
+          console.log('✅ [INLINE] window.currentUser установлен из Telegram:', window.currentUser);
+          
+          // Обновляем имя на главном экране сразу, если DOM готов
+          function updateWelcomeName() {
+            if (document.readyState === 'loading') {
+              setTimeout(updateWelcomeName, 100);
+              return;
+            }
+            const welcomeUserName = document.querySelector('#screen-welcome .user-name');
+            if (welcomeUserName && window.currentUser && window.currentUser.name && window.currentUser.name !== "Username") {
+              welcomeUserName.textContent = window.currentUser.name;
+              console.log('✅ [INLINE] Имя пользователя обновлено на главном экране:', window.currentUser.name);
+            }
+          }
+          updateWelcomeName();
+        }
+      }
+    })();
+  </script>
 </head>
 <body>
   <!-- Прелоадер -->
