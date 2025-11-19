@@ -180,8 +180,10 @@ async def upload_photo_from_url(request: Request):
         async with aiofiles.open(file_path, 'wb') as f:
             await f.write(image_buffer)
         
-        # Проверяем лицо
+        # Проверяем лицо через OpenCV
+        print(f"🔍 [PHOTOS] Проверяем лицо через OpenCV для userId={userId}, photoIndex={photoIndex} (uploadUrl)")
         has_face, face_count = check_face_in_photo(image_buffer)
+        print(f"🔍 [PHOTOS] Результат проверки (uploadUrl): has_face={has_face}, face_count={face_count}")
         
         if not has_face:
             # Удаляем файл если лицо не найдено
@@ -248,17 +250,22 @@ async def upload_photo_base64(data: Dict = Body(...)):
         async with aiofiles.open(file_path, 'wb') as f:
             await f.write(image_buffer)
         
-        # Проверяем лицо
+        # Проверяем лицо через OpenCV
+        print(f"🔍 [PHOTOS] Проверяем лицо через OpenCV для userId={userId}, photoIndex={photoIndex} (uploadBase64)")
         has_face, face_count = check_face_in_photo(image_buffer)
+        print(f"🔍 [PHOTOS] Результат проверки (uploadBase64): has_face={has_face}, face_count={face_count}")
         
         # Обновляем БД (безопасно)
         column = f"photo{photoIndex}"
         photo_url = f"/data/img/{userId}/{filename}"
+        need_photo = 0 if has_face else 1
         
+        print(f"🔍 [PHOTOS] Обновляем БД (uploadBase64): {column}={photo_url}, needPhoto={need_photo}")
         await db_run(
             f'UPDATE users SET "{column}" = ?, needPhoto = ? WHERE "userId" = ?',
-            [photo_url, 0 if has_face else 1, userId]
+            [photo_url, need_photo, userId]
         )
+        print(f"✅ [PHOTOS] БД обновлена (uploadBase64). needPhoto установлен в {need_photo}")
         
         return {
             "success": True,
