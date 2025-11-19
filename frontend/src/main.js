@@ -1768,14 +1768,31 @@ ageToggleIcon.addEventListener("click", () => {
         currentUser.gender   = d.gender;
         currentUser.bio      = d.bio      || currentUser.bio;
         currentUser.age      = d.age      || currentUser.age;
-        currentUser.photos   = [];
-        if (d.photo1) currentUser.photos.push(d.photo1);
-        if (d.photo2) currentUser.photos.push(d.photo2);
-        if (d.photo3) currentUser.photos.push(d.photo3);
-        if (currentUser.photos.length === 0) {
-          currentUser.photos.push(d.photoUrl || "/img/logo.svg");
+        // Правильно загружаем фото из photo1, photo2, photo3
+        currentUser.photos = [];
+        // Заполняем массив по порядку, пропуская пустые слоты
+        if (d.photo1 && d.photo1.trim() && d.photo1 !== '/img/logo.svg' && d.photo1 !== '/img/avatar.svg') {
+          currentUser.photos.push(d.photo1);
         }
-        currentUser.photoUrl = currentUser.photos[0];
+        if (d.photo2 && d.photo2.trim() && d.photo2 !== '/img/logo.svg' && d.photo2 !== '/img/avatar.svg') {
+          currentUser.photos.push(d.photo2);
+        }
+        if (d.photo3 && d.photo3.trim() && d.photo3 !== '/img/logo.svg' && d.photo3 !== '/img/avatar.svg') {
+          currentUser.photos.push(d.photo3);
+        }
+        
+        // Если нет фото, используем photoUrl как fallback
+        if (currentUser.photos.length === 0) {
+          const fallbackUrl = d.photoUrl || "/img/logo.svg";
+          if (fallbackUrl && fallbackUrl !== '/img/logo.svg' && fallbackUrl !== '/img/avatar.svg') {
+            currentUser.photos.push(fallbackUrl);
+          }
+        }
+        
+        // Устанавливаем photoUrl из первого фото или из d.photoUrl
+        currentUser.photoUrl = currentUser.photos.length > 0 ? currentUser.photos[0] : (d.photoUrl || "/img/logo.svg");
+        
+        console.log(`✅ [loadUserData] photos загружены:`, currentUser.photos, `photoUrl:`, currentUser.photoUrl);
         // Парсим likes и dislikes, если они строки, иначе используем как есть
         try {
           currentUser.likes = typeof d.likes === 'string' ? JSON.parse(d.likes || "[]") : (d.likes || []);

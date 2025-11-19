@@ -145,29 +145,55 @@ export function handlePhotoAddition() {
       
       if (result.success && result.photoUrl) {
         window.currentUser.photos = window.currentUser.photos || [];
-        // Обновляем или добавляем фото в нужный слот
         const index = parseInt(photoIndex) - 1;
-        if (window.currentUser.photos[index]) {
-          window.currentUser.photos[index] = result.photoUrl;
-        } else {
-          window.currentUser.photos.push(result.photoUrl);
+        
+        console.log(`🔵 [handlePhotoAddition] Обновляем photos: index=${index}, текущая длина=${window.currentUser.photos.length}`);
+        
+        // Правильно обновляем массив photos - заполняем до нужного индекса если нужно
+        while (window.currentUser.photos.length <= index) {
+          window.currentUser.photos.push('');
         }
+        // Устанавливаем фото в нужный слот
+        window.currentUser.photos[index] = result.photoUrl;
+        
+        // Удаляем пустые элементы в конце
+        while (window.currentUser.photos.length > 0 && !window.currentUser.photos[window.currentUser.photos.length - 1]) {
+          window.currentUser.photos.pop();
+        }
+        
+        // Обновляем photoUrl если это photo1
+        if (photoIndex === '1' && result.hasFace) {
+          window.currentUser.photoUrl = result.photoUrl;
+          console.log(`🔵 [handlePhotoAddition] Обновлен photoUrl: ${result.photoUrl}`);
+        }
+        
         // Обновляем needPhoto из результата
         if (result.needPhoto !== undefined) {
           window.currentUser.needPhoto = result.needPhoto;
           console.log(`🔵 [handlePhotoAddition] needPhoto обновлен: ${result.needPhoto}, hasFace: ${result.hasFace}`);
         }
         
-        // --- Главное исправление: всегда обновлять профиль и UI ---
-        if (window.loadUserData) await window.loadUserData();
+        console.log(`✅ [handlePhotoAddition] photos обновлен:`, window.currentUser.photos);
+        
+        // Обновляем UI сразу, не дожидаясь loadUserData
         if (isCard && window.initProfileEditScreen) {
           addEl.innerHTML = '';
           addEl.classList.remove('loading');
+          console.log(`🔵 [handlePhotoAddition] Вызываем initProfileEditScreen для обновления карусели`);
           window.initProfileEditScreen();
         } else if (!isCard && window.updateProfileScreen) {
-        addEl.disabled = false;
-        addEl.textContent = 'Фото добавлено';
+          addEl.disabled = false;
+          addEl.textContent = 'Фото добавлено';
           window.updateProfileScreen();
+        }
+        
+        // Затем обновляем данные с сервера для синхронизации
+        if (window.loadUserData) {
+          await window.loadUserData();
+          // После загрузки данных снова обновляем карусель
+          if (isCard && window.initProfileEditScreen) {
+            window.initProfileEditScreen();
+          }
         }
       } else {
         const errorMsg = result.error || result.detail || 'Неизвестная ошибка';
