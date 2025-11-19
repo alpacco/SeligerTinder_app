@@ -166,6 +166,11 @@ export function showCandidate() {
   // Экспортируем в глобальную область для использования в main.js
   window.showCandidateFromSwipe = showCandidate;
   const singleCard = document.getElementById("singleCard");
+  if (!singleCard) {
+    console.error('[showCandidate] singleCard не найден!');
+    return;
+  }
+  
   if (window.currentUser.needPhoto === 1) {
     console.log('[showCandidate] needPhoto=1, показываем кнопку "Добавить фото"');
     singleCard.style.backgroundImage = "none";
@@ -179,6 +184,7 @@ export function showCandidate() {
       </div>
     `;
     singleCard.style.boxShadow = "none";
+    // Скрываем кнопки лайк/дизлайк, но НЕ удаляем их из DOM
     document.querySelectorAll(".back-cnd-btn, .superlike_d, .like_d, .dislike_d").forEach(b => b.style.display = "none");
     const btn = document.getElementById("add-photo-swipe-btn");
     if (btn) {

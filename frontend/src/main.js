@@ -464,19 +464,53 @@ if (femaleBtn) {
 }
 
   // Обработчики для переключения экрана (например, переход на профайл, матчи)
+  // Обработчик для кнопки MATCHES (устанавливается глобально)
   const matchesButton = document.getElementById("matches-button");
   if (matchesButton) {
-    matchesButton.addEventListener("click", () => {
+    // Удаляем старые обработчики, если есть
+    const newMatchesBtn = matchesButton.cloneNode(true);
+    matchesButton.parentNode.replaceChild(newMatchesBtn, matchesButton);
+    
+    newMatchesBtn.addEventListener("click", () => {
+      console.log("▶ Клик по кнопке MATCHES");
       updateMatchesCount();       // ← Обновляем число в бейдже
       showScreen("screen-matches");
     });
+    console.log("✅ Обработчик для matches-button установлен");
+  } else {
+    console.warn("⚠️ Кнопка matches-button не найдена");
   }
 
-  // Remove old avatar_button listener if present, since now using .ava-frame
-  // const avatarBtn = document.getElementById("avatar_button");
-  // if (avatarBtn) {
-  //   avatarBtn.onclick = () => showScreen("screen-profile");
-  // }
+  // Обработчик для avatar_button (устанавливается глобально)
+  const avatarBtn = document.getElementById("avatar_button");
+  if (avatarBtn) {
+    avatarBtn.style.cursor = "pointer";
+    // Удаляем старые обработчики, если есть
+    const newAvatarBtn = avatarBtn.cloneNode(true);
+    avatarBtn.parentNode.replaceChild(newAvatarBtn, avatarBtn);
+    
+    newAvatarBtn.addEventListener("click", () => {
+      console.log("▶ Клик по avatar_button -> переход на screen-profile");
+      viewingCandidate = null;
+      showScreen("screen-profile");
+    });
+    console.log("✅ Обработчик для avatar_button установлен");
+  } else {
+    console.warn("⚠️ avatar_button не найден");
+  }
+  
+  // Также устанавливаем обработчик для .ava-frame (на случай, если id изменился)
+  const avatarFrame = document.querySelector("#screen-swipe .ava-frame");
+  if (avatarFrame && !avatarFrame.hasAttribute('data-handler-added')) {
+    avatarFrame.setAttribute('data-handler-added', 'true');
+    avatarFrame.style.cursor = "pointer";
+    avatarFrame.addEventListener("click", () => {
+      console.log("▶ Клик по .ava-frame -> переход на screen-profile");
+      viewingCandidate = null;
+      showScreen("screen-profile");
+    });
+    console.log("✅ Обработчик для .ava-frame установлен");
+  }
 // Для экрана Matches (screen4)
 const matchesBackBtn = document.getElementById("back-button");
 if (matchesBackBtn) {
@@ -782,27 +816,51 @@ if (profileEditBackBtn) {
   
   // animateCardOut function removed
 
-    // +++ Обработка клика по кнопкам «лайк» / «дизлайк»
-    const likeBtnControl = document.querySelector(".like_d");
-    const dislikeBtnControl = document.querySelector(".dislike_d");
-    if (likeBtnControl) {
-      likeBtnControl.addEventListener("click", () => {
-        if (!candidates || candidates.length === 0 || currentIndex >= candidates.length) {
-          showCandidate();
-        } else {
-          doLike();
-        }
-      });
+    // +++ Обработка клика по кнопкам «лайк» / «дизлайк» (устанавливается глобально)
+    // Эти кнопки должны быть в HTML (как в старом коде)
+    function setupLikeDislikeHandlers() {
+      const likeBtnControl = document.querySelector(".like_d");
+      const dislikeBtnControl = document.querySelector(".dislike_d");
+      
+      if (likeBtnControl && !likeBtnControl.hasAttribute('data-handler-added')) {
+        likeBtnControl.setAttribute('data-handler-added', 'true');
+        likeBtnControl.addEventListener("click", () => {
+          console.log("▶ Клик по кнопке Like");
+          if (!candidates || candidates.length === 0 || currentIndex >= candidates.length) {
+            showCandidate();
+          } else {
+            doLike();
+          }
+        });
+        console.log("✅ Обработчик для .like_d установлен");
+      }
+      
+      if (dislikeBtnControl && !dislikeBtnControl.hasAttribute('data-handler-added')) {
+        dislikeBtnControl.setAttribute('data-handler-added', 'true');
+        dislikeBtnControl.addEventListener("click", () => {
+          console.log("▶ Клик по кнопке Dislike");
+          if (!candidates || candidates.length === 0 || currentIndex >= candidates.length) {
+            showCandidate();
+          } else {
+            doDislike();
+          }
+        });
+        console.log("✅ Обработчик для .dislike_d установлен");
+      }
     }
-    if (dislikeBtnControl) {
-      dislikeBtnControl.addEventListener("click", () => {
-        if (!candidates || candidates.length === 0 || currentIndex >= candidates.length) {
-          showCandidate();
-        } else {
-          doDislike();
-        }
-      });
-    }
+    
+    // Устанавливаем обработчики сразу
+    setupLikeDislikeHandlers();
+    
+    // Также устанавливаем обработчики при переключении на экран свайпов
+    // (на случай, если кнопки были пересозданы)
+    const originalShowScreen = showScreen;
+    showScreen = function(screenId) {
+      originalShowScreen(screenId);
+      if (screenId === "screen-swipe") {
+        setTimeout(setupLikeDislikeHandlers, 100);
+      }
+    };
 
     async function doDislike() {
       const topUserId = singleCard.dataset.userId;
