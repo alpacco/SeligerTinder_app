@@ -1507,28 +1507,8 @@ if (giftDetailBtn) {
     }, 400);
   }
 
-  const ageToggleIcon = document.getElementById("age-toggle-icon");
-  const ageInput     = document.getElementById("edit-age-input");
-  const ageLabel     = document.querySelector(".age-label");
-
-ageToggleIcon.classList.add("active");
-ageToggleIcon.style.backgroundImage = "url('/img/eye_open.svg')";
-ageToggleIcon.addEventListener("click", () => {
-  const isNowVisible = ageToggleIcon.classList.toggle("active");
-  if (isNowVisible) {
-    ageToggleIcon.style.backgroundImage = "url('/img/eye_open.svg')";
-    ageInput.disabled = false;
-    ageInput.style.filter = "none";
-    if (ageLabel) ageLabel.style.color = "";        // вернём нормальный цвет
-    currentUser.hideAge = false;
-  } else {
-    ageToggleIcon.style.backgroundImage = "url('/img/eye_close.svg')";
-    ageInput.disabled = true;
-    ageInput.style.filter = "grayscale(100%)";
-    if (ageLabel) ageLabel.style.color = "#999";    // серый цвет
-    currentUser.hideAge = true;
-  }
-});
+  // Обработчик age-toggle-icon теперь только в profile.js (initProfileEditScreen)
+  // Удален отсюда, чтобы избежать конфликтов
   function handlePhotoDeletion(index) {
     currentUser.photos.splice(index, 1);
     initProfileEditScreen();

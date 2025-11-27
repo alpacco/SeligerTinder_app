@@ -336,80 +336,124 @@ export function initProfileEditScreen() {
   const ageToggleIcon = document.getElementById('age-toggle-icon');
   const ageLabel = document.querySelector('.age-label');
   const ageContainer = document.querySelector('.edit-age-container');
+  
+  console.log('[AGE TOGGLE][INIT] Инициализация:', {
+    ageToggleIcon: !!ageToggleIcon,
+    ageInput: !!ageInput,
+    ageLabel: !!ageLabel,
+    ageContainer: !!ageContainer,
+    currentUserHideAge: currentUser.hideAge
+  });
+  
   if (ageToggleIcon && ageInput) {
+    // Удаляем старые обработчики, если есть
+    const newAgeToggleIcon = ageToggleIcon.cloneNode(true);
+    ageToggleIcon.parentNode.replaceChild(newAgeToggleIcon, ageToggleIcon);
+    const freshAgeToggleIcon = document.getElementById('age-toggle-icon');
+    
+    // Инициализация состояния
     if (currentUser.hideAge) {
-      ageToggleIcon.classList.remove('active');
-      ageToggleIcon.style.backgroundImage = "url('/img/eye_close.svg')";
+      freshAgeToggleIcon.classList.remove('active');
+      freshAgeToggleIcon.style.backgroundImage = "url('/img/eye_close.svg')";
       ageInput.disabled = true;
       ageInput.setAttribute('disabled', 'disabled');
       ageInput.style.filter = "grayscale(100%)";
       if (ageLabel) ageLabel.style.color = "#999";
       // Скрываем весь контейнер возраста
       if (ageContainer) ageContainer.style.display = "none";
+      console.log('[AGE TOGGLE][INIT] Возраст скрыт при инициализации');
     } else {
-      ageToggleIcon.classList.add('active');
-      ageToggleIcon.style.backgroundImage = "url('/img/eye_open.svg')";
+      freshAgeToggleIcon.classList.add('active');
+      freshAgeToggleIcon.style.backgroundImage = "url('/img/eye_open.svg')";
       ageInput.disabled = false;
       ageInput.removeAttribute('disabled');
       ageInput.style.filter = "none";
       if (ageLabel) ageLabel.style.color = "";
       // Показываем контейнер возраста
       if (ageContainer) ageContainer.style.display = "";
+      console.log('[AGE TOGGLE][INIT] Возраст показан при инициализации');
     }
-    ageToggleIcon.onclick = () => {
-      console.log('[AGE TOGGLE] Клик! id:', ageToggleIcon.id, 'class:', ageToggleIcon.className, 'currentUser.hideAge:', currentUser.hideAge, 'ageInput.disabled:', ageInput.disabled, 'ageLabel.color:', ageLabel && ageLabel.style.color);
-      const isNowVisible = ageToggleIcon.classList.toggle('active');
+    
+    // Устанавливаем обработчик клика
+    freshAgeToggleIcon.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      
+      console.log('🔵 [AGE TOGGLE][CLICK] Клик по иконке глаза!');
+      console.log('  - Элемент:', freshAgeToggleIcon);
+      console.log('  - ID:', freshAgeToggleIcon.id);
+      console.log('  - Класс до:', freshAgeToggleIcon.className);
+      console.log('  - backgroundImage до:', freshAgeToggleIcon.style.backgroundImage);
+      console.log('  - currentUser.hideAge до:', currentUser.hideAge);
+      console.log('  - ageInput.disabled до:', ageInput.disabled);
+      console.log('  - ageLabel до:', ageLabel ? ageLabel.textContent : 'не найден');
+      console.log('  - ageContainer до:', ageContainer ? ageContainer.style.display : 'не найден');
+      
+      const isNowVisible = freshAgeToggleIcon.classList.toggle('active');
+      console.log('  - isNowVisible после toggle:', isNowVisible);
+      
       if (isNowVisible) {
-        ageToggleIcon.style.backgroundImage = "url('/img/eye_open.svg')";
+        // Показываем возраст
+        console.log('  ✅ [AGE TOGGLE] Показываем возраст');
+        freshAgeToggleIcon.style.backgroundImage = "url('/img/eye_open.svg')";
         ageInput.disabled = false;
         ageInput.removeAttribute('disabled');
-        setTimeout(() => {
-          if (ageInput.disabled) ageInput.removeAttribute('disabled');
-        }, 100);
         ageInput.style.filter = "none";
-        if (ageLabel) ageLabel.style.color = "";
+        ageInput.style.color = "rgb(32, 32, 34)";
+        if (ageLabel) {
+          ageLabel.style.color = "";
+          ageLabel.style.display = "";
+        }
         // Показываем контейнер возраста
-        if (ageContainer) ageContainer.style.display = "";
+        if (ageContainer) {
+          ageContainer.style.display = "";
+          console.log('  ✅ [AGE TOGGLE] Контейнер возраста показан');
+        }
         currentUser.hideAge = false;
         window.currentUser.hideAge = false;
-        console.log('[AGE TOGGLE][DEBUG] После открытия: disabled=', ageInput.disabled, 'hasAttr=', ageInput.hasAttribute('disabled'));
+        console.log('  ✅ [AGE TOGGLE] После показа: disabled=', ageInput.disabled, 'hasAttr=', ageInput.hasAttribute('disabled'));
         // Сохраняем на сервер
         saveHideAgeToServer(false);
       } else {
-        ageToggleIcon.style.backgroundImage = "url('/img/eye_close.svg')";
+        // Скрываем возраст
+        console.log('  ❌ [AGE TOGGLE] Скрываем возраст');
+        freshAgeToggleIcon.style.backgroundImage = "url('/img/eye_close.svg')";
         ageInput.disabled = true;
         ageInput.setAttribute('disabled', 'disabled');
-        setTimeout(() => {
-          if (!ageInput.disabled) ageInput.setAttribute('disabled', 'disabled');
-        }, 100);
-        // --- Супер-жёсткий патч ---
-        let patchCount = 0;
-        const patchInterval = setInterval(() => {
-          patchCount++;
-          if (!ageInput.disabled) {
-            ageInput.disabled = true;
-            ageInput.setAttribute('disabled', 'disabled');
-            console.log('[AGE TOGGLE][PATCH] Принудительно выставил disabled!');
-          }
-          if (!ageInput.hasAttribute('disabled')) {
-            ageInput.setAttribute('disabled', 'disabled');
-            console.log('[AGE TOGGLE][PATCH] Принудительно выставил атрибут disabled!');
-          }
-          if (patchCount > 10) clearInterval(patchInterval);
-        }, 100);
-        // --- конец патча ---
         ageInput.style.filter = "grayscale(100%)";
-        if (ageLabel) ageLabel.style.color = "#999";
+        if (ageLabel) {
+          ageLabel.style.color = "#999";
+          ageLabel.style.display = "none";
+          console.log('  ❌ [AGE TOGGLE] Лейбл скрыт');
+        }
         // Скрываем весь контейнер возраста
-        if (ageContainer) ageContainer.style.display = "none";
+        if (ageContainer) {
+          ageContainer.style.display = "none";
+          console.log('  ❌ [AGE TOGGLE] Контейнер возраста скрыт');
+        }
         currentUser.hideAge = true;
         window.currentUser.hideAge = true;
-        console.log('[AGE TOGGLE][DEBUG] После скрытия: disabled=', ageInput.disabled, 'hasAttr=', ageInput.hasAttribute('disabled'));
+        console.log('  ❌ [AGE TOGGLE] После скрытия: disabled=', ageInput.disabled, 'hasAttr=', ageInput.hasAttribute('disabled'));
         // Сохраняем на сервер
         saveHideAgeToServer(true);
       }
-      console.log('[AGE TOGGLE] После: currentUser.hideAge:', currentUser.hideAge, 'ageInput.disabled:', ageInput.disabled, 'ageLabel.color:', ageLabel && ageLabel.style.color);
-    };
+      
+      console.log('🔵 [AGE TOGGLE][CLICK] Финальное состояние:', {
+        className: freshAgeToggleIcon.className,
+        backgroundImage: freshAgeToggleIcon.style.backgroundImage,
+        hideAge: currentUser.hideAge,
+        ageInputDisabled: ageInput.disabled,
+        ageLabelDisplay: ageLabel ? ageLabel.style.display : 'не найден',
+        ageContainerDisplay: ageContainer ? ageContainer.style.display : 'не найден'
+      });
+    });
+    
+    console.log('[AGE TOGGLE][INIT] Обработчик клика установлен');
+  } else {
+    console.error('[AGE TOGGLE][INIT] Ошибка: не найдены элементы', {
+      ageToggleIcon: !!ageToggleIcon,
+      ageInput: !!ageInput
+    });
   }
   // --- Initialize Photo Carousel ---
   const carousel = document.querySelector('.edit-photo-carousel');
