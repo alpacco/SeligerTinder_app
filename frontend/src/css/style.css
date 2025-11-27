@@ -290,17 +290,30 @@ flex: 1;
   object-fit: cover;
 
 }
+/* Унифицированные стили для кнопки back на всех экранах */
 .back-btn {
-    position: absolute;
-    background: none;
-    border: none;
-    cursor: pointer;
-
+  flex: 0 0 auto;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  margin: 0;
+  margin-right: 10px;
+  background: none;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index: 1;
 }
+
 .back-btn img {
   width: 24px;
   height: 24px;
   object-fit: contain;
+  display: block;
 }
 
 /* ========== PRO BADGE CONTAINER FLEX LAYOUT ========== */
@@ -387,10 +400,7 @@ flex: 1;
 .candidate-header .profile-pro-info, .candidate-header .matches-pro-info {
   display: none;
 }
-.back-btn {
-  flex: 0 0 auto;
-  margin-right: 10px;
-}
+/* Стили для .back-btn уже определены выше, удаляем дубликат */
 
 .cards-header .btn-matches {
   flex: 0 0 auto;
@@ -2167,23 +2177,35 @@ flex: 1;
 
 }
 .header-main-row {
-  display: flex;
+  display: grid;
+  grid-template-columns: 44px 1fr 44px;
   align-items: center;
-  justify-content: space-between;
+  justify-items: center;
   height: 40px;
   position: relative;
+  gap: 10px;
 }
+
+.header-main-row .back-btn {
+  justify-self: start;
+  grid-column: 1;
+}
+
 .header-main-row h2 {
-  flex: 1;
+  grid-column: 2;
   text-align: center;
   font-size: var(--font-size-base);
   font-weight: bold;
   margin: 0;
-  position: absolute;
-  left: 0; right: 0;
-  margin-left: auto; margin-right: auto;
-  width: max-content;
+  width: 100%;
   color: var(--color-black);
+}
+
+.header-main-row .header-pro-info {
+  grid-column: 3;
+  justify-self: end;
+  min-width: auto;
+  width: auto;
 }
 .header-pro-info {
     min-width: 40px;
@@ -2258,18 +2280,7 @@ flex: 1;
   text-align: right;
 }
 
-.profile-edit-header .back-btn {
-  flex: 0 0 auto;
-  margin-right: 10px;
-  background: none;
-  border: none;
-  outline: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: var(--radius-rd);
-  cursor: pointer;
-}
+/* Стили для .back-btn уже определены выше, удаляем дубликат */
 
 .edit-save-button {
   background: var(--color-red);
