@@ -54,40 +54,12 @@ export function updateProfileScreen() {
   const bioEl = document.querySelector("#screen-profile .user-info .user-bio");
   let paginator = document.querySelector("#screen-profile .user-info .paginator");
 
-  // === Блокировка профиля, если не пройден Vision ===
-  if (currentUser.needPhoto === 1 && picture) {
-    picture.style.backgroundImage = "none";
-    picture.style.backgroundColor = "#fff";
-    picture.innerHTML = `
-      <div class="no-users invite-wrapper">
-        <h3>Пожалуйста, загрузите 1-3 фото с лицом, чтобы просматривать анкеты.</h3>
-        <button id="add-photo-profile-btn" class="invite-button">Добавить фото</button>
-      </div>
-    `;
-    if (userInfo) userInfo.style.display = "none";
-    if (nameEl) nameEl.style.display = "none";
-    if (ageEl) ageEl.style.display = "none";
-    if (bioEl) bioEl.style.display = "none";
-    if (paginator) paginator.style.display = "none";
-    
-    // Добавляем обработчик для кнопки "Добавить фото"
-    const btn = document.getElementById("add-photo-profile-btn");
-    if (btn) {
-      // Удаляем старые обработчики
-      const newBtn = btn.cloneNode(true);
-      btn.parentNode.replaceChild(newBtn, btn);
-      
-      newBtn.addEventListener("click", function() { handlePhotoAddition.call(newBtn); });
-    }
-    return;
-  } else {
-    // Восстанавливаем отображение инфо-блока, если needPhoto = 0
-    if (userInfo) userInfo.style.display = "";
-    if (nameEl) nameEl.style.display = "";
-    if (ageEl) ageEl.style.display = "";
-    if (bioEl) bioEl.style.display = "";
-    if (paginator) paginator.style.display = "";
-  }
+  // Восстанавливаем отображение всех элементов профиля
+  if (userInfo) userInfo.style.display = "";
+  if (nameEl) nameEl.style.display = "";
+  if (ageEl) ageEl.style.display = "";
+  if (bioEl) bioEl.style.display = "";
+  if (paginator) paginator.style.display = "";
 
   if (picture && userInfo) {
     // Очищаем старые данные
