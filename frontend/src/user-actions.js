@@ -129,6 +129,11 @@ export async function loadUserData() {
     currentUser.pro_end = d.pro_end;
     currentUser.hideAge = Number(d.hideAge || 0) === 1;
     
+    // Обновляем PRO-класс на body для применения стилей
+    if (window.initProFeatures) {
+      window.initProFeatures(currentUser);
+    }
+    
     if (currentUser.is_pro) {
       console.log("▶ Allocating 3 SuperLikes for PRO user");
       currentUser.superLikesCount = 3;
