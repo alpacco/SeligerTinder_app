@@ -335,6 +335,7 @@ export function initProfileEditScreen() {
   // --- Age toggle logic ---
   const ageToggleIcon = document.getElementById('age-toggle-icon');
   const ageLabel = document.querySelector('.age-label');
+  const ageContainer = document.querySelector('.edit-age-container');
   if (ageToggleIcon && ageInput) {
     if (currentUser.hideAge) {
       ageToggleIcon.classList.remove('active');
@@ -343,6 +344,8 @@ export function initProfileEditScreen() {
       ageInput.setAttribute('disabled', 'disabled');
       ageInput.style.filter = "grayscale(100%)";
       if (ageLabel) ageLabel.style.color = "#999";
+      // Скрываем весь контейнер возраста
+      if (ageContainer) ageContainer.style.display = "none";
     } else {
       ageToggleIcon.classList.add('active');
       ageToggleIcon.style.backgroundImage = "url('/img/eye_open.svg')";
@@ -350,6 +353,8 @@ export function initProfileEditScreen() {
       ageInput.removeAttribute('disabled');
       ageInput.style.filter = "none";
       if (ageLabel) ageLabel.style.color = "";
+      // Показываем контейнер возраста
+      if (ageContainer) ageContainer.style.display = "";
     }
     ageToggleIcon.onclick = () => {
       console.log('[AGE TOGGLE] Клик! id:', ageToggleIcon.id, 'class:', ageToggleIcon.className, 'currentUser.hideAge:', currentUser.hideAge, 'ageInput.disabled:', ageInput.disabled, 'ageLabel.color:', ageLabel && ageLabel.style.color);
@@ -363,6 +368,8 @@ export function initProfileEditScreen() {
         }, 100);
         ageInput.style.filter = "none";
         if (ageLabel) ageLabel.style.color = "";
+        // Показываем контейнер возраста
+        if (ageContainer) ageContainer.style.display = "";
         currentUser.hideAge = false;
         window.currentUser.hideAge = false;
         console.log('[AGE TOGGLE][DEBUG] После открытия: disabled=', ageInput.disabled, 'hasAttr=', ageInput.hasAttribute('disabled'));
@@ -393,6 +400,8 @@ export function initProfileEditScreen() {
         // --- конец патча ---
         ageInput.style.filter = "grayscale(100%)";
         if (ageLabel) ageLabel.style.color = "#999";
+        // Скрываем весь контейнер возраста
+        if (ageContainer) ageContainer.style.display = "none";
         currentUser.hideAge = true;
         window.currentUser.hideAge = true;
         console.log('[AGE TOGGLE][DEBUG] После скрытия: disabled=', ageInput.disabled, 'hasAttr=', ageInput.hasAttribute('disabled'));
