@@ -48,33 +48,67 @@ def check_face_in_photo(image_buffer: bytes) -> Tuple[bool, int]:
     Returns:
         Tuple[bool, int]: (успех, количество лиц)
     """
-    print(f"🔍 [OpenCV] check_face_in_photo вызвана, размер буфера: {len(image_buffer)} байт")
+    import time
+    start_time = time.time()
+    
+    print("=" * 80)
+    print(f"🔍 [OpenCV] ========== НАЧАЛО ПРОВЕРКИ ЛИЦА ==========")
+    print(f"🔍 [OpenCV] Размер буфера: {len(image_buffer)} байт")
+    print(f"🔍 [OpenCV] opencv_available: {opencv_available}")
+    print(f"🔍 [OpenCV] face_cascade is None: {face_cascade is None}")
+    
+    if face_cascade is not None:
+        print(f"🔍 [OpenCV] face_cascade.empty(): {face_cascade.empty()}")
     
     if not opencv_available or face_cascade is None:
         print("❌ [OpenCV] OpenCV недоступен, НЕ пропускаем проверку - возвращаем False")
         logger.warning("OpenCV недоступен, возвращаем False для проверки лица")
+        print("=" * 80)
         return False, 0  # Возвращаем False, чтобы требовать фото с лицом
     
     try:
-        print("🔍 [OpenCV] Декодируем изображение из буфера...")
+        print("🔍 [OpenCV] Шаг 1: Декодируем изображение из буфера...")
         # Декодируем изображение из буфера
         nparr = np.frombuffer(image_buffer, np.uint8)
-        img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+        print(f"🔍 [OpenCV] nparr создан, размер: {len(nparr)} элементов")
         
-        if img is None or img.size == 0:
-            print("❌ [OpenCV] Не удалось декодировать изображение из буфера")
+        img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+        decode_time = time.time() - start_time
+        print(f"🔍 [OpenCV] Декодирование заняло: {decode_time:.3f} сек")
+        
+        if img is None:
+            print("❌ [OpenCV] cv2.imdecode вернул None - изображение не декодировано")
             logger.error("Не удалось декодировать изображение из буфера")
+            print("=" * 80)
             return False, 0  # Возвращаем False при ошибке декодирования
         
-        print(f"🔍 [OpenCV] Изображение декодировано, размер: {img.shape}")
+        if img.size == 0:
+            print("❌ [OpenCV] Размер изображения = 0")
+            logger.error("Размер изображения = 0")
+            print("=" * 80)
+            return False, 0
+        
+        print(f"🔍 [OpenCV] Изображение декодировано успешно")
+        print(f"🔍 [OpenCV] Размер изображения (shape): {img.shape}")
+        print(f"🔍 [OpenCV] Тип данных: {img.dtype}")
+        print(f"🔍 [OpenCV] Размер в пикселях: {img.shape[0]}x{img.shape[1]}")
         
         # Конвертируем в grayscale
+        print("🔍 [OpenCV] Шаг 2: Конвертируем в grayscale...")
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        print("🔍 [OpenCV] Изображение конвертировано в grayscale")
+        print(f"🔍 [OpenCV] Grayscale создан, размер: {gray.shape}")
+        print(f"🔍 [OpenCV] Диапазон значений: min={gray.min()}, max={gray.max()}")
         
         # Детектируем лица
-        print("🔍 [OpenCV] Начинаем детекцию лиц...")
-        print(f"🔍 [OpenCV] Параметры детекции: scaleFactor=1.1, minNeighbors=3, minSize=(50, 50)")
+        print("🔍 [OpenCV] Шаг 3: Начинаем детекцию лиц...")
+        print(f"🔍 [OpenCV] Параметры детекции:")
+        print(f"  - scaleFactor: 1.1")
+        print(f"  - minNeighbors: 3")
+        print(f"  - minSize: (50, 50)")
+        print(f"  - flags: CASCADE_SCALE_IMAGE")
+        print(f"🔍 [OpenCV] Размер изображения для детекции: {gray.shape[1]}x{gray.shape[0]}")
+        
+        detect_start = time.time()
         faces = face_cascade.detectMultiScale(
             gray,
             scaleFactor=1.1,  # Масштаб для поиска (меньше = точнее, но медленнее)
@@ -82,23 +116,58 @@ def check_face_in_photo(image_buffer: bytes) -> Tuple[bool, int]:
             minSize=(50, 50), # Минимальный размер лица в пикселях (увеличено для лучшей точности)
             flags=cv2.CASCADE_SCALE_IMAGE
         )
+        detect_time = time.time() - detect_start
+        print(f"🔍 [OpenCV] Детекция заняла: {detect_time:.3f} сек")
         
         face_count = len(faces)
-        print(f"✅ [OpenCV] Детекция завершена. Найдено лиц: {face_count}")
+        print(f"🔍 [OpenCV] Результат detectMultiScale: {type(faces)}")
+        print(f"🔍 [OpenCV] Количество найденных лиц: {face_count}")
+        
+        if face_count > 0:
+            print(f"🔍 [OpenCV] Координаты найденных лиц:")
+            for i, (x, y, w, h) in enumerate(faces):
+                print(f"  Лицо {i+1}: x={x}, y={y}, width={w}, height={h}")
+                print(f"    Размер: {w}x{h} пикселей")
+                print(f"    Позиция: ({x}, {y})")
+        else:
+            print("⚠️ [OpenCV] Лица не найдены!")
+            print(f"🔍 [OpenCV] Попробуем с более мягкими параметрами...")
+            # Пробуем с более мягкими параметрами для отладки
+            faces_soft = face_cascade.detectMultiScale(
+                gray,
+                scaleFactor=1.05,
+                minNeighbors=2,
+                minSize=(30, 30),
+                flags=cv2.CASCADE_SCALE_IMAGE
+            )
+            print(f"🔍 [OpenCV] С мягкими параметрами найдено: {len(faces_soft)} лиц")
+            if len(faces_soft) > 0:
+                print(f"🔍 [OpenCV] Координаты (мягкие параметры):")
+                for i, (x, y, w, h) in enumerate(faces_soft):
+                    print(f"  Лицо {i+1}: x={x}, y={y}, width={w}, height={h}")
+        
+        total_time = time.time() - start_time
+        print(f"🔍 [OpenCV] Общее время проверки: {total_time:.3f} сек")
+        
         logger.info(f"OpenCV: найдено лиц: {face_count}")
         
         if face_count == 0:
-            print("⚠️ [OpenCV] Лицо не найдено на фото!")
+            print("⚠️ [OpenCV] ========== РЕЗУЛЬТАТ: ЛИЦО НЕ НАЙДЕНО ==========")
+            print("=" * 80)
             return False, 0
         
-        print(f"✅ [OpenCV] Лицо найдено! Количество: {face_count}")
+        print(f"✅ [OpenCV] ========== РЕЗУЛЬТАТ: ЛИЦО НАЙДЕНО ({face_count} шт.) ==========")
+        print("=" * 80)
         return True, face_count
         
     except Exception as e:
-        print(f"❌ [OpenCV] Ошибка при проверке лица: {e}")
+        print(f"❌ [OpenCV] ========== ОШИБКА ПРИ ПРОВЕРКЕ ЛИЦА ==========")
+        print(f"❌ [OpenCV] Ошибка: {e}")
         logger.error(f"Ошибка при проверке лица через OpenCV: {e}")
         import traceback
-        print(f"❌ [OpenCV] Traceback: {traceback.format_exc()}")
+        print(f"❌ [OpenCV] Traceback:")
+        print(traceback.format_exc())
+        print("=" * 80)
         return False, 0  # Возвращаем False при ошибке, чтобы требовать фото с лицом
 
 
