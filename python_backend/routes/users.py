@@ -81,6 +81,42 @@ async def get_user_frontend(userId: str = Query(..., description="ID польз�
         if row.get("photo3"):
             photos.append(row["photo3"])
         
+        # Проверяем needPhoto: если есть хотя бы одно фото, то needPhoto = 0
+        need_photo = row.get("needPhoto", 0)
+        if len(photos) > 0:
+            # Фильтруем дефолтные фото
+            valid_photos = [p for p in photos if p and p.strip() and p not in ["/img/logo.svg", "/img/avatar.svg", "/img/photo.svg"]]
+            if len(valid_photos) > 0:
+                need_photo = 0
+            else:
+                need_photo = 1
+        
+        # Проверяем Pro статус: если срок истек, то is_pro = 0
+        is_pro = row.get("is_pro", 0)
+        pro_end = row.get("pro_end")
+        if is_pro and pro_end:
+            from datetime import datetime, timezone
+            try:
+                # Обрабатываем разные форматы даты
+                if isinstance(pro_end, str):
+                    # Если строка, парсим ISO формат
+                    end_date = datetime.fromisoformat(pro_end.replace('Z', '+00:00'))
+                elif hasattr(pro_end, 'isoformat'):
+                    # Если это datetime объект (из PostgreSQL)
+                    end_date = pro_end
+                else:
+                    # Неизвестный формат, считаем что Pro активен
+                    end_date = None
+                
+                if end_date:
+                    # Сравниваем с текущим временем
+                    now = datetime.now(end_date.tzinfo) if hasattr(end_date, 'tzinfo') and end_date.tzinfo else datetime.now(timezone.utc)
+                    if end_date < now:
+                        is_pro = 0
+                        print(f"[getUser] Pro срок истек для userId={userId}, pro_end={pro_end}, now={now}")
+            except Exception as e:
+                print(f"[getUser] Ошибка проверки Pro срока для userId={userId}: {e}")
+        
         # Формируем данные для фронтенда
         user_data = {
             "userId": row.get("userId"),
@@ -99,9 +135,9 @@ async def get_user_frontend(userId: str = Query(..., description="ID польз�
             "likes": safe_json_parse(row.get("likes", "[]")),
             "dislikes": safe_json_parse(row.get("dislikes", "[]")),
             "matches": safe_json_parse(row.get("matches", "[]")),
-            "is_pro": row.get("is_pro", 0),
-            "pro_end": row.get("pro_end"),
-            "needPhoto": row.get("needPhoto", 0),
+            "is_pro": is_pro,
+            "pro_end": pro_end,
+            "needPhoto": need_photo,
             "hideAge": row.get("hideAge", 0),
         }
         

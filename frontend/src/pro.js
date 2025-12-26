@@ -23,8 +23,12 @@ function renderProBadge(currentUser) {
     proContainer.appendChild(headerName);
   }
 
-  // Если пользователь PRO — создаём бейдж (если ещё нет) и включаем колонку
-  if (currentUser.is_pro) {
+  // Проверяем, действительно ли пользователь PRO (с учетом срока действия)
+  const now = Date.now();
+  const isProActive = currentUser.is_pro && currentUser.pro_end && new Date(currentUser.pro_end).getTime() > now;
+  
+  // Если пользователь PRO и срок не истек — создаём бейдж (если ещё нет) и включаем колонку
+  if (isProActive) {
     if (!proContainer.querySelector(".header-pro-badge")) {
       const badge = document.createElement("span");
       badge.className = "header-pro-badge";
@@ -33,7 +37,7 @@ function renderProBadge(currentUser) {
     }
     avaFrame.classList.add("has-pro");
   } else {
-    // Убираем бейдж и колонку, если не PRO
+    // Убираем бейдж и колонку, если не PRO или срок истек
     const existingBadge = proContainer.querySelector(".header-pro-badge");
     if (existingBadge) existingBadge.remove();
     avaFrame.classList.remove("has-pro");
@@ -44,17 +48,20 @@ function renderProBadge(currentUser) {
  * Рендерит PRO-информацию в профиле
  */
 function renderProInfo(currentUser) {
+  // Проверяем, действительно ли пользователь PRO (с учетом срока действия)
+  const now = Date.now();
+  const isProActive = currentUser.is_pro && currentUser.pro_end && new Date(currentUser.pro_end).getTime() > now;
+  
   // Profile
   const profileProInfo = document.querySelector('.profile-header .header-pro-info');
   if (profileProInfo) {
     profileProInfo.innerHTML = '';
-    if (currentUser.is_pro) {
-      const now = new Date();
+    if (isProActive) {
       const end = new Date(currentUser.pro_end);
-      const days = Math.max(0, Math.ceil((end - now) / (1000*60*60*24)));
+      const days = Math.max(0, Math.ceil((end.getTime() - now) / (1000*60*60*24)));
       profileProInfo.innerHTML = `<strong>PRO</strong> ${days} дн.`;
     } else {
-      // Показываем "Купить PRO" для не-PRO пользователей
+      // Показываем "Купить PRO" для не-PRO пользователей или с истекшим сроком
       profileProInfo.innerHTML = `<strong>Купить PRO</strong>`;
       // Добавляем обработчик клика для открытия PRO-модалки
       profileProInfo.style.cursor = 'pointer';
@@ -70,13 +77,12 @@ function renderProInfo(currentUser) {
   const matchesProInfo = document.querySelector('.matches-header .header-pro-info');
   if (matchesProInfo) {
     matchesProInfo.innerHTML = '';
-    if (currentUser.is_pro) {
-      const now = new Date();
+    if (isProActive) {
       const end = new Date(currentUser.pro_end);
-      const days = Math.max(0, Math.ceil((end - now) / (1000*60*60*24)));
+      const days = Math.max(0, Math.ceil((end.getTime() - now) / (1000*60*60*24)));
       matchesProInfo.innerHTML = `<strong>PRO</strong> ${days} дн.`;
     } else {
-      // Показываем "Купить PRO" для не-PRO пользователей
+      // Показываем "Купить PRO" для не-PRO пользователей или с истекшим сроком
       matchesProInfo.innerHTML = `<strong>Купить PRO</strong>`;
       // Добавляем обработчик клика для открытия PRO-модалки
       matchesProInfo.style.cursor = 'pointer';
