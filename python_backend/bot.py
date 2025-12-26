@@ -640,13 +640,16 @@ def create_bot_application():
         
         # Регистрация обработчика данных от WebApp
         print("  - Регистрация MessageHandler для WebApp данных...")
-        # Используем кастомный фильтр для сообщений с web_app_data
-        # Проверяем наличие web_app_data в обработчике, поэтому используем общий фильтр Message
-        def web_app_data_filter(update: Update) -> bool:
-            return bool(update.message and update.message.web_app_data)
-        
-        application.add_handler(MessageHandler(web_app_data_filter, web_app_data_handler))
-        print("✅ WebAppDataHandler зарегистрирован")
+        # Используем фильтр StatusUpdate.WEB_APP_DATA для сообщений с данными от WebApp
+        try:
+            application.add_handler(MessageHandler(filters.StatusUpdate.WEB_APP_DATA, web_app_data_handler))
+            print("✅ WebAppDataHandler зарегистрирован с фильтром StatusUpdate.WEB_APP_DATA")
+        except AttributeError:
+            # Если фильтр не доступен, используем кастомный фильтр
+            def web_app_data_filter(update: Update) -> bool:
+                return bool(update.message and update.message.web_app_data)
+            application.add_handler(MessageHandler(web_app_data_filter, web_app_data_handler))
+            print("✅ WebAppDataHandler зарегистрирован с кастомным фильтром")
         
         bot_application = application
         print("=" * 70)
