@@ -138,6 +138,32 @@ async def create_postgres_tables():
             );
         """)
         
+        # Таблица payments для Telegram Stars
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS payments (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                payload TEXT UNIQUE NOT NULL,
+                user_id TEXT NOT NULL,
+                amount INTEGER NOT NULL,
+                currency TEXT NOT NULL DEFAULT 'XTR',
+                telegram_charge_id TEXT UNIQUE,
+                status TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending', 'paid', 'refunded')),
+                created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+                paid_at TIMESTAMP WITH TIME ZONE,
+                refunded_at TIMESTAMP WITH TIME ZONE
+            );
+        """)
+        
+        # Индекс для быстрого поиска по payload (для идемпотентности)
+        cur.execute("""
+            CREATE INDEX IF NOT EXISTS idx_payments_payload ON payments(payload);
+        """)
+        
+        # Индекс для поиска по user_id
+        cur.execute("""
+            CREATE INDEX IF NOT EXISTS idx_payments_user_id ON payments(user_id);
+        """)
+        
         conn.commit()
         print("✅ Все таблицы PostgreSQL созданы или уже существуют")
     except Exception as e:

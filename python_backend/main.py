@@ -173,7 +173,7 @@ if Path(IMAGES_DIR).exists():
 html_file = Path(__file__).parent.parent / "public" / "index.html"
 
 # Импорт роутов
-from routes import users, likes, matches, photos, pro, stats, admin, goals, push
+from routes import users, likes, matches, photos, pro, stats, admin, goals, push, payment
 
 # Импортируем opencv_utils для инициализации OpenCV при старте
 try:
@@ -199,6 +199,7 @@ app.include_router(push.router, prefix="/api", tags=["push"])
 
 # Алиасы для совместимости с ботом
 app.include_router(pro.router, prefix="/api", tags=["pro-alias"])  # /api/grantPro
+app.include_router(payment.router, prefix="/api/payment", tags=["payment"])
 
 # Обработчики ошибок
 app.add_exception_handler(RequestValidationError, validation_exception_handler)

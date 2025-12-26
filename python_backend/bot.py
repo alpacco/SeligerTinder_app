@@ -6,12 +6,13 @@ import os
 import asyncio
 import httpx
 from pathlib import Path
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, WebAppInfo
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, WebAppInfo, LabeledPrice
 from telegram.ext import (
     Application,
     CommandHandler,
     CallbackQueryHandler,
     MessageHandler,
+    PreCheckoutQueryHandler,
     filters,
     ContextTypes
 )
@@ -320,6 +321,100 @@ async def masssend_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("❌ Ошибка при массовой рассылке.")
 
 
+async def send_pro_invoice(update: Update, context: ContextTypes.DEFAULT_TYPE, days: int):
+    """Отправляет инвойс для покупки PRO подписки"""
+    from services.payment import create_payment
+    
+    user_id = str(update.effective_user.id)
+    
+    try:
+        payment_data = await create_payment(user_id, days)
+        
+        # Создаем инвойс через Telegram Bot API
+        await context.bot.send_invoice(
+            chat_id=update.effective_chat.id,
+            title=f"PRO подписка на {days} дней",
+            description=f"Получите доступ к PRO функциям на {days} дней",
+            payload=payment_data["payload"],
+            currency="XTR",  # Telegram Stars
+            prices=[LabeledPrice(label=payment_data["prices"][0]["label"], amount=payment_data["amount"])],
+            provider_token=None,  # Не используется для Stars
+        )
+        print(f"✅ [BOT] Инвойс отправлен: user_id={user_id}, days={days}, payload={payment_data['payload']}")
+    except Exception as e:
+        print(f"❌ [BOT] Ошибка отправки инвойса: {e}")
+        await update.message.reply_text("❌ Ошибка при создании платежа. Попробуйте позже.")
+
+
+async def pre_checkout_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Обработчик pre_checkout_query"""
+    from services.payment import process_pre_checkout
+    
+    query = update.pre_checkout_query
+    user_id = str(update.effective_user.id)
+    payload = query.invoice_payload
+    
+    print(f"🔵 [BOT] Pre-checkout: user_id={user_id}, payload={payload}")
+    
+    # Проверяем платеж
+    is_valid = await process_pre_checkout(query.id, payload)
+    
+    if is_valid:
+        await query.answer(ok=True)
+        print(f"✅ [BOT] Pre-checkout подтвержден: payload={payload}")
+    else:
+        await query.answer(ok=False, error_message="Платеж не найден или уже обработан")
+        print(f"❌ [BOT] Pre-checkout отклонен: payload={payload}")
+
+
+async def successful_payment_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Обработчик successful_payment"""
+    from services.payment import process_successful_payment, get_days_for_amount
+    
+    payment = update.message.successful_payment
+    user_id = str(update.effective_user.id)
+    payload = payment.invoice_payload
+    amount = payment.total_amount
+    telegram_charge_id = payment.telegram_payment_charge_id
+    
+    print(f"🔵 [BOT] Successful payment: user_id={user_id}, payload={payload}, amount={amount}")
+    
+    # Определяем количество дней по сумме
+    days = get_days_for_amount(amount)
+    if not days:
+        print(f"❌ [BOT] Неизвестная сумма платежа: {amount}")
+        await update.message.reply_text("❌ Ошибка: неизвестная сумма платежа. Обратитесь в поддержку.")
+        return
+    
+    # Обрабатываем платеж
+    result = await process_successful_payment(
+        user_id=user_id,
+        payload=payload,
+        amount=amount,
+        telegram_charge_id=telegram_charge_id,
+        days=days
+    )
+    
+    if result.get("success"):
+        await update.message.reply_text(
+            f"🎉 Спасибо за покупку!\n\n"
+            f"✅ PRO подписка активирована на {days} дней.\n"
+            f"📅 Подписка активна до: {result.get('pro_end', 'N/A')}\n\n"
+            f"✨ Откройте приложение, чтобы использовать PRO функции!"
+        )
+        print(f"✅ [BOT] PRO выдана: user_id={user_id}, days={days}")
+    else:
+        error = result.get("error", "unknown")
+        if error == "duplicate":
+            await update.message.reply_text("ℹ️ Этот платеж уже был обработан ранее.")
+        else:
+            await update.message.reply_text(
+                f"❌ Ошибка при активации PRO подписки.\n"
+                f"Обратитесь в поддержку с ID платежа: {telegram_charge_id}"
+            )
+        print(f"❌ [BOT] Ошибка выдачи PRO: {result}")
+
+
 async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Обработчик callback запросов"""
     query = update.callback_query
@@ -331,6 +426,7 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if data == "show_menu":
         keyboard = InlineKeyboardMarkup([
             [InlineKeyboardButton("✨Открыть Seliger Tinder✨", web_app=WebAppInfo(url=WEB_APP_URL))],
+            [InlineKeyboardButton("⭐ Купить PRO", callback_data="buy_pro_menu")],
             [InlineKeyboardButton("Удалить профиль", callback_data="delete_user")],
             [
                 InlineKeyboardButton("Запросить бейдж", callback_data="request_badge"),
@@ -339,6 +435,23 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             [InlineKeyboardButton("Пожаловаться/Ошибка/Проблема", callback_data="dev_message")]
         ])
         await query.edit_message_reply_markup(reply_markup=keyboard)
+    
+    elif data == "buy_pro_menu":
+        keyboard = InlineKeyboardMarkup([
+            [InlineKeyboardButton("7 дней - 100 ⭐", callback_data="buy_pro_7")],
+            [InlineKeyboardButton("30 дней - 350 ⭐", callback_data="buy_pro_30")],
+            [InlineKeyboardButton("90 дней - 900 ⭐", callback_data="buy_pro_90")],
+            [InlineKeyboardButton("Назад", callback_data="show_menu")]
+        ])
+        await query.edit_message_text(
+            "⭐ Выберите период PRO подписки:\n\n"
+            "✨ PRO функции:\n"
+            "• Неограниченные лайки\n"
+            "• Видеть, кто лайкнул вас\n"
+            "• Суперлайки\n"
+            "• Расширенная статистика",
+            reply_markup=keyboard
+        )
     
     elif data == "delete_user":
         keyboard = InlineKeyboardMarkup([
@@ -372,6 +485,14 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     elif data == "cancel_delete":
         await query.message.reply_text("Главное меню", reply_markup=get_start_keyboard())
+    
+    elif data.startswith("buy_pro_"):
+        # Обработка покупки PRO: buy_pro_7, buy_pro_30, buy_pro_90
+        try:
+            days = int(data.split("_")[-1])
+            await send_pro_invoice(update, context, days)
+        except (ValueError, IndexError):
+            await query.answer("❌ Ошибка: неверный формат команды", show_alert=True)
 
 
 # Глобальная переменная для бота
@@ -468,6 +589,15 @@ def create_bot_application():
         print("  - Регистрация CallbackQueryHandler...")
         application.add_handler(CallbackQueryHandler(callback_handler))
         print("✅ CallbackQueryHandler зарегистрирован")
+        
+        # Регистрация обработчиков платежей
+        print("  - Регистрация PreCheckoutQueryHandler...")
+        application.add_handler(PreCheckoutQueryHandler(pre_checkout_handler))
+        print("✅ PreCheckoutQueryHandler зарегистрирован")
+        
+        print("  - Регистрация MessageHandler для successful_payment...")
+        application.add_handler(MessageHandler(filters.SUCCESSFUL_PAYMENT, successful_payment_handler))
+        print("✅ SuccessfulPaymentHandler зарегистрирован")
         
         bot_application = application
         print("=" * 70)
