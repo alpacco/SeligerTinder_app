@@ -210,6 +210,35 @@ export function showCandidate() {
     window.inMutualMatch = false;
   }
   
+  // КРИТИЧНО: Финальная проверка кнопки в конце функции
+  setTimeout(() => {
+    const finalDislikeBtn = document.querySelector(".dislike_d");
+    if (finalDislikeBtn && !window.inMutualMatch) {
+      const hasWaveBtn = finalDislikeBtn.classList.contains('wave-btn');
+      const hasChatBtn = finalDislikeBtn.classList.contains('chat-btn');
+      const hasWaveSvg = finalDislikeBtn.innerHTML.includes('wave.svg');
+      const hasChatSvg = finalDislikeBtn.innerHTML.includes('chat.svg');
+      
+      if (hasWaveBtn || hasChatBtn || hasWaveSvg || hasChatSvg) {
+        console.error('🚨 [showCandidate setTimeout] КРИТИЧНО: Кнопка "Помахать" обнаружена ПОСЛЕ выполнения функции! Сбрасываем...', {
+          hasWaveBtn,
+          hasChatBtn,
+          hasWaveSvg,
+          hasChatSvg,
+          inMutualMatch: window.inMutualMatch
+        });
+        
+        // АГРЕССИВНЫЙ СБРОС
+        finalDislikeBtn.classList.remove('wave-btn', 'chat-btn');
+        finalDislikeBtn.className = 'dislike_d';
+        finalDislikeBtn.innerHTML = `<svg class="dislike-icon" width="36" height="36" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><rect class="st0" x="29.5" y="14.61" width="5" height="34.78" rx="2.5" ry="2.5" transform="translate(-13.25 32) rotate(-45)"/><rect class="st0" x="14.61" y="29.5" width="34.78" height="5" rx="2.5" ry="2.5" transform="translate(-13.25 32) rotate(-45)"/></svg>`;
+        finalDislikeBtn.style.backgroundColor = '';
+        finalDislikeBtn.style.fontSize = '';
+        finalDislikeBtn.onclick = null;
+      }
+    }
+  }, 50); // Проверяем через 50ms после завершения функции
+  
   // Экспортируем в глобальную область для использования в main.js
   window.showCandidateFromSwipe = showCandidate;
   const singleCard = document.getElementById("singleCard");
