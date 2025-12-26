@@ -100,10 +100,26 @@ function renderProInfo(currentUser) {
  * Рендерит статистику лайков для PRO-пользователей в профиле
  */
 function renderProLikesStats(currentUser) {
-  if (window.viewingCandidate || !currentUser.is_pro) return;
   const subRow = document.querySelector('.profile-header .header-sub-row');
   if (!subRow) return;
+  
+  // Очищаем строку для всех пользователей
   subRow.innerHTML = '';
+  
+  // Если просматриваем профиль кандидата или пользователь не PRO - не показываем статистику
+  if (window.viewingCandidate || !currentUser.is_pro) {
+    return;
+  }
+  
+  // Проверяем срок действия Pro
+  const now = Date.now();
+  const isProActive = currentUser.is_pro && currentUser.pro_end && new Date(currentUser.pro_end).getTime() > now;
+  
+  if (!isProActive) {
+    return;
+  }
+  
+  // Показываем статистику только для активных PRO пользователей
   const made = currentUser.likes.length;
   subRow.innerHTML = `
     <div class="profile-likes-stats">
@@ -128,10 +144,26 @@ function renderProLikesStats(currentUser) {
  * Рендерит статистику лайков для PRO-пользователей в мэтчах
  */
 function renderProMatchesStats(currentUser) {
-  if (!currentUser.is_pro) return;
   const subRow = document.querySelector('.matches-header .header-sub-row');
   if (!subRow) return;
+  
+  // Очищаем строку для всех пользователей
   subRow.innerHTML = '';
+  
+  // Если пользователь не PRO - не показываем статистику
+  if (!currentUser.is_pro) {
+    return;
+  }
+  
+  // Проверяем срок действия Pro
+  const now = Date.now();
+  const isProActive = currentUser.is_pro && currentUser.pro_end && new Date(currentUser.pro_end).getTime() > now;
+  
+  if (!isProActive) {
+    return;
+  }
+  
+  // Показываем статистику только для активных PRO пользователей
   const made = currentUser.likes.length;
   subRow.innerHTML = `
     <div class="matches-likes-stats">
@@ -181,6 +213,14 @@ function initProFeatures(currentUser) {
   setProClass(currentUser);
   renderProBadge(currentUser);
   renderProInfo(currentUser);
+  
+  // Очищаем статистику лайков перед рендерингом (на случай, если она была в HTML)
+  const profileSubRow = document.querySelector('.profile-header .header-sub-row');
+  const matchesSubRow = document.querySelector('.matches-header .header-sub-row');
+  if (profileSubRow) profileSubRow.innerHTML = '';
+  if (matchesSubRow) matchesSubRow.innerHTML = '';
+  
+  // Рендерим статистику только для PRO пользователей
   renderProLikesStats(currentUser);
   renderProMatchesStats(currentUser);
   toggleProLayout();

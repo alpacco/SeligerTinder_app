@@ -1,5 +1,5 @@
 [phases.setup]
-nixPkgs = ["python312", "python312Packages.pip", "pkg-config", "opencv", "postgresql", "nodejs_20"]
+nixPkgs = ["python312", "python312Packages.pip", "pkg-config", "opencv", "nodejs_20"]
 
 [phases.install]
 cmds = [
