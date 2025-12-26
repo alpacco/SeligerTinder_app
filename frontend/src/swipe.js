@@ -240,16 +240,39 @@ export function showCandidate() {
   const dislikeBtn = document.querySelector(".dislike_d");
   const likeBtn = document.querySelector(".like_d");
   
+  console.log('🔵 [showCandidate] Проверка кнопок:', {
+    inMutualMatch: window.inMutualMatch,
+    dislikeBtn: !!dislikeBtn,
+    likeBtn: !!likeBtn,
+    dislikeBtnClasses: dislikeBtn?.className,
+    dislikeBtnInnerHTML: dislikeBtn?.innerHTML?.substring(0, 50)
+  });
+  
   // Сбрасываем флаг mutual match при показе нового кандидата (если это не mutual match)
   if (!window.inMutualMatch) {
     // Сбрасываем кнопку дизлайка к обычному состоянию
     if (dislikeBtn) {
+      const hadWaveBtn = dislikeBtn.classList.contains('wave-btn');
+      const hadChatBtn = dislikeBtn.classList.contains('chat-btn');
+      const hadWaveSvg = dislikeBtn.innerHTML.includes('wave.svg');
+      const hadChatSvg = dislikeBtn.innerHTML.includes('chat.svg');
+      
+      if (hadWaveBtn || hadChatBtn || hadWaveSvg || hadChatSvg) {
+        console.log('⚠️ [showCandidate] Обнаружена кнопка "Помахать" на обычном кандидате! Сбрасываем...', {
+          hadWaveBtn,
+          hadChatBtn,
+          hadWaveSvg,
+          hadChatSvg
+        });
+      }
+      
       // Удаляем все классы wave-btn и chat-btn
       dislikeBtn.classList.remove('wave-btn', 'chat-btn');
       dislikeBtn.className = 'dislike_d'; // Принудительно устанавливаем только базовый класс
       // Проверяем innerHTML - если там wave.svg, сбрасываем
       if (dislikeBtn.innerHTML.includes('wave.svg') || dislikeBtn.innerHTML.includes('chat.svg')) {
         dislikeBtn.innerHTML = `<svg class="dislike-icon" width="36" height="36" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><rect class="st0" x="29.5" y="14.61" width="5" height="34.78" rx="2.5" ry="2.5" transform="translate(-13.25 32) rotate(-45)"/><rect class="st0" x="14.61" y="29.5" width="34.78" height="5" rx="2.5" ry="2.5" transform="translate(-13.25 32) rotate(-45)"/></svg>`;
+        console.log('✅ [showCandidate] Кнопка дизлайка сброшена к обычному состоянию');
       }
       dislikeBtn.style.backgroundColor = '';
       dislikeBtn.style.fontSize = '';
@@ -262,11 +285,14 @@ export function showCandidate() {
       likeBtn.className = 'like_d';
       if (likeBtn.innerHTML.includes('next.svg')) {
         likeBtn.innerHTML = `<svg class="like-icon" width="36" height="36" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><path class="st0" d="M40.2,19.3c-5.1-0.5-7.5,2.5-8.2,3.5c-0.6-1-3.1-4-8.2-3.5c-5.4,0.6-10.8,7-5.7,15.6c4.2,6.9,13.6,11.9,13.9,12.1l0,0l0,0l0,0l0,0c0.2-0.1,9.7-5.1,13.9-12.1C51,26.3,45.6,19.9,40.2,19.3L40.2,19.3z"/></svg>`;
+        console.log('✅ [showCandidate] Кнопка лайка сброшена к обычному состоянию');
       }
       likeBtn.style.backgroundColor = '';
       likeBtn.style.fontSize = '';
       likeBtn.style.display = window.currentUser.needPhoto ? "none" : "flex";
     }
+  } else {
+    console.log('ℹ️ [showCandidate] Mutual match активен, кнопки не сбрасываем');
   }
   
   // Для PRO показываем Back и SuperLike (если они были созданы)
