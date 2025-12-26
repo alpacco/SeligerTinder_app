@@ -567,11 +567,20 @@ export function onMutualLike() {
     // КРИТИЧНО: Проверяем, что мы все еще в mutual match режиме
     if (!window.inMutualMatch) {
       console.error('🚨 [onMutualLike setTimeout] КРИТИЧНО: inMutualMatch был сброшен до установки кнопки! Не устанавливаем кнопку "Помахать"');
+      // Сбрасываем кнопку на всякий случай
+      if (dislikeBtn) {
+        dislikeBtn.classList.remove('wave-btn', 'chat-btn');
+        dislikeBtn.className = 'dislike_d';
+        dislikeBtn.innerHTML = `<svg class="dislike-icon" width="36" height="36" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><rect class="st0" x="29.5" y="14.61" width="5" height="34.78" rx="2.5" ry="2.5" transform="translate(-13.25 32) rotate(-45)"/><rect class="st0" x="14.61" y="29.5" width="34.78" height="5" rx="2.5" ry="2.5" transform="translate(-13.25 32) rotate(-45)"/></svg>`;
+        dislikeBtn.style.backgroundColor = '';
+        dislikeBtn.style.fontSize = '';
+        dislikeBtn.onclick = null;
+      }
       return; // Не устанавливаем кнопку, если mutual match уже сброшен
     }
     
     if (dislikeBtn) {
-      console.log('🔵 [onMutualLike setTimeout] Устанавливаем кнопку "Помахать" для mutual match');
+      console.log('🔵 [onMutualLike setTimeout] Устанавливаем кнопку "Помахать" для mutual match, inMutualMatch:', window.inMutualMatch);
       dislikeBtn.style.display = "flex";
       if (currentCandidate && currentCandidate.id && currentCandidate.id.startsWith('VALID_') && currentCandidate.username) {
         dislikeBtn.classList.remove('wave-btn');
