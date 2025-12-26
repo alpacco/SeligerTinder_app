@@ -1074,10 +1074,11 @@ export function setupSwipeHandlers() {
   const singleCard = document.getElementById("singleCard");
   let isDragging = false, startX = 0, startY = 0, currentX = 0, currentY = 0;
   let hasMoved = false; // Флаг, чтобы отличить клик от свайпа
+  let lastClickTime = 0; // Время последнего клика для предотвращения двойных срабатываний
   const maxDistance = 200, minFont = 64, maxFont = 128, threshold = 100;
   if (!singleCard) return;
   
-  // Удаляем старые обработчики, если они есть
+  // Удаляем старые обработчики, если они есть, клонируя элемент
   const newCard = singleCard.cloneNode(true);
   singleCard.parentNode.replaceChild(newCard, singleCard);
   const card = document.getElementById("singleCard");
@@ -1122,15 +1123,21 @@ export function setupSwipeHandlers() {
   
   card.addEventListener("pointerup", e => {
     const wasDragging = isDragging;
+    const moved = hasMoved; // Сохраняем значение перед сбросом
     isDragging = false;
     card.releasePointerCapture(e.pointerId);
     const distX = Math.abs(currentX), distY = Math.abs(currentY);
     
     // Если это был просто клик (без движения) - переключаем фото
-    if (wasDragging && !hasMoved && distX < 10 && distY < 10) {
+    if (wasDragging && !moved && distX < 10 && distY < 10) {
       e.preventDefault();
       e.stopPropagation();
-      window.cyclePhoto && window.cyclePhoto();
+      const now = Date.now();
+      // Предотвращаем двойное срабатывание
+      if (now - lastClickTime > 300) {
+        lastClickTime = now;
+        window.cyclePhoto && window.cyclePhoto();
+      }
       // Сбрасываем transform
       card.style.transition = "transform 0.3s ease";
       card.style.transform = "none";
@@ -1143,14 +1150,14 @@ export function setupSwipeHandlers() {
     }
     
     // Если это был свайп
-    if (hasMoved && distX > threshold) {
+    if (moved && distX > threshold) {
       const dir = currentX > 0 ? "right" : "left";
       if (dir === "right") {
         window.doLike && window.doLike();
       } else {
         window.doDislike && window.doDislike();
       }
-    } else if (hasMoved) {
+    } else if (moved) {
       // плавный возврат при неполном свайпе
       card.style.transition = "transform 0.3s ease";
       card.style.transform = "none";
@@ -1161,17 +1168,6 @@ export function setupSwipeHandlers() {
     }
     
     hasMoved = false;
-  });
-  
-  // Также добавляем обработчик click для переключения фото (на случай, если pointer events не работают)
-  card.addEventListener("click", (e) => {
-    // Проверяем, что это не был свайп (если hasMoved был true, значит это был свайп)
-    if (!hasMoved && Math.abs(currentX) < 10 && Math.abs(currentY) < 10) {
-      const photos = JSON.parse(card.dataset.photos || '[]');
-      if (photos.length >= 2) {
-        window.cyclePhoto && window.cyclePhoto();
-      }
-    }
   });
 }
 
