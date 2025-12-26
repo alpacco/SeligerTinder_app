@@ -219,12 +219,23 @@ def extract_data_if_needed():
     print(f"✅ [DATA] Архив найден: {archive_path} (размер: {archive_path.stat().st_size / 1024 / 1024:.2f} MB)")
     
     # Проверяем, пусты ли директории
+    # Считаем данные распакованными только если есть достаточно файлов (больше 100)
     img_dir = Path(IMAGES_DIR)
-    has_images = img_dir.exists() and any(img_dir.iterdir())
+    log_dir = Path(LOG_DIR)
+    giftimg_dir = Path(GIFT_IMAGES_DIR)
     
-    if has_images:
-        img_count = sum(1 for _ in img_dir.rglob('*') if _.is_file())
-        print(f"✅ [DATA] Данные уже распакованы в {DATA_BASE_DIR} ({img_count} файлов в {IMAGES_DIR})")
+    # Подсчитываем файлы во всех директориях
+    img_count = sum(1 for _ in img_dir.rglob('*') if _.is_file()) if img_dir.exists() else 0
+    log_count = sum(1 for _ in log_dir.rglob('*') if _.is_file()) if log_dir.exists() else 0
+    giftimg_count = sum(1 for _ in giftimg_dir.rglob('*') if _.is_file()) if giftimg_dir.exists() else 0
+    total_count = img_count + log_count + giftimg_count
+    
+    # Если уже есть достаточно данных (больше 100 файлов), считаем что распаковка не нужна
+    if total_count > 100:
+        print(f"✅ [DATA] Данные уже распакованы в {DATA_BASE_DIR}")
+        print(f"   - Фотографии: {img_count} файлов в {IMAGES_DIR}")
+        print(f"   - Логи: {log_count} файлов в {LOG_DIR}")
+        print(f"   - Подарки: {giftimg_count} файлов в {GIFT_IMAGES_DIR}")
         return
     
     print(f"📦 [DATA] Найден архив данных, начинаем распаковку...")
@@ -258,8 +269,8 @@ def extract_data_if_needed():
         import traceback
         traceback.print_exc()
 
-# Вызываем распаковку при импорте модуля
-extract_data_if_needed()
+# Распаковка вызывается в lifespan (main.py) при запуске приложения
+# Не вызываем здесь, чтобы избежать двойного вызова
 
 # ========== CORS ==========
 
