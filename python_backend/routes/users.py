@@ -252,8 +252,14 @@ async def get_candidates(
     
     try:
         # Проверяем needPhoto текущего пользователя
-        user_row = await db_get("SELECT needPhoto FROM users WHERE userId = ?", [userId])
-        if user_row and user_row.get("needPhoto") == 1:
+        user_row = await db_get('SELECT "needPhoto" FROM users WHERE "userId" = ?', [userId])
+        need_photo = user_row.get("needPhoto") if user_row else 0
+        # Преобразуем в число, если это строка
+        if isinstance(need_photo, str):
+            need_photo = int(need_photo) if need_photo.isdigit() else 0
+        print(f"[GET /api/candidates] needPhoto текущего пользователя: {need_photo}")
+        if need_photo == 1:
+            print(f"[GET /api/candidates] Пользователь не имеет фото, возвращаем пустой массив")
             return {"success": True, "data": []}
         
         # Получаем likes/dislikes текущего пользователя
