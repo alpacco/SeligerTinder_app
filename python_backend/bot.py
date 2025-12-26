@@ -497,7 +497,16 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def web_app_data_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Обработчик данных от WebApp"""
-    if not update.message or not update.message.web_app_data:
+    print(f"🔵 [BOT] web_app_data_handler вызван")
+    print(f"  - update.message: {update.message}")
+    print(f"  - update.message.web_app_data: {update.message.web_app_data if update.message else None}")
+    
+    if not update.message:
+        print("⚠️ [BOT] web_app_data_handler: нет update.message")
+        return
+    
+    if not update.message.web_app_data:
+        print("⚠️ [BOT] web_app_data_handler: нет web_app_data в сообщении")
         return
     
     user_id = update.effective_user.id
@@ -640,16 +649,15 @@ def create_bot_application():
         
         # Регистрация обработчика данных от WebApp
         print("  - Регистрация MessageHandler для WebApp данных...")
-        # Используем фильтр StatusUpdate.WEB_APP_DATA для сообщений с данными от WebApp
-        try:
-            application.add_handler(MessageHandler(filters.StatusUpdate.WEB_APP_DATA, web_app_data_handler))
-            print("✅ WebAppDataHandler зарегистрирован с фильтром StatusUpdate.WEB_APP_DATA")
-        except AttributeError:
-            # Если фильтр не доступен, используем кастомный фильтр
-            def web_app_data_filter(update: Update) -> bool:
-                return bool(update.message and update.message.web_app_data)
-            application.add_handler(MessageHandler(web_app_data_filter, web_app_data_handler))
-            print("✅ WebAppDataHandler зарегистрирован с кастомным фильтром")
+        # Используем кастомный фильтр для большей надежности
+        def web_app_data_filter(update: Update) -> bool:
+            has_data = bool(update.message and update.message.web_app_data)
+            if has_data:
+                print(f"🔵 [BOT] web_app_data_filter: найдены данные от WebApp, user_id={update.effective_user.id if update.effective_user else None}")
+            return has_data
+        
+        application.add_handler(MessageHandler(web_app_data_filter, web_app_data_handler))
+        print("✅ WebAppDataHandler зарегистрирован с кастомным фильтром")
         
         bot_application = application
         print("=" * 70)
