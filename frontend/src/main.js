@@ -17,6 +17,7 @@
 const APP_VERSION = '2025-01-19-wave-btn-fix-v1';
 console.log('🔄 [CACHE] main.js загружен, версия:', APP_VERSION);
 console.log('🔄 [CACHE] Время загрузки:', new Date().toISOString());
+console.log('🔄 [CACHE] Уникальный ID модуля:', Math.random().toString(36).substr(2, 9));
 console.log('🔄 [CACHE] Уникальный ID:', Math.random().toString(36).substr(2, 9));
 
 // Импортируем CSS (Vite обработает и скомпилирует)

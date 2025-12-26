@@ -3,6 +3,7 @@
 const SWIPE_MODULE_VERSION = '2025-01-19-wave-btn-fix-v1';
 console.log('🔄 [CACHE] swipe.js загружен, версия:', SWIPE_MODULE_VERSION);
 console.log('🔄 [CACHE] Время загрузки:', new Date().toISOString());
+console.log('🔄 [CACHE] Уникальный ID модуля:', Math.random().toString(36).substr(2, 9));
 // Экспортируемые функции:
 // - showPreviousCandidate, setupSwipeControls, showCandidate, fillCard, shareInvite, customHideBadges, moveToNextCandidate
 // - onMutualLike, onSuperMatch, onSuperPending, onSuperRejected
@@ -153,6 +154,7 @@ export function setupSwipeControls() {
 }
 
 export function showCandidate() {
+  console.log('🔄 [showCandidate] Версия модуля:', SWIPE_MODULE_VERSION);
   // Экспортируем в глобальную область для использования в main.js
   window.showCandidateFromSwipe = showCandidate;
   const singleCard = document.getElementById("singleCard");
