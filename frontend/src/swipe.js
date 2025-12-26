@@ -285,8 +285,7 @@ export function showCandidate() {
   
   // КРИТИЧНО: Принудительно сбрасываем кнопки к обычному состоянию для обычных кандидатов
   // Кнопка "Помахать" должна появляться ТОЛЬКО при mutual like, а не при обычном показе кандидата
-  const dislikeBtn = document.querySelector(".dislike_d");
-  const likeBtn = document.querySelector(".like_d");
+  // Переиспользуем уже объявленные переменные dislikeBtn и likeBtn из начала функции
   
   // Сбрасываем флаг mutual match при показе нового кандидата (если это не mutual match)
   if (!window.inMutualMatch) {
