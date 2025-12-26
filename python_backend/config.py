@@ -66,11 +66,15 @@ HTTP_MAX_REDIRECTS = int(os.getenv("HTTP_MAX_REDIRECTS", "5"))
 
 def find_railway_volume():
     """Автоматически находит Railway Volume и создает /data если нужно"""
+    print("🔍 [VOLUME] Начинаем поиск Railway Volume...")
     data_path = Path("/data")
     
     # Если /data уже существует, используем его
     if data_path.exists():
+        print(f"✅ [VOLUME] /data уже существует: {data_path}")
         return str(data_path)
+    
+    print(f"⚠️ [VOLUME] /data не существует, ищем Railway Volume...")
     
     # Ищем Volume в стандартных местах Railway
     possible_volume_paths = [
@@ -78,18 +82,22 @@ def find_railway_volume():
     ]
     
     for base_path in possible_volume_paths:
+        print(f"🔍 [VOLUME] Проверяем путь: {base_path}")
         if not base_path.exists():
+            print(f"⚠️ [VOLUME] Путь не существует: {base_path}")
             continue
         
         # Ищем директории с vol_ в названии
         try:
+            print(f"🔍 [VOLUME] Сканируем директории в {base_path}...")
             for item in base_path.iterdir():
                 if item.is_dir():
+                    print(f"🔍 [VOLUME] Найдена директория: {item}")
                     # Ищем vol_ директории внутри
                     for subitem in item.iterdir():
                         if subitem.is_dir() and "vol_" in subitem.name:
                             volume_path = subitem
-                            print(f"🔍 Найден Railway Volume: {volume_path}")
+                            print(f"✅ [VOLUME] Найден Railway Volume: {volume_path}")
                             
                             # Создаем /data как симлинк на Volume
                             try:
@@ -99,26 +107,29 @@ def find_railway_volume():
                                     # Создаем симлинк
                                     import os
                                     os.symlink(str(volume_path), str(data_path))
-                                    print(f"✅ Создан симлинк /data -> {volume_path}")
+                                    print(f"✅ [VOLUME] Создан симлинк /data -> {volume_path}")
                                     return str(data_path)
                             except (OSError, PermissionError) as e:
-                                print(f"⚠️ Не удалось создать симлинк /data: {e}")
+                                print(f"⚠️ [VOLUME] Не удалось создать симлинк /data: {e}")
                                 # Используем путь Volume напрямую
+                                print(f"✅ [VOLUME] Используем путь Volume напрямую: {volume_path}")
                                 return str(volume_path)
-        except (PermissionError, OSError):
+        except (PermissionError, OSError) as e:
+            print(f"⚠️ [VOLUME] Ошибка доступа к {base_path}: {e}")
             continue
     
     # Если Volume не найден, создаем /data локально
-    print("⚠️ Railway Volume не найден, создаем /data локально")
+    print("⚠️ [VOLUME] Railway Volume не найден, создаем /data локально")
     try:
         data_path.mkdir(parents=True, exist_ok=True)
+        print(f"✅ [VOLUME] Создана локальная директория: {data_path}")
         return str(data_path)
     except (OSError, PermissionError) as e:
-        print(f"⚠️ Не удалось создать /data: {e}")
+        print(f"⚠️ [VOLUME] Не удалось создать /data: {e}")
         # Используем /tmp/data как fallback
         fallback_path = Path("/tmp/data")
         fallback_path.mkdir(parents=True, exist_ok=True)
-        print(f"⚠️ Используем fallback путь: {fallback_path}")
+        print(f"⚠️ [VOLUME] Используем fallback путь: {fallback_path}")
         return str(fallback_path)
 
 # Определяем базовый путь для данных
