@@ -43,7 +43,30 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Обработчик команды /start"""
     user_id = update.effective_user.id if update.effective_user else None
     username = update.effective_user.username if update.effective_user else None
-    print(f"🔵 [BOT] Команда /start от пользователя {user_id} (@{username})")
+    args = context.args  # Получаем аргументы команды /start
+    
+    print(f"🔵 [BOT] Команда /start от пользователя {user_id} (@{username}), args: {args}")
+    
+    # Если передан параметр buy_pro_menu, показываем меню покупки PRO
+    if args and len(args) > 0 and args[0] == "buy_pro_menu":
+        print(f"🔵 [BOT] Запрос меню покупки PRO через /start")
+        keyboard = InlineKeyboardMarkup([
+            [InlineKeyboardButton("7 дней - 100 ⭐", callback_data="buy_pro_7")],
+            [InlineKeyboardButton("30 дней - 350 ⭐", callback_data="buy_pro_30")],
+            [InlineKeyboardButton("90 дней - 900 ⭐", callback_data="buy_pro_90")],
+            [InlineKeyboardButton("Назад", callback_data="show_menu")]
+        ])
+        await update.message.reply_text(
+            "⭐ Выберите период PRO подписки:\n\n"
+            "✨ PRO функции:\n"
+            "• Неограниченные лайки\n"
+            "• Видеть, кто лайкнул вас\n"
+            "• Суперлайки\n"
+            "• Расширенная статистика",
+            reply_markup=keyboard
+        )
+        print(f"✅ [BOT] Меню покупки PRO отправлено пользователю {user_id}")
+        return
     
     try:
         await update.message.reply_text(

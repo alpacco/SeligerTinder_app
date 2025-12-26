@@ -67,47 +67,40 @@ function showProModal() {
   modal.querySelector('.pro-modal-backdrop').onclick = hideProModal;
   // Кнопка купить - отправляем данные боту и закрываем приложение
   modal.querySelector('.pro-modal-buy').onclick = function() {
-    console.log("🔵 [PRO Modal] Кнопка КУПИТЬ нажата");
-    
     // Закрываем модальное окно
     hideProModal();
     
     // Проверяем, доступен ли Telegram WebApp API
     if (window.Telegram && window.Telegram.WebApp) {
       const tg = window.Telegram.WebApp;
-      console.log("✅ [PRO Modal] Telegram.WebApp доступен");
-      console.log("  - tg.sendData:", typeof tg.sendData);
-      console.log("  - tg.close:", typeof tg.close);
       
       // Отправляем данные боту о том, что нужно показать меню покупки PRO
       if (tg.sendData) {
         const dataToSend = JSON.stringify({ action: "buy_pro_menu" });
-        console.log("🔵 [PRO Modal] Отправка данных боту:", dataToSend);
         try {
           tg.sendData(dataToSend);
-          console.log("✅ [PRO Modal] Данные отправлены боту через sendData");
+          // Ждем немного перед закрытием, чтобы данные успели отправиться
+          setTimeout(() => {
+            tg.close();
+          }, 500);
         } catch (error) {
           console.error("❌ [PRO Modal] Ошибка при отправке данных:", error);
+          // Если sendData не работает, просто закрываем
+          tg.close();
         }
       } else {
-        console.warn("⚠️ [PRO Modal] tg.sendData недоступен");
-      }
-      
-      // Закрываем Web App и возвращаемся в бота
-      // Бот получит данные и покажет меню с ценами
-      setTimeout(() => {
-        console.log("🔵 [PRO Modal] Закрытие WebApp...");
-        try {
+        // Если sendData недоступен, используем openTelegramLink для открытия бота с параметром
+        if (tg.openTelegramLink) {
+          // Открываем бота с параметром, который вызовет команду /start buy_pro_menu
+          tg.openTelegramLink('https://t.me/SeligerTinderApp_bot?start=buy_pro_menu');
+        } else {
+          // Просто закрываем приложение
           tg.close();
-          console.log("✅ [PRO Modal] WebApp закрыт");
-        } catch (error) {
-          console.error("❌ [PRO Modal] Ошибка при закрытии WebApp:", error);
         }
-      }, 200); // Увеличиваем задержку, чтобы данные успели отправиться
+      }
     } else {
-      console.warn("⚠️ [PRO Modal] Telegram.WebApp недоступен");
       // Если WebApp API недоступен (например, в браузере), открываем ссылку на бота
-      const botLink = 'https://t.me/SeligerTinderApp_bot';
+      const botLink = 'https://t.me/SeligerTinderApp_bot?start=buy_pro_menu';
       window.open(botLink, '_blank');
     }
   };
