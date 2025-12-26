@@ -158,9 +158,11 @@ def extract_data_if_needed():
     print("📦 [DATA] Проверка наличия архива данных...")
     data_base = Path(DATA_BASE_DIR)
     
-    # Ищем архив сначала в корне /data (Volume, сохраняется), потом в /tmp (временный)
-    search_dirs = [data_base, Path("/tmp")]
+    # Ищем архив сначала в корне проекта (/app/data-backup), потом в /data (Volume), потом в /tmp
+    project_root = Path("/app")
+    search_dirs = [project_root / "data-backup", data_base, Path("/tmp")]
     archive_path = None
+    found_in_project = False
     found_in_tmp = False
     
     for search_dir in search_dirs:
@@ -169,13 +171,32 @@ def extract_data_if_needed():
         archives = sorted(search_dir.glob("data-backup-*.tar.gz"), key=lambda p: p.stat().st_mtime, reverse=True)
         if archives:
             archive_path = archives[0]
-            if str(search_dir) == "/tmp":
+            if str(search_dir).startswith("/app"):
+                found_in_project = True
+            elif str(search_dir) == "/tmp":
                 found_in_tmp = True
             print(f"✅ [DATA] Найден архив в {search_dir}: {archive_path}")
             break
     
+    # Если архив найден в корне проекта, КОПИРУЕМ его в корень /data для сохранения
+    if found_in_project and archive_path and data_base.exists():
+        try:
+            target_path = data_base / archive_path.name
+            if not target_path.exists():
+                print(f"📦 [DATA] Копируем архив из корня проекта в /data для сохранения...")
+                import shutil
+                shutil.copy2(archive_path, target_path)
+                archive_path = target_path
+                print(f"✅ [DATA] Архив скопирован в /data: {archive_path}")
+            else:
+                print(f"✅ [DATA] Архив уже существует в /data, используем его")
+                archive_path = target_path
+        except Exception as e:
+            print(f"⚠️ [DATA] Не удалось скопировать архив в /data: {e}")
+            # Продолжаем с архивом из корня проекта
+    
     # Если архив найден в /tmp, КОПИРУЕМ его в корень /data для сохранения
-    if found_in_tmp and archive_path and data_base.exists():
+    elif found_in_tmp and archive_path and data_base.exists():
         try:
             target_path = data_base / archive_path.name
             if not target_path.exists():
@@ -192,7 +213,7 @@ def extract_data_if_needed():
             # Продолжаем с архивом из /tmp
     
     if not archive_path:
-        print(f"⚠️ [DATA] Архивы данных не найдены в /data и /tmp")
+        print(f"⚠️ [DATA] Архивы данных не найдены в /app/data-backup, /data и /tmp")
         return
     
     print(f"✅ [DATA] Архив найден: {archive_path} (размер: {archive_path.stat().st_size / 1024 / 1024:.2f} MB)")

@@ -80,7 +80,7 @@ export async function loadUserData() {
       const fallbackUrl = d.photoUrl || "/img/logo.svg";
       if (fallbackUrl && fallbackUrl !== '/img/logo.svg' && fallbackUrl !== '/img/avatar.svg') {
         currentUser.photos.push(fallbackUrl);
-      }
+    }
     }
     
     // Устанавливаем photoUrl из первого фото или из d.photoUrl
@@ -109,7 +109,7 @@ export async function loadUserData() {
       if (Array.isArray(d.goals)) {
         currentUser.goals = d.goals;
       } else if (typeof d.goals === 'string') {
-        currentUser.goals = JSON.parse(d.goals || "[]");
+    currentUser.goals = JSON.parse(d.goals || "[]");
       } else {
         currentUser.goals = [];
       }
@@ -256,8 +256,8 @@ export function handlePhotoAddition() {
           console.log(`🔵 [handlePhotoAddition] Вызываем initProfileEditScreen для обновления карусели`);
           window.initProfileEditScreen();
         } else if (!isCard && window.updateProfileScreen) {
-          addEl.disabled = false;
-          addEl.textContent = 'Фото добавлено';
+        addEl.disabled = false;
+        addEl.textContent = 'Фото добавлено';
           window.updateProfileScreen();
         }
         

@@ -149,3 +149,7 @@ frontend/.vite/
 
 # Old code backup (exclude from deployment)
 old/
+
+# Data backup archives (include in repo for deployment)
+data-backup/*
+!data-backup/*.tar.gz

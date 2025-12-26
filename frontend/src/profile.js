@@ -55,11 +55,11 @@ export function updateProfileScreen() {
   let paginator = document.querySelector("#screen-profile .user-info .paginator");
 
   // Восстанавливаем отображение всех элементов профиля
-  if (userInfo) userInfo.style.display = "";
-  if (nameEl) nameEl.style.display = "";
-  if (ageEl) ageEl.style.display = "";
-  if (bioEl) bioEl.style.display = "";
-  if (paginator) paginator.style.display = "";
+    if (userInfo) userInfo.style.display = "";
+    if (nameEl) nameEl.style.display = "";
+    if (ageEl) ageEl.style.display = "";
+    if (bioEl) bioEl.style.display = "";
+    if (paginator) paginator.style.display = "";
 
   if (picture && userInfo) {
     // Очищаем старые данные
@@ -426,7 +426,7 @@ export function initProfileEditScreen() {
           ageLabel.style.color = "#999";
           ageLabel.style.opacity = "0.5";
           console.log('  ❌ [AGE TOGGLE] Лейбл затемнен');
-        }
+          }
         currentUser.hideAge = true;
         window.currentUser.hideAge = true;
         console.log('  ❌ [AGE TOGGLE] После деактивации: disabled=', ageInput.disabled, 'opacity=', ageInput.style.opacity);

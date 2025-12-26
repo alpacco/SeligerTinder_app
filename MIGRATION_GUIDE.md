@@ -72,11 +72,15 @@ cd /tmp
 # Или используйте Railway Dashboard → Deployments → Upload Files
 ```
 
-### Вариант B: Через Railway Dashboard
+### Вариант B: Через скрипт upload_via_base64.sh
 
-1. Railway Dashboard → Ваш сервис → **Deployments** → **View Logs**
-2. Найдите опцию **Upload Files** или используйте **Terminal**
-3. Загрузите архив `data-backup-*.tar.gz`
+Если архив уже создан, используйте специальный скрипт:
+
+```bash
+./scripts/upload_via_base64.sh /tmp/data-backup-*.tar.gz
+```
+
+Скрипт автоматически загрузит архив через base64.
 
 ## Шаг 4: Распаковка данных
 

@@ -45,12 +45,13 @@ ARCHIVE_SIZE_BYTES=$(stat -f%z "$ARCHIVE_PATH" 2>/dev/null || stat -c%s "$ARCHIV
 MAX_SIZE=$((50 * 1024 * 1024))  # 50MB - лимит для base64 через railway run
 
 if [ "$ARCHIVE_SIZE_BYTES" -gt "$MAX_SIZE" ]; then
-    echo "⚠️ Архив большой ($ARCHIVE_SIZE), используйте ручной способ загрузки"
+    echo "⚠️ Архив большой ($ARCHIVE_SIZE), используйте альтернативный способ"
     echo ""
-    echo "Инструкции:"
-    echo "1. Загрузите архив через Railway Dashboard → Deployments → Upload Files"
-    echo "2. Или используйте: railway run --service $SERVICE_NAME bash"
-    echo "3. Затем в контейнере: cd /tmp и загрузите архив"
+    echo "Используйте скрипт upload_via_base64.sh:"
+    echo "  ./scripts/upload_via_base64.sh $ARCHIVE_PATH"
+    echo ""
+    echo "Или загрузите вручную через Python скрипт:"
+    echo "  railway run --service $SERVICE_NAME --command 'python python_backend/migrate_data_to_railway.py --source /tmp/data --target /data'"
     echo ""
     echo "Архив находится здесь: $ARCHIVE_PATH"
     exit 0

@@ -1882,7 +1882,7 @@ if (giftDetailBtn) {
 
   // Присваиваем реализацию showScreen переменной showScreenImpl
 showScreenImpl = showScreen;
-  
+
   // КРИТИЧНО: Заменяем window.showScreen на настоящую реализацию
   console.log("🔵 [MAIN.JS] Заменяем window.showScreen на настоящую реализацию...");
   window.showScreen = showScreen;

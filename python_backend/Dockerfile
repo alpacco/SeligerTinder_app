@@ -16,6 +16,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY python_backend/ ./python_backend/
 COPY public/ ./public/
 
+# Копируем архив данных из корня проекта (если есть)
+COPY data-backup/ ./data-backup/ 2>/dev/null || true
+
 # Создаем необходимые директории
 RUN mkdir -p /data/img /data/log
 
