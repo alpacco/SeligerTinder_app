@@ -564,7 +564,14 @@ export function onMutualLike() {
       };
     }
     // Chat / Wave (Chat button styled blue) - используем сохраненного кандидата
+    // КРИТИЧНО: Проверяем, что мы все еще в mutual match режиме
+    if (!window.inMutualMatch) {
+      console.error('🚨 [onMutualLike setTimeout] КРИТИЧНО: inMutualMatch был сброшен до установки кнопки! Не устанавливаем кнопку "Помахать"');
+      return; // Не устанавливаем кнопку, если mutual match уже сброшен
+    }
+    
     if (dislikeBtn) {
+      console.log('🔵 [onMutualLike setTimeout] Устанавливаем кнопку "Помахать" для mutual match');
       dislikeBtn.style.display = "flex";
       if (currentCandidate && currentCandidate.id && currentCandidate.id.startsWith('VALID_') && currentCandidate.username) {
         dislikeBtn.classList.remove('wave-btn');
