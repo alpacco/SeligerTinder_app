@@ -152,6 +152,54 @@ for directory in [IMAGES_DIR, LOG_DIR, GIFT_IMAGES_DIR]:
     except (OSError, PermissionError) as e:
         print(f"⚠️ Не удалось создать директорию {directory}: {e}")
 
+# Автоматическая распаковка данных из архива, если архив существует и директории пусты
+def extract_data_if_needed():
+    """Распаковывает данные из архива, если архив существует и директории пусты"""
+    archive_path = Path("/tmp/data-backup-20251226-141714.tar.gz")
+    data_base = Path(DATA_BASE_DIR)
+    
+    # Проверяем, есть ли архив
+    if not archive_path.exists():
+        return
+    
+    # Проверяем, пусты ли директории
+    img_dir = Path(IMAGES_DIR)
+    has_images = img_dir.exists() and any(img_dir.iterdir())
+    
+    if has_images:
+        print(f"✅ [DATA] Данные уже распакованы в {DATA_BASE_DIR}")
+        return
+    
+    print(f"📦 [DATA] Найден архив данных, начинаем распаковку...")
+    print(f"📦 [DATA] Архив: {archive_path}")
+    print(f"📦 [DATA] Целевая директория: {data_base}")
+    
+    try:
+        import tarfile
+        with tarfile.open(archive_path, 'r:gz') as tar:
+            tar.extractall(path=data_base)
+        print(f"✅ [DATA] Данные успешно распакованы в {data_base}")
+        
+        # Проверяем результат
+        if img_dir.exists():
+            img_count = len(list(img_dir.rglob('*'))) if img_dir.exists() else 0
+            print(f"✅ [DATA] Распаковано файлов в {IMAGES_DIR}: {img_count}")
+        
+        # Удаляем архив после успешной распаковки
+        try:
+            archive_path.unlink()
+            print(f"✅ [DATA] Архив удален: {archive_path}")
+        except Exception as e:
+            print(f"⚠️ [DATA] Не удалось удалить архив: {e}")
+            
+    except Exception as e:
+        print(f"❌ [DATA] Ошибка при распаковке данных: {e}")
+        import traceback
+        traceback.print_exc()
+
+# Вызываем распаковку при импорте модуля
+extract_data_if_needed()
+
 # ========== CORS ==========
 
 # Разрешенные origins (можно добавить через переменную окружения)
