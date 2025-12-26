@@ -554,75 +554,8 @@ if (profileEditBackBtn) {
     tgModalCancel.addEventListener("click", hideTelegramModal);
   }
   // ------------------- Показываем кандидата или "Нет новых" -------------------
-  function showCandidate() {
-    if (currentUser.needPhoto === 1) {
-      console.log('[showCandidate] needPhoto=1, показываем кнопку "Добавить фото"');
-      singleCard.style.backgroundImage = "none";
-      singleCard.style.backgroundColor = "#fff";
-      singleCard.innerHTML = `
-        <div class="no-users invite-wrapper">
-          <h3>Пожалуйста, загрузите 1-3 фото с лицом, чтобы просматривать анкеты.</h3>
-          <button id="add-photo-swipe-btn" class="invite-button">Добавить фото</button>
-        </div>
-      `;
-      singleCard.style.boxShadow = "none";
-      document.querySelectorAll(".back-cnd-btn, .superlike_d, .like_d, .dislike_d").forEach(b => b.style.display = "none");
-      const btn = document.getElementById("add-photo-swipe-btn");
-      if (btn) {
-        // Удаляем старые обработчики
-        const newBtn = btn.cloneNode(true);
-        btn.parentNode.replaceChild(newBtn, btn);
-        
-        newBtn.addEventListener("click", function() { 
-          if (window.handlePhotoAddition) {
-            window.handlePhotoAddition.call(newBtn);
-          } else {
-            console.warn('handlePhotoAddition не найден');
-          }
-        });
-        console.log('[showCandidate] Кнопка найдена, навешиваем обработчик handlePhotoAddition');
-      }
-      return;
-    }
-    
-    if (!candidates || candidates.length === 0 || currentIndex >= candidates.length) {
-      singleCard.style.backgroundImage = "none";
-      singleCard.style.backgroundColor = "#fff";
-      // Если needPhoto=1, показываем "Загрузите фото", иначе "Пригласить"
-      const buttonText = currentUser && currentUser.needPhoto === 1 ? "Загрузите фото" : "Пригласить";
-      const buttonId = currentUser && currentUser.needPhoto === 1 ? "add-photo-swipe-btn" : "invite-button";
-      singleCard.innerHTML = `
-        <div class="no-users invite-wrapper">
-          <h3>Нет новых пользователей</h3>
-          <button id="${buttonId}" class="invite-button">${buttonText}</button>
-        </div>
-      `;
-      singleCard.style.boxShadow = "none";
-      document.querySelectorAll(".like_d, .dislike_d").forEach(b => b.style.display = "none");
-      const btn = document.getElementById(buttonId);
-      if (btn) {
-        if (currentUser && currentUser.needPhoto === 1) {
-          // Если needPhoto=1, открываем модалку для загрузки фото
-          btn.addEventListener("click", function() {
-            if (window.handlePhotoAddition) {
-              window.handlePhotoAddition.call(btn);
-            }
-          });
-        } else {
-          // Иначе - приглашение
-          btn.addEventListener("click", shareInvite);
-        }
-      }
-      return;
-    }
-  
-  
-  // Иначе — обычная карточка
-  fillCard(singleCard, candidates[currentIndex]);
-  singleCard.classList.remove("show-match", "returning");
-  document.querySelectorAll(".like_d, .dislike_d")
-          .forEach(b => b.style.display = currentUser.needPhoto ? "none" : "flex");
-  }
+  // УДАЛЕНО: функция showCandidate() - теперь используется версия из swipe.js
+  // Все вызовы заменены на window.showCandidate()
 
   // ------------------- Обработка взаимного мэтча -------------------
   function onMutualLike() {
@@ -788,7 +721,7 @@ if (profileEditBackBtn) {
     if (likeBtnControl) {
       likeBtnControl.addEventListener("click", () => {
         if (!candidates || candidates.length === 0 || currentIndex >= candidates.length) {
-          showCandidate();
+          window.showCandidate && window.showCandidate();
         } else {
           doLike();
         }
@@ -797,7 +730,7 @@ if (profileEditBackBtn) {
     if (dislikeBtnControl) {
       dislikeBtnControl.addEventListener("click", () => {
         if (!candidates || candidates.length === 0 || currentIndex >= candidates.length) {
-          showCandidate();
+          window.showCandidate && window.showCandidate();
         } else {
           doDislike();
         }
@@ -861,7 +794,7 @@ if (profileEditBackBtn) {
     if (currentUser.needPhoto === 1) {
       candidates = [];
       window.candidates = candidates;
-      showCandidate();
+      window.showCandidate && window.showCandidate();
       updateMatchesCount();
       return;
     }
@@ -885,13 +818,13 @@ if (profileEditBackBtn) {
         window.candidates = candidates;
         window.currentIndex = currentIndex;
       }
-      showCandidate();
+      window.showCandidate && window.showCandidate();
       updateMatchesCount();
     } catch (err) {
       console.error("❌ loadCandidates:", err);
       candidates = [];
       window.candidates = candidates;
-      showCandidate();
+      window.showCandidate && window.showCandidate();
       updateMatchesCount();
     }
   }
@@ -962,7 +895,7 @@ if (profileEditBackBtn) {
 
     // Ensure buttons are visible and move to next
     document.querySelectorAll(".like_d, .dislike_d").forEach(b => b.style.display = 'flex');
-    showCandidate();
+    window.showCandidate && window.showCandidate();
   }
   
   // Обновление экрана «Матчи»
@@ -1025,7 +958,7 @@ function showScreen(screenId) {
           if (currentUser.needPhoto === 1) {
           candidates = [];
             window.candidates = candidates;
-            showCandidate();
+            window.showCandidate && window.showCandidate();
             updateMatchesCount();
           } else {
             loadCandidates();
@@ -1866,10 +1799,12 @@ showScreenImpl = showScreen;
   console.log("  ✅ window.showScreen заменен на настоящую реализацию:", typeof window.showScreen);
   console.log("  - showScreenImpl:", typeof showScreenImpl);
   
-  // Также экспортируем showCandidate если он определен
-  if (typeof showCandidate !== 'undefined') {
-    window.showCandidate = showCandidate;
-    console.log("  ✅ window.showCandidate установлен");
+  // НЕ экспортируем showCandidate из main.js - используем версию из swipe.js
+  // window.showCandidate должен быть установлен в swipe.js
+  if (window.showCandidate) {
+    console.log("  ✅ window.showCandidate найден (из swipe.js):", typeof window.showCandidate);
+  } else {
+    console.warn("  ⚠️ window.showCandidate не найден! Возможно, swipe.js еще не загружен.");
   }
 }
 
