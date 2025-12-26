@@ -55,8 +55,18 @@ export function fillCard(cardEl, data, options = {}) {
       const badgeImage = badgeWrapper.querySelector('.badge-image');
       
       if (badgeImage) {
-        const badgePath = `/img/labels/${data.badge}.svg`;
+        // Нормализуем badge: убираем пути, слэши и расширения, оставляем только имя
+        let badgeName = data.badge.trim();
+        // Убираем пути и слэши
+        badgeName = badgeName.replace(/^.*\//, ''); // Убираем все до последнего слэша
+        // Убираем расширение .svg если есть
+        badgeName = badgeName.replace(/\.svg$/i, '');
+        // Убираем лишние точки и слэши
+        badgeName = badgeName.replace(/[\/\\\.]+/g, '');
+        // Формируем правильный путь
+        const badgePath = `/img/labels/${badgeName}.svg`;
         badgeImage.src = badgePath;
+        console.log('[card.js] Установлен badge:', { original: data.badge, normalized: badgeName, path: badgePath });
       }
     } else {
       console.warn('[card.js] badge-wrapper не найден в карточке');
@@ -88,7 +98,15 @@ export function fillCard(cardEl, data, options = {}) {
     <div class="gradient-card"></div>
     <div class="candidate-goals"></div>
     <div class="user-info">
-      ${data.badge ? `<div class="badge-wrapper"><img src="/img/labels/${data.badge}.svg" class="badge-image"></div>` : ""}
+      ${(() => {
+        if (!data.badge) return "";
+        // Нормализуем badge: убираем пути, слэши и расширения
+        let badgeName = String(data.badge).trim();
+        badgeName = badgeName.replace(/^.*\//, ''); // Убираем все до последнего слэша
+        badgeName = badgeName.replace(/\.svg$/i, ''); // Убираем расширение .svg если есть
+        badgeName = badgeName.replace(/[\/\\\.]+/g, ''); // Убираем лишние точки и слэши
+        return `<div class="badge-wrapper"><img src="/img/labels/${badgeName}.svg" class="badge-image"></div>`;
+      })()}
       <div class="name-age-container">
         <span class="user-name">${data.name || ""}</span>
         ${(!window.currentUser?.hideAge && data.age) ? `<span class="user-age">${data.age} лет</span>` : ""}

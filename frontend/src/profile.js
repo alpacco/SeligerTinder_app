@@ -97,7 +97,12 @@ export function updateProfileScreen() {
     if (currentUser.badge && currentUser.badge.trim() !== "") {
       const badgeDiv = document.createElement("div");
       badgeDiv.className = "badge-wrapper";
-      badgeDiv.innerHTML = `<img src="/img/labels/${currentUser.badge}.svg" alt="Badge" class="badge-image">`;
+      // Нормализуем badge: убираем пути, слэши и расширения
+      let badgeName = String(currentUser.badge).trim();
+      badgeName = badgeName.replace(/^.*\//, ''); // Убираем все до последнего слэша
+      badgeName = badgeName.replace(/\.svg$/i, ''); // Убираем расширение .svg если есть
+      badgeName = badgeName.replace(/[\/\\\.]+/g, ''); // Убираем лишние точки и слэши
+      badgeDiv.innerHTML = `<img src="/img/labels/${badgeName}.svg" alt="Badge" class="badge-image">`;
       userInfo.prepend(badgeDiv);
     }
     

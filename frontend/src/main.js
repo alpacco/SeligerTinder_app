@@ -240,7 +240,15 @@ function fillCard(cardEl, cand) {
   cardEl.innerHTML = `
     <div class="gradient-card"></div>
     <div class="user-info">
-      ${cand.badge ? `<div class="badge-wrapper"><img src="/img/labels/${cand.badge}.svg" class="badge-image"></div>` : ""}
+      ${(() => {
+        if (!cand.badge) return "";
+        // Нормализуем badge: убираем пути, слэши и расширения
+        let badgeName = String(cand.badge).trim();
+        badgeName = badgeName.replace(/^.*\//, ''); // Убираем все до последнего слэша
+        badgeName = badgeName.replace(/\.svg$/i, ''); // Убираем расширение .svg если есть
+        badgeName = badgeName.replace(/[\/\\\.]+/g, ''); // Убираем лишние точки и слэши
+        return `<div class="badge-wrapper"><img src="/img/labels/${badgeName}.svg" class="badge-image"></div>`;
+      })()}
       <div class="name-age-container">
         <span class="user-name">${cand.name}</span>
         ${(!currentUser.hideAge && cand.age) ? `<span class="user-age">${cand.age} лет</span>` : ""}

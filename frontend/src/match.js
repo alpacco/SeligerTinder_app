@@ -284,7 +284,12 @@ export async function showCandidateProfile(match) {
   if (match.badge && match.badge.trim()) {
     const badgeDiv = document.createElement("div");
     badgeDiv.className = "badge-wrapper";
-    badgeDiv.innerHTML = `<img src="/img/labels/${match.badge}.svg" class="badge-image">`;
+    // Нормализуем badge: убираем пути, слэши и расширения
+    let badgeName = String(match.badge).trim();
+    badgeName = badgeName.replace(/^.*\//, ''); // Убираем все до последнего слэша
+    badgeName = badgeName.replace(/\.svg$/i, ''); // Убираем расширение .svg если есть
+    badgeName = badgeName.replace(/[\/\\\.]+/g, ''); // Убираем лишние точки и слэши
+    badgeDiv.innerHTML = `<img src="/img/labels/${badgeName}.svg" class="badge-image">`;
     userInfo.prepend(badgeDiv);
   }
 
