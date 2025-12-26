@@ -286,22 +286,17 @@ export function moveToNextCandidate(direction = 'right') {
   // Restore like/dislike buttons to default state
   let likeBtn = document.querySelector(".like_d");
   if (likeBtn) {
-    const btnClone = likeBtn.cloneNode(true);
-    likeBtn.parentNode.replaceChild(btnClone, likeBtn);
-    likeBtn = btnClone;
-  }
-  let dislikeBtn = document.querySelector(".dislike_d");
-  if (dislikeBtn) {
-    const btnClone = dislikeBtn.cloneNode(true);
-    dislikeBtn.parentNode.replaceChild(btnClone, dislikeBtn);
-    dislikeBtn = btnClone;
-  }
-
-  if (likeBtn) {
+    // Полностью сбрасываем кнопку лайка
     likeBtn.innerHTML = `<svg class="like-icon" width="36" height="36" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><path class="st0" d="M40.2,19.3c-5.1-0.5-7.5,2.5-8.2,3.5c-0.6-1-3.1-4-8.2-3.5c-5.4,0.6-10.8,7-5.7,15.6c4.2,6.9,13.6,11.9,13.9,12.1l0,0l0,0l0,0l0,0c0.2-0.1,9.7-5.1,13.9-12.1C51,26.3,45.6,19.9,40.2,19.3L40.2,19.3z"/></svg>`;
     likeBtn.onclick = null;
+    likeBtn.className = 'like_d'; // Сброс всех классов
     likeBtn.style.backgroundColor = '';
     likeBtn.style.fontSize = '';
+    likeBtn.style.display = 'flex';
+    // Удаляем все обработчики событий через клонирование
+    const newLikeBtn = likeBtn.cloneNode(true);
+    likeBtn.parentNode.replaceChild(newLikeBtn, likeBtn);
+    likeBtn = newLikeBtn;
     // Восстанавливаем обработчик события для Like
     likeBtn.addEventListener('click', () => {
       if (!window.candidates || window.candidates.length === 0 || window.currentIndex >= window.candidates.length) {
@@ -311,12 +306,19 @@ export function moveToNextCandidate(direction = 'right') {
       }
     });
   }
+  let dislikeBtn = document.querySelector(".dislike_d");
   if (dislikeBtn) {
+    // Полностью сбрасываем кнопку дизлайка - удаляем все классы (wave-btn, chat-btn и т.д.)
     dislikeBtn.innerHTML = `<svg class="dislike-icon" width="36" height="36" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><rect class="st0" x="29.5" y="14.61" width="5" height="34.78" rx="2.5" ry="2.5" transform="translate(-13.25 32) rotate(-45)"/><rect class="st0" x="14.61" y="29.5" width="34.78" height="5" rx="2.5" ry="2.5" transform="translate(-13.25 32) rotate(-45)"/></svg>`;
     dislikeBtn.onclick = null;
+    dislikeBtn.className = 'dislike_d'; // Сброс всех классов (удаляем wave-btn, chat-btn и т.д.)
     dislikeBtn.style.backgroundColor = '';
     dislikeBtn.style.fontSize = '';
-    dislikeBtn.className = 'dislike_d'; // Сброс классов к дефолтному
+    dislikeBtn.style.display = 'flex';
+    // Удаляем все обработчики событий через клонирование
+    const newDislikeBtn = dislikeBtn.cloneNode(true);
+    dislikeBtn.parentNode.replaceChild(newDislikeBtn, dislikeBtn);
+    dislikeBtn = newDislikeBtn;
     // Восстанавливаем обработчик события для Dislike
     dislikeBtn.addEventListener('click', () => {
       if (!window.candidates || window.candidates.length === 0 || window.currentIndex >= window.candidates.length) {
