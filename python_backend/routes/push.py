@@ -62,3 +62,55 @@ async def special_push(data: Dict = Body(...)):
         print(f"[specialPush] Ошибка: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+
+@router.post("/showProMenu")
+async def show_pro_menu(data: Dict = Body(...)):
+    """Показать меню покупки PRO пользователю"""
+    userId = data.get("userId")
+    
+    if not userId:
+        raise HTTPException(status_code=400, detail="userId required")
+    
+    if not BOT_TOKEN:
+        raise HTTPException(status_code=500, detail="BOT_TOKEN not configured")
+    
+    try:
+        from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+        
+        keyboard = InlineKeyboardMarkup([
+            [InlineKeyboardButton("7 дней - 100 ⭐", callback_data="buy_pro_7")],
+            [InlineKeyboardButton("30 дней - 350 ⭐", callback_data="buy_pro_30")],
+            [InlineKeyboardButton("90 дней - 900 ⭐", callback_data="buy_pro_90")],
+            [InlineKeyboardButton("Назад", callback_data="show_menu")]
+        ])
+        
+        message_text = (
+            "⭐ Выберите период PRO подписки:\n\n"
+            "✨ PRO функции:\n"
+            "• Неограниченные лайки\n"
+            "• Видеть, кто лайкнул вас\n"
+            "• Суперлайки\n"
+            "• Расширенная статистика"
+        )
+        
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage",
+                json={
+                    "chat_id": userId,
+                    "text": message_text,
+                    "reply_markup": keyboard.to_dict()
+                }
+            )
+            response.raise_for_status()
+            result = response.json()
+            
+            if not result.get("ok"):
+                raise Exception(f"Telegram API error: {result}")
+            
+            print(f"✅ [showProMenu] Меню PRO отправлено пользователю {userId}")
+            return {"success": True, "result": result.get("result")}
+    except Exception as e:
+        print(f"❌ [showProMenu] Ошибка: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+

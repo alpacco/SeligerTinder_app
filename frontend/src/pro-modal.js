@@ -65,43 +65,45 @@ function showProModal() {
   // Закрытие
   modal.querySelector('.pro-modal-close').onclick = hideProModal;
   modal.querySelector('.pro-modal-backdrop').onclick = hideProModal;
-  // Кнопка купить - отправляем данные боту и закрываем приложение
-  modal.querySelector('.pro-modal-buy').onclick = function() {
+  // Кнопка купить - отправляем запрос на API для показа меню PRO и закрываем приложение
+  modal.querySelector('.pro-modal-buy').onclick = async function() {
     // Закрываем модальное окно
     hideProModal();
     
-    // Проверяем, доступен ли Telegram WebApp API
+    // Получаем userId из window.currentUser
+    const userId = window.currentUser?.userId;
+    if (!userId) {
+      console.error("❌ [PRO Modal] userId не найден");
+      return;
+    }
+    
+    // Отправляем запрос на API для показа меню PRO
+    const API_URL = window.API_URL || window.API_BASE_URL;
+    if (API_URL) {
+      try {
+        const response = await fetch(`${API_URL}/showProMenu`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: userId })
+        });
+        
+        if (response.ok) {
+          console.log("✅ [PRO Modal] Запрос на показ меню PRO отправлен");
+        } else {
+          console.error("❌ [PRO Modal] Ошибка при отправке запроса:", response.status);
+        }
+      } catch (error) {
+        console.error("❌ [PRO Modal] Ошибка при отправке запроса:", error);
+      }
+    }
+    
+    // Закрываем WebApp и возвращаемся в бота
     if (window.Telegram && window.Telegram.WebApp) {
       const tg = window.Telegram.WebApp;
-      
-      // Отправляем данные боту о том, что нужно показать меню покупки PRO
-      if (tg.sendData) {
-        const dataToSend = JSON.stringify({ action: "buy_pro_menu" });
-        try {
-          tg.sendData(dataToSend);
-          // Ждем немного перед закрытием, чтобы данные успели отправиться
-          setTimeout(() => {
-            tg.close();
-          }, 500);
-        } catch (error) {
-          console.error("❌ [PRO Modal] Ошибка при отправке данных:", error);
-          // Если sendData не работает, просто закрываем
-          tg.close();
-        }
-      } else {
-        // Если sendData недоступен, используем openTelegramLink для открытия бота с параметром
-        if (tg.openTelegramLink) {
-          // Открываем бота с параметром, который вызовет команду /start buy_pro_menu
-          tg.openTelegramLink('https://t.me/SeligerTinderApp_bot?start=buy_pro_menu');
-        } else {
-          // Просто закрываем приложение
-          tg.close();
-        }
-      }
-    } else {
-      // Если WebApp API недоступен (например, в браузере), открываем ссылку на бота
-      const botLink = 'https://t.me/SeligerTinderApp_bot?start=buy_pro_menu';
-      window.open(botLink, '_blank');
+      // Небольшая задержка, чтобы запрос успел отправиться
+      setTimeout(() => {
+        tg.close();
+      }, 300);
     }
   };
   // Карусель свайпом
