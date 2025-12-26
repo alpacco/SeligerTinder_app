@@ -129,11 +129,7 @@ export async function renderMatches() {
           pushBtn.disabled = false;
         }
       });
-      const giftBtn = card.querySelector('.match-gift-btn');
-      if (giftBtn) giftBtn.addEventListener('click', () => {
-        window.selectedCandidateId = id;
-        showGiftModal();
-      });
+      // Кнопка подарков удалена
       card.querySelectorAll('.status-button').forEach(b =>
         b.addEventListener('click', () => {
           const msg = card.querySelector('.superlike-message');

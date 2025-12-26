@@ -1073,7 +1073,6 @@ if (headerTitle) headerTitle.textContent = 'Ваш Match';
       actions.className = "profile-actions";
       actions.innerHTML = `
         <button id="candidate-write-btn">Написать</button>
-        <button id="candidate-gift-btn">Подарок</button>
       `;
       editBtn.insertAdjacentElement("afterend", actions);
 
