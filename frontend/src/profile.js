@@ -858,13 +858,7 @@ export function renderProfileFooter(profileData, container) {
       openChat && openChat(profileData.username);
     });
   }
-  const giftBtn = footer.querySelector('#candidate-gift-btn');
-  if (giftBtn) {
-    giftBtn.addEventListener('click', () => {
-      window.selectedCandidateId = profileData.userId || profileData.id;
-      showGiftModal();
-    });
-  }
+  // Кнопка подарков удалена
 }
 
 // Навешиваем обработчик на .header-pro-info (только один раз)
