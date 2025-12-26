@@ -967,9 +967,6 @@ async function renderMatches() {
         </div>
         <div class="match-actions">
           ${btnHTML}
-          <button class="match-gift-btn">
-            <img src="/img/gift.svg" alt="gift" />
-          </button>
         </div>
       `;
       // Обработчик волны / чата
@@ -1009,12 +1006,7 @@ async function renderMatches() {
           window.open(`https://t.me/${m.username}`, "_blank");
         });
       }
-      // Обработчик «Подарок»
-      const giftBtn = div.querySelector(".match-gift-btn");
-      if (giftBtn) giftBtn.addEventListener("click", () => {
-        selectedCandidateId = m.id;
-        showGiftModal();
-      });
+      // Кнопка подарков удалена
 
       matchesListEl.appendChild(div);
       // Открыть детальную карточку кандидата по клику на аватар+имя
