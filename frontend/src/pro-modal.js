@@ -65,9 +65,21 @@ function showProModal() {
   // Закрытие
   modal.querySelector('.pro-modal-close').onclick = hideProModal;
   modal.querySelector('.pro-modal-backdrop').onclick = hideProModal;
-  // Кнопка купить
+  // Кнопка купить - закрываем приложение и возвращаемся в бота
   modal.querySelector('.pro-modal-buy').onclick = function() {
-    window.open('/pro', '_blank');
+    // Закрываем модальное окно
+    hideProModal();
+    
+    // Проверяем, доступен ли Telegram WebApp API
+    if (window.Telegram && window.Telegram.WebApp) {
+      // Закрываем Web App и возвращаемся в бота
+      // Пользователь увидит меню бота с кнопкой "Купить PRO"
+      window.Telegram.WebApp.close();
+    } else {
+      // Если WebApp API недоступен (например, в браузере), открываем ссылку на бота
+      const botLink = 'https://t.me/SeligerTinderApp_bot';
+      window.open(botLink, '_blank');
+    }
   };
   // Карусель свайпом
   const img = modal.querySelector('.pro-carousel-img');
