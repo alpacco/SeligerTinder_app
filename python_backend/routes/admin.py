@@ -223,3 +223,44 @@ async def update_badge(
     except Exception as e:
         print(f"[updateBadge] Ошибка: {e}")
         raise HTTPException(status_code=500, detail="Ошибка обновления бейджа")
+
+
+@router.post("/extract-data")
+async def extract_data(
+    request: Request,
+    authorization: Optional[str] = Header(None)
+):
+    """Распаковать данные из архива (админ, требует авторизации)"""
+    verify_admin(request, authorization)
+    try:
+        from config import extract_data_if_needed
+        from pathlib import Path
+        
+        # Проверяем наличие архива
+        tmp_dir = Path("/tmp")
+        archives = sorted(tmp_dir.glob("data-backup-*.tar.gz"), key=lambda p: p.stat().st_mtime, reverse=True)
+        
+        if not archives:
+            return {"success": False, "message": "Архивы данных не найдены в /tmp"}
+        
+        archive_path = archives[0]
+        
+        # Вызываем функцию распаковки
+        extract_data_if_needed()
+        
+        # Проверяем результат
+        from config import IMAGES_DIR
+        img_dir = Path(IMAGES_DIR)
+        img_count = sum(1 for _ in img_dir.rglob('*') if _.is_file()) if img_dir.exists() else 0
+        
+        return {
+            "success": True,
+            "message": f"Данные распакованы из {archive_path.name}",
+            "archive": str(archive_path),
+            "images_count": img_count
+        }
+    except Exception as e:
+        print(f"[extract-data] Ошибка: {e}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Ошибка распаковки данных: {str(e)}")
