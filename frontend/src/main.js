@@ -47,8 +47,6 @@ if (window.Telegram && window.Telegram.WebApp) {
   tg.setHeaderColor("#ffffff");
   tg.setBackgroundColor("#f4f4f4");
   console.log("✅ Telegram.WebApp подключен:", tg);
-  console.log("ℹ️ tg.initData:", tg.initData);
-  console.log("ℹ️ tg.initDataUnsafe:", tg.initDataUnsafe);
 } else {
   console.warn("⚠ Telegram.WebApp не найден (серверный/локальный режим?)");
 }
