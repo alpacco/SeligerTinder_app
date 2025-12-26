@@ -48,6 +48,39 @@
   <link rel="stylesheet" href="/css/main.css?v=2025-01-19-wave-btn-fix-v2" id="main-css-link" />
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script>
+    // КРИТИЧНО: Агрессивный сброс кнопки "Помахать" при загрузке страницы
+    (function() {
+      function resetWaveButton() {
+        const dislikeBtn = document.querySelector(".dislike_d");
+        if (dislikeBtn) {
+          const hasWaveBtn = dislikeBtn.classList.contains('wave-btn');
+          const hasChatBtn = dislikeBtn.classList.contains('chat-btn');
+          const hasWaveSvg = dislikeBtn.innerHTML.includes('wave.svg');
+          const hasChatSvg = dislikeBtn.innerHTML.includes('chat.svg');
+          
+          if (hasWaveBtn || hasChatBtn || hasWaveSvg || hasChatSvg) {
+            console.error('🚨 [INLINE] КРИТИЧНО: Кнопка "Помахать" обнаружена при загрузке! Сбрасываем...');
+            dislikeBtn.classList.remove('wave-btn', 'chat-btn');
+            dislikeBtn.className = 'dislike_d';
+            dislikeBtn.innerHTML = `<svg class="dislike-icon" width="36" height="36" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><rect class="st0" x="29.5" y="14.61" width="5" height="34.78" rx="2.5" ry="2.5" transform="translate(-13.25 32) rotate(-45)"/><rect class="st0" x="14.61" y="29.5" width="34.78" height="5" rx="2.5" ry="2.5" transform="translate(-13.25 32) rotate(-45)"/></svg>`;
+            dislikeBtn.style.backgroundColor = '';
+            dislikeBtn.style.fontSize = '';
+            dislikeBtn.onclick = null;
+          }
+        }
+      }
+      
+      // Проверяем сразу
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', resetWaveButton);
+      } else {
+        resetWaveButton();
+      }
+      
+      // Периодическая проверка каждые 50ms
+      setInterval(resetWaveButton, 50);
+    })();
+    
     // Версия приложения для обхода кэша Telegram
     // ВАЖНО: версия должна быть СТАТИЧЕСКОЙ, иначе будет бесконечная перезагрузка!
     const APP_VERSION = '2025-01-19-wave-btn-fix-v2';
