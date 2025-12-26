@@ -581,72 +581,8 @@ if (profileEditBackBtn) {
         .catch(() => alert("Не удалось скопировать текст"));
     }
   }
-  // Обработчики свайпов (pointer events)
-  
-  let isDragging = false, startX = 0, startY = 0, currentX = 0, currentY = 0;
-  const maxDistance = 200, minFont = 64, maxFont = 128, threshold = 100;
-  if (singleCard) {
-    singleCard.addEventListener("pointerdown", (e) => {
-      if (currentIndex >= candidates.length) return;
-      isDragging = true;
-      startX = e.clientX;
-      startY = e.clientY;
-      singleCard.setPointerCapture(e.pointerId);
-      singleCard.style.transition = "none";
-    });
-    singleCard.addEventListener("pointermove", (e) => {
-      if (!isDragging) return;
-      currentX = e.clientX - startX;
-      currentY = e.clientY - startY;
-      const rot = (currentX / 200) * 20;
-      singleCard.style.transform = `translate(${currentX}px, ${currentY}px) rotate(${rot}deg)`;
-      singleCard.style.boxShadow = "0 8px 24px rgba(0,0,0,0.3)";
-      const likeB = singleCard.querySelector(".badge-like");
-      const nopeB = singleCard.querySelector(".badge-nope");
-      let ratio = Math.min(Math.abs(currentX) / maxDistance, 1);
-      let fontNow = minFont + (maxFont - minFont) * ratio;
-      if (currentX > 0) {
-        if (likeB) { likeB.style.opacity = ratio; likeB.style.fontSize = fontNow + "px"; }
-        if (nopeB) { nopeB.style.opacity = 0; nopeB.style.fontSize = minFont + "px"; }
-      } else {
-        if (nopeB) { nopeB.style.opacity = ratio; nopeB.style.fontSize = fontNow + "px"; }
-        if (likeB) { likeB.style.opacity = 0; likeB.style.fontSize = minFont + "px"; }
-      }
-    });
-    singleCard.addEventListener("pointerup", e => {
-      isDragging = false;
-      singleCard.releasePointerCapture(e.pointerId);
-      const distX = Math.abs(currentX), distY = Math.abs(currentY);
-      if (distX < 10 && distY < 10) {
-        cyclePhoto();
-      } else if (distX > threshold) {
-        const dir = currentX > 0 ? "right" : "left";
-        if (dir === "right") {
-          doLike();
-        } else {
-          doDislike();
-        }
-      } else {
-        // плавный возврат при неполном свайпе
-        singleCard.style.transition = "transform 0.3s ease";
-        singleCard.style.transform = "none";
-        singleCard.style.boxShadow = "0 2px 8px rgba(0,0,0,0.2)";
-        hideBadges(singleCard);
-        currentX = 0;
-        currentY = 0;
-      }
-    });
-  }
-  function cyclePhoto() {
-    const rawPhotos = singleCard.dataset.photos ? JSON.parse(singleCard.dataset.photos) : [];
-    if (rawPhotos.length < 2) return;
-    currentPhotoIndex = (currentPhotoIndex + 1) % rawPhotos.length;
-    singleCard.style.backgroundImage = `url('${rawPhotos[currentPhotoIndex]}')`;
-    const paginatorEl = singleCard.querySelector(".paginator");
-    if (paginatorEl) {
-      renderPaginator(paginatorEl, rawPhotos.length, currentPhotoIndex);
-    }
-  }
+  // Обработчики свайпов теперь в swipe.js через setupSwipeHandlers()
+  // Удалены старые обработчики отсюда, чтобы избежать конфликтов
   
   // animateCardOut function removed
 

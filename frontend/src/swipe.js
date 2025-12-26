@@ -336,6 +336,12 @@ export function showCandidate() {
   document.querySelectorAll(".like_d, .dislike_d")
     .forEach(b => b.style.display = window.currentUser.needPhoto ? "none" : "flex");
   
+  // КРИТИЧНО: Устанавливаем обработчики свайпа после заполнения карточки
+  // Это нужно делать каждый раз, так как fillCard может пересоздавать элементы
+  setTimeout(() => {
+    window.setupSwipeHandlers && window.setupSwipeHandlers();
+  }, 0);
+  
   // КРИТИЧНО: Принудительно сбрасываем кнопки к обычному состоянию для обычных кандидатов
   // Кнопка "Помахать" должна появляться ТОЛЬКО при mutual like, а не при обычном показе кандидата
   // Переиспользуем уже объявленные переменные dislikeBtn и likeBtn из начала функции
