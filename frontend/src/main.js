@@ -263,7 +263,7 @@ function fillCard(cardEl, cand) {
   cardEl.innerHTML = `
     <div class="gradient-card"></div>
     <div class="user-info">
-      ${cand.badge ? `<div class="badge-wrapper"><img src="https://sta-black-dim.waw.amverum.cloud${cand.badge}" class="badge-image"></div>` : ""}
+      ${cand.badge ? `<div class="badge-wrapper"><img src="/img/labels/${cand.badge}.svg" class="badge-image"></div>` : ""}
       <div class="name-age-container">
         <span class="user-name">${cand.name}</span>
         ${(!currentUser.hideAge && cand.age) ? `<span class="user-age">${cand.age} лет</span>` : ""}

@@ -97,7 +97,7 @@ export function updateProfileScreen() {
     if (currentUser.badge && currentUser.badge.trim() !== "") {
       const badgeDiv = document.createElement("div");
       badgeDiv.className = "badge-wrapper";
-      badgeDiv.innerHTML = `<img src="/labels/${currentUser.badge}.svg" alt="Badge" class="badge-image">`;
+      badgeDiv.innerHTML = `<img src="/img/labels/${currentUser.badge}.svg" alt="Badge" class="badge-image">`;
       userInfo.prepend(badgeDiv);
     }
     

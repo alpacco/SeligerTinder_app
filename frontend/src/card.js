@@ -55,9 +55,7 @@ export function fillCard(cardEl, data, options = {}) {
       const badgeImage = badgeWrapper.querySelector('.badge-image');
       
       if (badgeImage) {
-        const badgePath = window.location.hostname === 'localhost' ? 
-          `/labels/${data.badge}.svg` : 
-          `sta-black-dim.waw.amverum.cloud/labels/${data.badge}.svg`;
+        const badgePath = `/img/labels/${data.badge}.svg`;
         badgeImage.src = badgePath;
       }
     } else {
@@ -90,7 +88,7 @@ export function fillCard(cardEl, data, options = {}) {
     <div class="gradient-card"></div>
     <div class="candidate-goals"></div>
     <div class="user-info">
-      ${data.badge ? `<div class="badge-wrapper"><img src="/labels/${data.badge}.svg" class="badge-image"></div>` : ""}
+      ${data.badge ? `<div class="badge-wrapper"><img src="/img/labels/${data.badge}.svg" class="badge-image"></div>` : ""}
       <div class="name-age-container">
         <span class="user-name">${data.name || ""}</span>
         ${(!window.currentUser?.hideAge && data.age) ? `<span class="user-age">${data.age} лет</span>` : ""}

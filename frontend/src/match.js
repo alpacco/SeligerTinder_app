@@ -284,7 +284,7 @@ export async function showCandidateProfile(match) {
   if (match.badge && match.badge.trim()) {
     const badgeDiv = document.createElement("div");
     badgeDiv.className = "badge-wrapper";
-    badgeDiv.innerHTML = `<img src="/labels/${match.badge}.svg" class="badge-image">`;
+    badgeDiv.innerHTML = `<img src="/img/labels/${match.badge}.svg" class="badge-image">`;
     userInfo.prepend(badgeDiv);
   }
 
