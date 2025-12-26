@@ -1377,7 +1377,13 @@ export async function initSwipeScreen() {
   // Загружаем пользователя и кандидатов
   await window.loadCandidates();
   window.setupSwipeControls && window.setupSwipeControls();
-  if (window.currentUser.is_pro) {
+    // Проверяем PRO статус с учетом срока действия (как в pro.js)
+    const now = Date.now();
+    const isPro = window.currentUser && 
+      (window.currentUser.is_pro === true || window.currentUser.is_pro === 'true' || window.currentUser.is_pro === 1) &&
+      window.currentUser.pro_end && 
+      new Date(window.currentUser.pro_end).getTime() > now;
+    if (isPro) {
     sendPush({ userId: window.currentUser.userId });
   }
   if (window.currentUser.needPhoto === 1) {
