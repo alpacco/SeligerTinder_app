@@ -174,20 +174,21 @@ def extract_data_if_needed():
             print(f"✅ [DATA] Найден архив в {search_dir}: {archive_path}")
             break
     
-    # Если архив найден в /tmp, перемещаем его в /data для сохранения
+    # Если архив найден в /tmp, КОПИРУЕМ его в /data для сохранения (не перемещаем!)
     if found_in_tmp and archive_path and data_base.exists():
         try:
             target_path = data_base / archive_path.name
             if not target_path.exists():
-                print(f"📦 [DATA] Перемещаем архив из /tmp в /data для сохранения...")
-                archive_path.rename(target_path)
+                print(f"📦 [DATA] Копируем архив из /tmp в /data для сохранения...")
+                import shutil
+                shutil.copy2(archive_path, target_path)
                 archive_path = target_path
-                print(f"✅ [DATA] Архив перемещен в /data: {archive_path}")
+                print(f"✅ [DATA] Архив скопирован в /data: {archive_path}")
             else:
                 print(f"✅ [DATA] Архив уже существует в /data, используем его")
                 archive_path = target_path
         except Exception as e:
-            print(f"⚠️ [DATA] Не удалось переместить архив в /data: {e}")
+            print(f"⚠️ [DATA] Не удалось скопировать архив в /data: {e}")
             # Продолжаем с архивом из /tmp
     
     if not archive_path:
@@ -220,12 +221,16 @@ def extract_data_if_needed():
             img_count = len(list(img_dir.rglob('*'))) if img_dir.exists() else 0
             print(f"✅ [DATA] Распаковано файлов в {IMAGES_DIR}: {img_count}")
         
-        # Удаляем архив после успешной распаковки
-        try:
-            archive_path.unlink()
-            print(f"✅ [DATA] Архив удален: {archive_path}")
-        except Exception as e:
-            print(f"⚠️ [DATA] Не удалось удалить архив: {e}")
+        # НЕ удаляем архив после распаковки - оставляем в /data для сохранения
+        # Удаляем только если архив в /tmp (временный)
+        if str(archive_path).startswith("/tmp/"):
+            try:
+                archive_path.unlink()
+                print(f"✅ [DATA] Временный архив удален из /tmp: {archive_path}")
+            except Exception as e:
+                print(f"⚠️ [DATA] Не удалось удалить временный архив: {e}")
+        else:
+            print(f"✅ [DATA] Архив сохранен в /data для будущего использования: {archive_path}")
             
     except Exception as e:
         print(f"❌ [DATA] Ошибка при распаковке данных: {e}")
