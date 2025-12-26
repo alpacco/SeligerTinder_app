@@ -114,29 +114,8 @@ export function fillCard(cardEl, data, options = {}) {
     renderCardPaginator(paginatorEl, validPhotos.length, parseInt(cardEl.dataset.photoIndex || '0', 10));
   }
 
-  // Переключение фото по клику
-  cardEl.onclick = () => {
-    const photos = JSON.parse(cardEl.dataset.photos || '[]');
-    if (photos.length < 2) return;
-    let currentIndex = parseInt(cardEl.dataset.photoIndex || '0', 10);
-    currentIndex = (currentIndex + 1) % photos.length;
-    cardEl.dataset.photoIndex = currentIndex;
-    const nextPhotoUrl = photos[currentIndex];
-    let nextFinalPhotoUrl;
-    if (nextPhotoUrl.startsWith('http') || nextPhotoUrl.startsWith('data:')) {
-      nextFinalPhotoUrl = nextPhotoUrl;
-    } else if (nextPhotoUrl.startsWith('/data/img/')) {
-      nextFinalPhotoUrl = nextPhotoUrl;
-    } else if (nextPhotoUrl === '/img/photo.svg') {
-      nextFinalPhotoUrl = nextPhotoUrl;
-    } else {
-      const filename = nextPhotoUrl.split('/').pop();
-      nextFinalPhotoUrl = `/data/img/${data.userId || data.id}/${filename}`;
-    }
-    cardEl.style.backgroundImage = `url('${nextFinalPhotoUrl}')`;
-    const paginatorEl = cardEl.querySelector('.paginator');
-    if (paginatorEl) renderCardPaginator(paginatorEl, photos.length, currentIndex);
-  };
+  // Переключение фото по клику обрабатывается в setupSwipeHandlers()
+  // Не устанавливаем onclick здесь, чтобы избежать конфликтов с обработчиками свайпа
 
   // Кнопка удаления мэтча (если нужно)
   if (options.showDeleteMatchBtn) {

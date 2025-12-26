@@ -1073,27 +1073,42 @@ export function cyclePhoto() {
 export function setupSwipeHandlers() {
   const singleCard = document.getElementById("singleCard");
   let isDragging = false, startX = 0, startY = 0, currentX = 0, currentY = 0;
+  let hasMoved = false; // Флаг, чтобы отличить клик от свайпа
   const maxDistance = 200, minFont = 64, maxFont = 128, threshold = 100;
   if (!singleCard) return;
-  singleCard.addEventListener("pointerdown", (e) => {
+  
+  // Удаляем старые обработчики, если они есть
+  const newCard = singleCard.cloneNode(true);
+  singleCard.parentNode.replaceChild(newCard, singleCard);
+  const card = document.getElementById("singleCard");
+  
+  card.addEventListener("pointerdown", (e) => {
     if (window.currentIndex >= window.candidates.length) return;
     isDragging = true;
+    hasMoved = false; // Сбрасываем флаг движения
     startX = e.clientX;
     startY = e.clientY;
     currentX = 0;
     currentY = 0;
-    singleCard.setPointerCapture(e.pointerId);
-    singleCard.style.transition = "none";
+    card.setPointerCapture(e.pointerId);
+    card.style.transition = "none";
   });
-  singleCard.addEventListener("pointermove", (e) => {
+  
+  card.addEventListener("pointermove", (e) => {
     if (!isDragging) return;
     currentX = e.clientX - startX;
     currentY = e.clientY - startY;
+    
+    // Если движение больше 5px, считаем это свайпом
+    if (Math.abs(currentX) > 5 || Math.abs(currentY) > 5) {
+      hasMoved = true;
+    }
+    
     const rot = (currentX / 200) * 20;
-    singleCard.style.transform = `translate(${currentX}px, ${currentY}px) rotate(${rot}deg)`;
-    singleCard.style.boxShadow = "0 8px 24px rgba(0,0,0,0.3)";
-    const likeB = singleCard.querySelector(".badge-like");
-    const nopeB = singleCard.querySelector(".badge-nope");
+    card.style.transform = `translate(${currentX}px, ${currentY}px) rotate(${rot}deg)`;
+    card.style.boxShadow = "0 8px 24px rgba(0,0,0,0.3)";
+    const likeB = card.querySelector(".badge-like");
+    const nopeB = card.querySelector(".badge-nope");
     let ratio = Math.min(Math.abs(currentX) / maxDistance, 1);
     let fontNow = minFont + (maxFont - minFont) * ratio;
     if (currentX > 0) {
@@ -1104,27 +1119,58 @@ export function setupSwipeHandlers() {
       if (likeB) { likeB.style.opacity = 0; likeB.style.fontSize = minFont + "px"; }
     }
   });
-  singleCard.addEventListener("pointerup", e => {
+  
+  card.addEventListener("pointerup", e => {
+    const wasDragging = isDragging;
     isDragging = false;
-    singleCard.releasePointerCapture(e.pointerId);
+    card.releasePointerCapture(e.pointerId);
     const distX = Math.abs(currentX), distY = Math.abs(currentY);
-    if (distX < 10 && distY < 10) {
-      window.cyclePhoto();
-    } else if (distX > threshold) {
-      const dir = currentX > 0 ? "right" : "left";
-      if (dir === "right") {
-        window.doLike();
-      } else {
-        window.doDislike();
-      }
-    } else {
-      // плавный возврат при неполном свайпе
-      singleCard.style.transition = "transform 0.3s ease";
-      singleCard.style.transform = "none";
-      singleCard.style.boxShadow = "0 2px 8px rgba(0,0,0,0.2)";
-      window.customHideBadges(singleCard);
+    
+    // Если это был просто клик (без движения) - переключаем фото
+    if (wasDragging && !hasMoved && distX < 10 && distY < 10) {
+      e.preventDefault();
+      e.stopPropagation();
+      window.cyclePhoto && window.cyclePhoto();
+      // Сбрасываем transform
+      card.style.transition = "transform 0.3s ease";
+      card.style.transform = "none";
+      card.style.boxShadow = "0 2px 8px rgba(0,0,0,0.2)";
+      window.customHideBadges && window.customHideBadges(card);
       currentX = 0;
       currentY = 0;
+      hasMoved = false;
+      return;
+    }
+    
+    // Если это был свайп
+    if (hasMoved && distX > threshold) {
+      const dir = currentX > 0 ? "right" : "left";
+      if (dir === "right") {
+        window.doLike && window.doLike();
+      } else {
+        window.doDislike && window.doDislike();
+      }
+    } else if (hasMoved) {
+      // плавный возврат при неполном свайпе
+      card.style.transition = "transform 0.3s ease";
+      card.style.transform = "none";
+      card.style.boxShadow = "0 2px 8px rgba(0,0,0,0.2)";
+      window.customHideBadges && window.customHideBadges(card);
+      currentX = 0;
+      currentY = 0;
+    }
+    
+    hasMoved = false;
+  });
+  
+  // Также добавляем обработчик click для переключения фото (на случай, если pointer events не работают)
+  card.addEventListener("click", (e) => {
+    // Проверяем, что это не был свайп (если hasMoved был true, значит это был свайп)
+    if (!hasMoved && Math.abs(currentX) < 10 && Math.abs(currentY) < 10) {
+      const photos = JSON.parse(card.dataset.photos || '[]');
+      if (photos.length >= 2) {
+        window.cyclePhoto && window.cyclePhoto();
+      }
     }
   });
 }
