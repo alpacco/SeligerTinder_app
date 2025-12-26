@@ -109,8 +109,9 @@ border: 0px;
 .button-footer-border-lg,
 .continue-button,
 .edit-cancel-button, .btn-main {
-  background-color: var(--color-white);
-  color: var(--color-red);
+  background-color: #fe5e5e;
+  color: var(--color-white);
+  opacity: 0.8;
 }
 
 .button-footer-border-lg,
@@ -376,7 +377,7 @@ flex: 1;
   height: var(--header-height, 80px);
     z-index: 10;
   background: transparent;
-  padding: 0 20px;
+  padding: 20px 20px 10px 20px;
   box-sizing: border-box;
 }
 
@@ -418,8 +419,8 @@ flex: 1;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0px 20px;
-
+    padding: 20px 20px 10px 20px;
+    box-sizing: border-box;
 }
 .common-header h2,
 .cards-header h2,
@@ -2173,7 +2174,7 @@ flex: 1;
     height: 80px;
     z-index: 10;
     box-sizing: border-box;
-    padding: 30px 20px;
+    padding: 20px 20px 10px 20px;
 
 }
 .header-main-row {
@@ -2206,6 +2207,7 @@ flex: 1;
   justify-self: end;
   min-width: auto;
   width: auto;
+  margin: 0;
 }
 .header-pro-info {
     min-width: 40px;
@@ -2215,18 +2217,16 @@ flex: 1;
     color: var(--color-white);
     background: var(--color-gold);
     border-radius: var(--radius-md);
-    padding: 10px 8px;
+    padding: 4px 8px;
     display: flex;
     align-items: center;
     justify-content: center;
-    height: 18px;
     box-shadow: 0 2px 8px rgba(0,0,0,0.04);
     align-self: center;
-    margin-left: auto;
     cursor: pointer;
     transition: background-color 0.2s ease;
     white-space: nowrap;
-
+    line-height: 1.2;
 }
 
 .header-pro-info:hover {
