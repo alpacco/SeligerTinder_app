@@ -1073,22 +1073,53 @@ async function refreshCurrentUser() {
 
 export async function loadCandidates() {
   const userId = window.currentUser?.userId;
-  console.log('[loadCandidates] userId:', userId);
+  const gender = window.currentUser?.gender;
+  console.log('[loadCandidates] userId:', userId, 'gender:', gender);
+  
+  if (!userId || !gender) {
+    console.warn('[loadCandidates] Недостаточно данных: userId или gender отсутствует');
+    window.candidates = [];
+    window.currentIndex = 0;
+    if (typeof updateSwipeScreen === 'function') updateSwipeScreen();
+    return;
+  }
+  
   try {
-    const url = `${window.API_URL}/candidates?userId=${userId}`;
+    // Определяем противоположный пол
+    const opposite = gender === "male" ? "female" : "male";
+    const url = `${window.API_URL}/candidates?userId=${userId}&oppositeGender=${opposite}`;
     console.log('[loadCandidates] fetch:', url);
     const resp = await fetch(url);
     const json = await resp.json();
     console.log('[loadCandidates] response:', json);
     if (!json || !json.success) {
       window.showToast && window.showToast('Ошибка загрузки кандидатов: ' + (json?.error || 'Неизвестная ошибка'));
+      window.candidates = [];
+      window.currentIndex = 0;
+      if (typeof updateSwipeScreen === 'function') updateSwipeScreen();
       return;
     }
-    window.candidates = json.candidates || [];
+    // Бэкенд возвращает данные в json.data, а не json.candidates
+    const candidates = json.data || [];
+    console.log('[loadCandidates] Загружено кандидатов:', candidates.length);
+    
+    // Фильтруем уже лайкнутых/дизлайкнутых (на всякий случай, хотя бэкенд уже фильтрует)
+    const liked = new Set((window.currentUser?.likes || []).map(String));
+    const disliked = new Set((window.currentUser?.dislikes || []).map(String));
+    const filtered = candidates.filter(c => 
+      !liked.has(String(c.id || c.userId)) && 
+      !disliked.has(String(c.id || c.userId))
+    );
+    
+    window.candidates = filtered;
     window.currentIndex = 0;
+    console.log('[loadCandidates] После фильтрации кандидатов:', filtered.length);
     if (typeof updateSwipeScreen === 'function') updateSwipeScreen();
   } catch (e) {
     console.error('[loadCandidates] error:', e);
+    window.candidates = [];
+    window.currentIndex = 0;
+    if (typeof updateSwipeScreen === 'function') updateSwipeScreen();
   }
 }
 
