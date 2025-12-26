@@ -28,7 +28,7 @@ from db_utils import db_get
 from config import (
     BOT_TOKEN, WEB_APP_URL, CORS_ORIGINS, LOCAL,
     RATE_LIMIT_PER_HOUR, RATE_LIMIT_PER_MINUTE,
-    IMAGES_DIR, PORT, DEBUG, ENVIRONMENT, LOG_LEVEL, MAX_FILE_SIZE
+    IMAGES_DIR, PORT, DEBUG, ENVIRONMENT, LOG_LEVEL, MAX_FILE_SIZE, DATA_BASE_DIR
 )
 
 load_dotenv()
@@ -44,6 +44,10 @@ async def lifespan(app: FastAPI):
     
     # Инициализация БД и проверки безопасности
     await init_app()
+    
+    # Распаковка данных из архива (если нужно)
+    from config import extract_data_if_needed
+    extract_data_if_needed()
     
     # Запуск бота
     print("=" * 70)
