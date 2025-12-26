@@ -50,8 +50,13 @@ export function showPreviousCandidate() {
 export function setupSwipeControls() {
   // ВАЖНО: Кнопки лайк/дизлайк уже есть в HTML footer, не создаем их здесь!
   // Эта функция создает только PRO-кнопки (Back, SuperLike) в cards-btns внутри footer
+  // И устанавливает обработчики для кнопок лайк/дизлайк
   const swipeScreen = document.getElementById("screen-swipe");
   if (!swipeScreen) return;
+  
+  // Устанавливаем обработчики для кнопок лайк/дизлайк
+  window.attachLikeHandler && window.attachLikeHandler();
+  window.attachDislikeHandler && window.attachDislikeHandler();
   
   // Кнопки лайк/дизлайк находятся в footer.cards-footer > .cards-btns
   // PRO-кнопки (Back, SuperLike) добавляются в тот же .cards-btns
@@ -340,6 +345,9 @@ export function showCandidate() {
   // Это нужно делать каждый раз, так как fillCard может пересоздавать элементы
   setTimeout(() => {
     window.setupSwipeHandlers && window.setupSwipeHandlers();
+    // Устанавливаем обработчики для кнопок лайк/дизлайк
+    window.attachLikeHandler && window.attachLikeHandler();
+    window.attachDislikeHandler && window.attachDislikeHandler();
   }, 0);
   
   // КРИТИЧНО: Принудительно сбрасываем кнопки к обычному состоянию для обычных кандидатов
@@ -944,6 +952,9 @@ export async function doLike() {
             window.currentUser.likes = window.currentUser.likes || [];
             window.currentUser.likes.push(topUserId);
             
+            // Обновляем данные пользователя после лайка
+            await refreshCurrentUser();
+            
             // Проверяем, есть ли взаимный лайк
             if (json.isMatch || ((candidate.id || candidate.userId) && (candidate.id || candidate.userId).startsWith('VALID_') && candidate.username)) {
 
@@ -1003,10 +1014,13 @@ export async function doDislike() {
     const candidate = window.candidates[idx];
     const url = `${window.API_URL}/dislike`;
     try {
-
-        sendDislike(window.currentUser.userId, topUserId);
-            window.currentUser.dislikes = window.currentUser.dislikes || [];
-            window.currentUser.dislikes.push(topUserId);
+        await sendDislike(window.currentUser.userId, topUserId);
+        window.currentUser.dislikes = window.currentUser.dislikes || [];
+        window.currentUser.dislikes.push(topUserId);
+        
+        // Обновляем данные пользователя после дизлайка
+        await refreshCurrentUser();
+        
         window.moveToNextCandidate && window.moveToNextCandidate('left');
     } catch (err) {
         console.error('❌ Ошибка дизлайка:', err);
