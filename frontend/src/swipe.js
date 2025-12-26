@@ -1,4 +1,8 @@
 // Модуль swipe.js: ВСЯ ЛОГИКА СВАЙПОВ, анимаций, обработчиков свайпов, кнопок и спец.событий
+// Версия модуля для отладки кэша
+const SWIPE_MODULE_VERSION = '2025-01-19-wave-btn-fix-v1';
+console.log('🔄 [CACHE] swipe.js загружен, версия:', SWIPE_MODULE_VERSION);
+console.log('🔄 [CACHE] Время загрузки:', new Date().toISOString());
 // Экспортируемые функции:
 // - showPreviousCandidate, setupSwipeControls, showCandidate, fillCard, shareInvite, customHideBadges, moveToNextCandidate
 // - onMutualLike, onSuperMatch, onSuperPending, onSuperRejected
