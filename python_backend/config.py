@@ -245,7 +245,41 @@ def extract_data_if_needed():
     try:
         import tarfile
         with tarfile.open(archive_path, 'r:gz') as tar:
-            tar.extractall(path=data_base)
+            # Проверяем структуру архива - если пути начинаются с 'data/', убираем этот префикс
+            members = tar.getmembers()
+            strip_prefix = False
+            
+            # Проверяем, все ли пути (кроме корня) начинаются с 'data/'
+            if members:
+                non_root_members = [m for m in members if m.name not in ('data/', './', 'data')]
+                if non_root_members and all(m.name.startswith('data/') for m in non_root_members):
+                    strip_prefix = True
+                    print(f"📦 [DATA] Обнаружен префикс 'data/' в архиве, убираем его при распаковке...")
+            
+            if strip_prefix:
+                # Извлекаем файлы с преобразованными путями (убираем префикс 'data/')
+                for member in members:
+                    if member.name.startswith('data/'):
+                        # Создаем новый путь без префикса 'data/'
+                        new_name = member.name[5:]  # Убираем 'data/' префикс
+                        target_path = data_base / new_name
+                        
+                        if member.isdir():
+                            # Создаем директорию
+                            target_path.mkdir(parents=True, exist_ok=True)
+                        elif member.isfile():
+                            # Извлекаем файл
+                            file_obj = tar.extractfile(member)
+                            if file_obj:
+                                target_path.parent.mkdir(parents=True, exist_ok=True)
+                                with open(target_path, 'wb') as f:
+                                    f.write(file_obj.read())
+                    elif member.name not in ('data/', './', 'data'):
+                        # Извлекаем как обычно (если не начинается с 'data/')
+                        tar.extract(member, path=data_base)
+            else:
+                # Обычная распаковка
+                tar.extractall(path=data_base)
         print(f"✅ [DATA] Данные успешно распакованы в {data_base}")
         
         # Проверяем результат
