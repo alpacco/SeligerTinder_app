@@ -1139,6 +1139,8 @@ export function setupSwipeHandlers() {
   const newCard = singleCard.cloneNode(true);
   singleCard.parentNode.replaceChild(newCard, singleCard);
   const card = document.getElementById("singleCard");
+  // Обновляем глобальную ссылку на карточку
+  window.singleCard = card;
   
   card.addEventListener("pointerdown", (e) => {
     if (window.currentIndex >= window.candidates.length) return;
