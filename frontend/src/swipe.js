@@ -329,6 +329,7 @@ export function customHideBadges(cardEl) {
 }
 
 export function moveToNextCandidate(direction = 'right') {
+  console.log('🔄 [moveToNextCandidate] Версия модуля:', SWIPE_MODULE_VERSION);
   // Удаляем кандидата только если это НЕ взаимный лайк
   if (!window._isBackAction && !window.inMutualMatch) {
     const currentCandidate = window.candidates[window.currentIndex];
@@ -425,7 +426,7 @@ export function moveToNextCandidate(direction = 'right') {
 }
 
 export function onMutualLike() {
-
+  console.log('🔄 [onMutualLike] Версия модуля:', SWIPE_MODULE_VERSION);
   window.updateMatchesCount && window.updateMatchesCount();
   window.inMutualMatch = true;
   
