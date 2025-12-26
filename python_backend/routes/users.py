@@ -261,6 +261,13 @@ async def get_candidates(
         liked = safe_json_parse(user_row.get("likes") if user_row else None, [])
         disliked = safe_json_parse(user_row.get("dislikes") if user_row else None, [])
         
+        # Преобразуем в строки для сравнения (userId может быть строкой или числом)
+        liked_ids = set(str(uid) for uid in liked)
+        disliked_ids = set(str(uid) for uid in disliked)
+        
+        print(f"[GET /api/candidates] userId={userId}, oppositeGender={oppositeGender}")
+        print(f"[GET /api/candidates] liked: {liked_ids}, disliked: {disliked_ids}")
+        
         # Получаем всех пользователей противоположного пола
         rows = await db_all(
             """SELECT userId, name, username, gender, bio, age, photo1, photo2, photo3, photoUrl, badge
@@ -269,8 +276,12 @@ async def get_candidates(
             [oppositeGender, userId]
         )
         
-        # Фильтруем лайкнутых/дизлайкнутых
-        filtered = [row for row in rows if row["userId"] not in liked and row["userId"] not in disliked]
+        print(f"[GET /api/candidates] Найдено пользователей в БД: {len(rows)}")
+        
+        # Фильтруем лайкнутых/дизлайкнутых (сравниваем как строки)
+        filtered = [row for row in rows if str(row["userId"]) not in liked_ids and str(row["userId"]) not in disliked_ids]
+        
+        print(f"[GET /api/candidates] После фильтрации: {len(filtered)}")
         
         # Обрабатываем каждого пользователя
         data = []
