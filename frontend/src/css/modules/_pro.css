@@ -294,12 +294,12 @@ body.is-pro .superlike-icon .st0 {
   color: var(--color-red);
 }
 
-/* PRO Swipe Buttons */
-.back-cnd-btn,
-.superlike_d,
-.dislike_d,
-.chat_s3,
-.like_d {
+/* PRO Swipe Buttons - только для PRO пользователей */
+body.is-pro .back-cnd-btn,
+body.is-pro .superlike_d,
+body.is-pro .dislike_d,
+body.is-pro .chat_s3,
+body.is-pro .like_d {
   position: relative;
   border: none;
   outline: none;
@@ -315,43 +315,43 @@ body.is-pro .superlike-icon .st0 {
   box-shadow: 0 0px 8px #171717;
 }
 
-.dislike_d,
-.chat_s3,
-.like_d {
+body.is-pro .dislike_d,
+body.is-pro .chat_s3,
+body.is-pro .like_d {
   width: 60px;
   height: 60px;
 }
 
-.back-cnd-btn,
-.superlike_d {
+body.is-pro .back-cnd-btn,
+body.is-pro .superlike_d {
   width: 50px;
   height: 50px;
 }
 
-.dislike_d {
+body.is-pro .dislike_d {
   background-color: var(--color-black_p);
 }
 
-.back-cnd-btn,
-.superlike_d,
-.dislike_d:active {
+body.is-pro .back-cnd-btn,
+body.is-pro .superlike_d,
+body.is-pro .dislike_d:active {
   background-color: var(--color-black_p);
 }
 
-.like_d {
+body.is-pro .like_d {
   background-color: var(--color-black_p);
 }
 
-.like_d:active {
+body.is-pro .like_d:active {
   background-color: var(--color-black_p);
 }
 
-.back-cnd-btn img,
-.dislike_d img,
-.like_d img,
-.match-gift-btn img,
-.superlike_d img,
-.delete-match-btn img {
+body.is-pro .back-cnd-btn img,
+body.is-pro .dislike_d img,
+body.is-pro .like_d img,
+body.is-pro .match-gift-btn img,
+body.is-pro .superlike_d img,
+body.is-pro .delete-match-btn img {
   width: var(--swipe-btn-icon-size);
   height: var(--swipe-btn-icon-size);
   object-fit: contain;
