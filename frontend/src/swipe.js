@@ -78,8 +78,11 @@ export function setupSwipeControls() {
   if (existingBackBtn) existingBackBtn.remove();
   if (existingSuperBtn) existingSuperBtn.remove();
   
+  // Проверяем, является ли пользователь PRO (проверяем как boolean и как строку)
+  const isPro = window.currentUser && (window.currentUser.is_pro === true || window.currentUser.is_pro === 'true' || window.currentUser.is_pro === 1);
+  
   // Back button for PRO users
-  if (window.currentUser.is_pro) {
+  if (isPro) {
     const backBtn = document.createElement("button");
     backBtn.className = "back-cnd-btn";
     backBtn.innerHTML = `<svg class="back-icon" width="36" height="36" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><g><path class="st0" d="M25,30.3L25,30.3c1-1,2.6-1,3.5,0L39,40.8c1,1,1,2.6,0,3.5l0,0c-1,1-2.6,1-3.5,0L25,33.8C24,32.8,24,31.2,25,30.3z"/><path class="st0" d="M25,30.2l10.5-10.5c1-1,2.6-1,3.5,0l0,0c1,1,1,2.6,0,3.5L28.5,33.7c-1,1-2.6,1-3.5,0l0,0C24,32.8,24,31.2,25,30.2z"/></g></svg>`;
@@ -96,7 +99,7 @@ export function setupSwipeControls() {
   }
   
   // Super-Like for PRO users
-  if (window.currentUser.is_pro) {
+  if (isPro) {
     const superBtn = document.createElement("button");
     superBtn.className = "superlike_d";
     superBtn.innerHTML = `<svg class="superlike-icon" width="36" height="36" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><g><path class="st0" d="M36.7,48.8c0-0.2,0.2-0.4,0.3-0.6c2.6-2.3,2.7-6.5,0.7-9.3c-0.8-1.2-1.9-2.1-3-3c-1.6-1.5-2.4-3.4-2.5-5.6c0-0.2,0-0.4-0.2-0.5c-0.2-0.1-0.3,0.1-0.4,0.3c-2,2.1-3.1,4.6-3.3,7.5c-0.1,0.8-0.1,1.6,0,2.4c0,0.3,0,0.3-0.3,0.2c-0.8-0.3-1.2-0.9-1.5-1.7c-0.1-0.2-0.1-0.6-0.4-0.7c-0.3,0-0.4,0.3-0.6,0.6c-0.5,0.9-0.8,2-0.9,3c-0.1,1.5,0,3,0.6,4.4c0.5,1.1,1.3,1.9,2.2,2.7c0.1,0.1,0.4,0.2,0.3,0.4c-0.1,0.3-0.4,0.1-0.6,0c-2.3-0.7-4.1-2-5.6-3.8c-1.9-2.4-2.7-5.1-2.5-8.2c0.2-1.7,0.7-3.2,1.6-4.7c1.6-2.5,3.4-4.9,5.5-7.1c1.3-1.4,2.3-2.9,2.9-4.7c0.6-2,0.5-4,0-6c-0.1-0.3-0.2-0.6-0.1-1c0.6,0.2,1.1,0.6,1.7,0.9c3.1,1.9,5.4,4.4,6.5,7.9c0.7,2,0.8,4,0.5,6.1C37.6,29,37.6,29,38,29c0.7-0.2,1.1-0.5,1.5-1.1c0.3-0.5,0.5-1,0.7-1.6c0.1-0.4,0.2-0.4,0.5-0.2c1.3,0.9,2.2,2.2,2.9,3.6c1.3,2.7,1.9,5.6,1.6,8.6c-0.4,4.3-2.5,7.5-6.1,9.8C38.3,48.6,37.5,48.9,36.7,48.8z"/></g></svg> <span id='superlike-count' class='superlike-count'>${window.currentUser.superLikesCount}</span>`;
@@ -398,8 +401,13 @@ export function showCandidate() {
   }
   
   // Для PRO показываем Back и SuperLike (если они были созданы)
-  if (window.currentUser.is_pro && !window.currentUser.needPhoto) {
+  // Для обычных пользователей скрываем PRO-кнопки
+  const isPro = window.currentUser && (window.currentUser.is_pro === true || window.currentUser.is_pro === 'true' || window.currentUser.is_pro === 1);
+  if (isPro && !window.currentUser.needPhoto) {
     document.querySelectorAll(".back-cnd-btn, .superlike_d").forEach(b => b.style.display = "flex");
+  } else {
+    // Скрываем PRO-кнопки для обычных пользователей
+    document.querySelectorAll(".back-cnd-btn, .superlike_d").forEach(b => b.style.display = "none");
   }
 }
 
