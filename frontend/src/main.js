@@ -162,7 +162,7 @@ showScreenImpl = showScreen;
   let candidates = [];
   let currentIndex = 0;
   let currentPhotoIndex = 0;
-  let inMutualMatch = false;
+  // УДАЛЕНО: локальная переменная inMutualMatch - используется window.inMutualMatch из swipe.js
   let viewingCandidate = null;
   // Экспортируем переменные в window для использования в swipe.js
   window.candidates = candidates;
@@ -831,7 +831,7 @@ if (profileEditBackBtn) {
 // (no stray END loadCandidates comment; ensure only one closing brace)
 
   async function doLike() {
-    if (inMutualMatch) {
+    if (window.inMutualMatch) {
       moveToNextCandidate();
       return;
     }
@@ -846,7 +846,7 @@ if (profileEditBackBtn) {
       });
       const json = await resp.json();
       if (json.success && json.mutual) {
-        onMutualLike();
+        window.onMutualLike && window.onMutualLike();
       } else {
         // Анимация улетающей карточки вправо
         singleCard.style.transition = "transform 0.5s ease";
@@ -864,7 +864,7 @@ if (profileEditBackBtn) {
   }
   // +++ Обработка свайпов: переход к следующему кандидату
   function moveToNextCandidate() {
-    if (inMutualMatch) {
+    if (window.inMutualMatch) {
       // Remove the matched candidate so it won't be shown again
       const idx = candidates.findIndex(c => String(c.id) === singleCard.dataset.userId);
       if (idx >= 0) {
@@ -872,7 +872,7 @@ if (profileEditBackBtn) {
         window.candidates = candidates;
       }
     }
-    inMutualMatch = false;
+    window.inMutualMatch = false;
     singleCard.style.transition = 'none';
     singleCard.style.transform = 'none';
     hideBadges(singleCard);
