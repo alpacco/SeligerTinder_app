@@ -145,8 +145,7 @@ LOG_DIR = os.getenv("LOG_DIR", f"{DATA_BASE_DIR}/log")
 GIFT_IMAGES_DIR = os.getenv("GIFT_IMAGES_DIR", f"{DATA_BASE_DIR}/giftimg")
 
 # Создаем директории если не существуют
-ARCHIVE_DIR = f"{DATA_BASE_DIR}/archive"  # Папка для архивов в Volume
-for directory in [IMAGES_DIR, LOG_DIR, GIFT_IMAGES_DIR, ARCHIVE_DIR]:
+for directory in [IMAGES_DIR, LOG_DIR, GIFT_IMAGES_DIR]:
     try:
         Path(directory).mkdir(parents=True, exist_ok=True)
         print(f"✅ Директория готова: {directory}")
@@ -158,10 +157,9 @@ def extract_data_if_needed():
     """Распаковывает данные из архива, если архив существует и директории пусты"""
     print("📦 [DATA] Проверка наличия архива данных...")
     data_base = Path(DATA_BASE_DIR)
-    archive_storage = Path(f"{DATA_BASE_DIR}/archive")  # Папка для архивов в Volume
     
-    # Ищем архив сначала в /data/archive (Volume, сохраняется), потом в /tmp (временный)
-    search_dirs = [archive_storage, Path("/tmp")]
+    # Ищем архив сначала в корне /data (Volume, сохраняется), потом в /tmp (временный)
+    search_dirs = [data_base, Path("/tmp")]
     archive_path = None
     found_in_tmp = False
     
@@ -176,26 +174,25 @@ def extract_data_if_needed():
             print(f"✅ [DATA] Найден архив в {search_dir}: {archive_path}")
             break
     
-    # Если архив найден в /tmp, КОПИРУЕМ его в /data/archive для сохранения
-    if found_in_tmp and archive_path:
+    # Если архив найден в /tmp, КОПИРУЕМ его в корень /data для сохранения
+    if found_in_tmp and archive_path and data_base.exists():
         try:
-            archive_storage.mkdir(parents=True, exist_ok=True)
-            target_path = archive_storage / archive_path.name
+            target_path = data_base / archive_path.name
             if not target_path.exists():
-                print(f"📦 [DATA] Копируем архив из /tmp в {archive_storage} для сохранения...")
+                print(f"📦 [DATA] Копируем архив из /tmp в корень /data для сохранения...")
                 import shutil
                 shutil.copy2(archive_path, target_path)
                 archive_path = target_path
-                print(f"✅ [DATA] Архив скопирован в {archive_storage}: {archive_path}")
+                print(f"✅ [DATA] Архив скопирован в /data: {archive_path}")
             else:
-                print(f"✅ [DATA] Архив уже существует в {archive_storage}, используем его")
+                print(f"✅ [DATA] Архив уже существует в /data, используем его")
                 archive_path = target_path
         except Exception as e:
-            print(f"⚠️ [DATA] Не удалось скопировать архив в {archive_storage}: {e}")
+            print(f"⚠️ [DATA] Не удалось скопировать архив в /data: {e}")
             # Продолжаем с архивом из /tmp
     
     if not archive_path:
-        print(f"⚠️ [DATA] Архивы данных не найдены в {archive_storage} и /tmp")
+        print(f"⚠️ [DATA] Архивы данных не найдены в /data и /tmp")
         return
     
     print(f"✅ [DATA] Архив найден: {archive_path} (размер: {archive_path.stat().st_size / 1024 / 1024:.2f} MB)")
@@ -224,7 +221,7 @@ def extract_data_if_needed():
             img_count = len(list(img_dir.rglob('*'))) if img_dir.exists() else 0
             print(f"✅ [DATA] Распаковано файлов в {IMAGES_DIR}: {img_count}")
         
-        # НЕ удаляем архив после распаковки - оставляем в /data/archive для сохранения
+        # НЕ удаляем архив после распаковки - оставляем в /data для сохранения
         # Удаляем только если архив в /tmp (временный)
         if str(archive_path).startswith("/tmp/"):
             try:
@@ -233,7 +230,7 @@ def extract_data_if_needed():
             except Exception as e:
                 print(f"⚠️ [DATA] Не удалось удалить временный архив: {e}")
         else:
-            print(f"✅ [DATA] Архив сохранен в {archive_storage} для будущего использования: {archive_path}")
+            print(f"✅ [DATA] Архив сохранен в /data для будущего использования: {archive_path}")
             
     except Exception as e:
         print(f"❌ [DATA] Ошибка при распаковке данных: {e}")
