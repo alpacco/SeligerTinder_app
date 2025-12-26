@@ -66,7 +66,9 @@ HTTP_MAX_REDIRECTS = int(os.getenv("HTTP_MAX_REDIRECTS", "5"))
 
 def find_railway_volume():
     """Автоматически находит Railway Volume и создает /data если нужно"""
-    print("🔍 [VOLUME] Начинаем поиск Railway Volume...")
+    import sys
+    print("🔍 [VOLUME] Начинаем поиск Railway Volume...", flush=True)
+    sys.stdout.flush()
     data_path = Path("/data")
     
     # Если /data уже существует, используем его
@@ -133,7 +135,9 @@ def find_railway_volume():
         return str(fallback_path)
 
 # Определяем базовый путь для данных
+print("📦 [CONFIG] Инициализация путей данных...", flush=True)
 DATA_BASE_DIR = find_railway_volume()
+print(f"📦 [CONFIG] Базовый путь данных: {DATA_BASE_DIR}", flush=True)
 
 # Пути для данных (можно переопределить через переменные окружения)
 IMAGES_DIR = os.getenv("IMAGES_DIR", f"{DATA_BASE_DIR}/img")
