@@ -361,41 +361,36 @@ export function onMutualLike() {
   window.updateMatchesCount && window.updateMatchesCount();
   window.inMutualMatch = true;
   
-  // Сохраняем текущего кандидата в истории для кнопки Back
+  // Сохраняем текущего кандидата - НЕ удаляем из массива сразу!
   const currentCandidate = window.candidates[window.currentIndex];
-  if (currentCandidate) {
-    window.swipeHistory.push({ candidate: currentCandidate, index: window.currentIndex });
-    // УДАЛЯЕМ кандидата из массива при взаимном лайке
-    window.candidates.splice(window.currentIndex, 1);
-    if (window.currentIndex >= window.candidates.length) {
-      window.currentIndex = 0;
-    }
+  if (!currentCandidate) {
+    console.warn('[onMutualLike] currentCandidate не найден!');
+    return;
   }
   
+  // Сохраняем кандидата в истории для кнопки Back
+  window.swipeHistory.push({ candidate: currentCandidate, index: window.currentIndex });
+  
   // Свайп-карточка улетает вправо
-
   window.singleCard.style.transition = "transform 0.5s ease";
   window.singleCard.style.transform = "translate(1000px, 0) rotate(45deg)";
   setTimeout(() => {
-    // Возврат в центр и подготовка
-
+    // Возврат в центр с ТЕМ ЖЕ кандидатом
     window.singleCard.style.transition = "transform 0.3s ease";
     window.singleCard.style.transform = "none";
     window.customHideBadges && window.customHideBadges(window.singleCard);
 
+    // Обновляем карточку с данными текущего кандидата (чтобы убедиться, что данные актуальны)
+    fillCard(window.singleCard, currentCandidate);
+
     // Анимация сердца
-
     const matchBadge = window.singleCard.querySelector(".badge-match");
-
     if (matchBadge) {
-
       matchBadge.innerHTML = "❤️‍🔥";
       matchBadge.style.opacity = "1";
       matchBadge.style.transform = "";
       matchBadge.classList.add("match-animation");
-
       matchBadge.addEventListener("animationend", () => {
-
         matchBadge.classList.remove("match-animation");
         matchBadge.style.opacity = "0";
       }, { once: true });
@@ -417,13 +412,20 @@ export function onMutualLike() {
       dislikeBtn.parentNode.replaceChild(btnClone, dislikeBtn);
       dislikeBtn = btnClone;
     }
-    const cand = window.candidates.find(c => String(c.id || c.userId) === window.singleCard.dataset.userId);
 
-    // Next
+    // Next - удаляем кандидата из массива только при нажатии
     if (likeBtn) {
       likeBtn.style.display = "flex";
       likeBtn.innerHTML = `<img class="next" src="/img/next.svg" alt="next" />`;
       likeBtn.onclick = () => {
+        // Удаляем кандидата из массива только сейчас
+        const idx = window.candidates.findIndex(c => String(c.id || c.userId) === String(currentCandidate.id || currentCandidate.userId));
+        if (idx >= 0) {
+          window.candidates.splice(idx, 1);
+          if (window.currentIndex >= window.candidates.length) {
+            window.currentIndex = 0;
+          }
+        }
         window.singleCard.style.transition = "transform 0.5s ease";
         window.singleCard.style.transform = "translate(1000px, 0) rotate(45deg)";
         setTimeout(() => {
@@ -433,16 +435,16 @@ export function onMutualLike() {
         }, 500);
       };
     }
-    // Chat / Wave (Chat button styled blue)
+    // Chat / Wave (Chat button styled blue) - используем сохраненного кандидата
     if (dislikeBtn) {
       dislikeBtn.style.display = "flex";
-      if (cand && cand.id && cand.id.startsWith('VALID_') && cand.username) {
+      if (currentCandidate && currentCandidate.id && currentCandidate.id.startsWith('VALID_') && currentCandidate.username) {
         dislikeBtn.classList.remove('wave-btn');
         dislikeBtn.classList.add('chat-btn');
         dislikeBtn.style.backgroundColor = "#55a6ff"; // голубой
         dislikeBtn.innerHTML = `<img class="chat" src="/img/chat.svg" alt="chat" />`;
         dislikeBtn.onclick = () => {
-          window.openChat && window.openChat(cand.username);
+          window.openChat && window.openChat(currentCandidate.username);
         };
       } else {
         // Для TEST_ пользователей или пользователей без username показываем Wave
@@ -454,7 +456,7 @@ export function onMutualLike() {
         dislikeBtn.onclick = async () => {
           const btn = dislikeBtn;
           try {
-            sendPush({ senderId: window.currentUser.userId, senderUsername: window.currentUser.username || window.currentUser.name, receiverId: cand.id || cand.userId });
+            sendPush({ senderId: window.currentUser.userId, senderUsername: window.currentUser.username || window.currentUser.name, receiverId: currentCandidate.id || currentCandidate.userId });
           } catch (err) {
             console.error("❌ /api/sendPush ошибка:", err);
           }
