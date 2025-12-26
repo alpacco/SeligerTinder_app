@@ -223,8 +223,9 @@ body.is-pro .superlike-icon .st0 {
   display: none;
 }
 
-#superlike-count,
-#matches-count {
+/* PRO стили для счетчиков - только для PRO пользователей */
+body.is-pro #superlike-count,
+body.is-pro #matches-count {
   position: absolute;
   display: inline-block;
   min-width: 20px;
@@ -239,13 +240,13 @@ body.is-pro .superlike-icon .st0 {
   border: 1px solid rgba(23, 21, 21, 0.697);
 }
 
-#superlike-count {
+body.is-pro #superlike-count {
   background: var(--color-black_p);
   top: -3px;
   right: -3px;
 }
 
-#matches-count {
+body.is-pro #matches-count {
   background: var(--color-red);
   top: -6px;
   right: -6px;
