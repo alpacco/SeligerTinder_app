@@ -64,13 +64,78 @@ HTTP_MAX_REDIRECTS = int(os.getenv("HTTP_MAX_REDIRECTS", "5"))
 
 # ========== ПУТИ ==========
 
+def find_railway_volume():
+    """Автоматически находит Railway Volume и создает /data если нужно"""
+    data_path = Path("/data")
+    
+    # Если /data уже существует, используем его
+    if data_path.exists():
+        return str(data_path)
+    
+    # Ищем Volume в стандартных местах Railway
+    possible_volume_paths = [
+        Path("/var/lib/containers/railwayapp/bind-mounts"),
+    ]
+    
+    for base_path in possible_volume_paths:
+        if not base_path.exists():
+            continue
+        
+        # Ищем директории с vol_ в названии
+        try:
+            for item in base_path.iterdir():
+                if item.is_dir():
+                    # Ищем vol_ директории внутри
+                    for subitem in item.iterdir():
+                        if subitem.is_dir() and "vol_" in subitem.name:
+                            volume_path = subitem
+                            print(f"🔍 Найден Railway Volume: {volume_path}")
+                            
+                            # Создаем /data как симлинк на Volume
+                            try:
+                                if not data_path.exists():
+                                    # Создаем родительскую директорию если нужно
+                                    data_path.parent.mkdir(parents=True, exist_ok=True)
+                                    # Создаем симлинк
+                                    import os
+                                    os.symlink(str(volume_path), str(data_path))
+                                    print(f"✅ Создан симлинк /data -> {volume_path}")
+                                    return str(data_path)
+                            except (OSError, PermissionError) as e:
+                                print(f"⚠️ Не удалось создать симлинк /data: {e}")
+                                # Используем путь Volume напрямую
+                                return str(volume_path)
+        except (PermissionError, OSError):
+            continue
+    
+    # Если Volume не найден, создаем /data локально
+    print("⚠️ Railway Volume не найден, создаем /data локально")
+    try:
+        data_path.mkdir(parents=True, exist_ok=True)
+        return str(data_path)
+    except (OSError, PermissionError) as e:
+        print(f"⚠️ Не удалось создать /data: {e}")
+        # Используем /tmp/data как fallback
+        fallback_path = Path("/tmp/data")
+        fallback_path.mkdir(parents=True, exist_ok=True)
+        print(f"⚠️ Используем fallback путь: {fallback_path}")
+        return str(fallback_path)
+
+# Определяем базовый путь для данных
+DATA_BASE_DIR = find_railway_volume()
+
 # Пути для данных (можно переопределить через переменные окружения)
-IMAGES_DIR = os.getenv("IMAGES_DIR", "/data/img")
-LOG_DIR = os.getenv("LOG_DIR", "/data/log")
+IMAGES_DIR = os.getenv("IMAGES_DIR", f"{DATA_BASE_DIR}/img")
+LOG_DIR = os.getenv("LOG_DIR", f"{DATA_BASE_DIR}/log")
+GIFT_IMAGES_DIR = os.getenv("GIFT_IMAGES_DIR", f"{DATA_BASE_DIR}/giftimg")
 
 # Создаем директории если не существуют
-for directory in [IMAGES_DIR, LOG_DIR]:
-    Path(directory).mkdir(parents=True, exist_ok=True)
+for directory in [IMAGES_DIR, LOG_DIR, GIFT_IMAGES_DIR]:
+    try:
+        Path(directory).mkdir(parents=True, exist_ok=True)
+        print(f"✅ Директория готова: {directory}")
+    except (OSError, PermissionError) as e:
+        print(f"⚠️ Не удалось создать директорию {directory}: {e}")
 
 # ========== CORS ==========
 
