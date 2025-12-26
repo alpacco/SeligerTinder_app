@@ -155,6 +155,59 @@ export function setupSwipeControls() {
 
 export function showCandidate() {
   console.log('🔄 [showCandidate] Версия модуля:', SWIPE_MODULE_VERSION);
+  console.log('🔄 [showCandidate] ВЫЗВАН showCandidate, время:', new Date().toISOString());
+  
+  // КРИТИЧНО: Сбрасываем кнопки ПЕРЕД всеми проверками
+  const dislikeBtn = document.querySelector(".dislike_d");
+  const likeBtn = document.querySelector(".like_d");
+  
+  if (dislikeBtn) {
+    const hadWaveBtn = dislikeBtn.classList.contains('wave-btn');
+    const hadChatBtn = dislikeBtn.classList.contains('chat-btn');
+    const hadWaveSvg = dislikeBtn.innerHTML.includes('wave.svg');
+    const hadChatSvg = dislikeBtn.innerHTML.includes('chat.svg');
+    
+    if (hadWaveBtn || hadChatBtn || hadWaveSvg || hadChatSvg) {
+      console.error('🚨 [showCandidate] КРИТИЧНО: Обнаружена кнопка "Помахать" в начале функции! Сбрасываем немедленно...', {
+        hadWaveBtn,
+        hadChatBtn,
+        hadWaveSvg,
+        hadChatSvg,
+        className: dislikeBtn.className,
+        innerHTML: dislikeBtn.innerHTML.substring(0, 100)
+      });
+      
+      // АГРЕССИВНЫЙ СБРОС
+      dislikeBtn.classList.remove('wave-btn', 'chat-btn');
+      dislikeBtn.className = 'dislike_d';
+      dislikeBtn.innerHTML = `<svg class="dislike-icon" width="36" height="36" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><rect class="st0" x="29.5" y="14.61" width="5" height="34.78" rx="2.5" ry="2.5" transform="translate(-13.25 32) rotate(-45)"/><rect class="st0" x="14.61" y="29.5" width="34.78" height="5" rx="2.5" ry="2.5" transform="translate(-13.25 32) rotate(-45)"/></svg>`;
+      dislikeBtn.style.backgroundColor = '';
+      dislikeBtn.style.fontSize = '';
+      dislikeBtn.onclick = null;
+      
+      console.log('✅ [showCandidate] Кнопка дизлайка сброшена в начале функции');
+    }
+  }
+  
+  if (likeBtn) {
+    if (likeBtn.innerHTML.includes('next.svg')) {
+      console.error('🚨 [showCandidate] КРИТИЧНО: Обнаружена кнопка "Next" в начале функции! Сбрасываем...');
+      likeBtn.classList.remove('nextMode');
+      likeBtn.className = 'like_d';
+      likeBtn.innerHTML = `<svg class="like-icon" width="36" height="36" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><path class="st0" d="M40.2,19.3c-5.1-0.5-7.5,2.5-8.2,3.5c-0.6-1-3.1-4-8.2-3.5c-5.4,0.6-10.8,7-5.7,15.6c4.2,6.9,13.6,11.9,13.9,12.1l0,0l0,0l0,0l0,0c0.2-0.1,9.7-5.1,13.9-12.1C51,26.3,45.6,19.9,40.2,19.3L40.2,19.3z"/></svg>`;
+      likeBtn.style.backgroundColor = '';
+      likeBtn.style.fontSize = '';
+      likeBtn.onclick = null;
+      console.log('✅ [showCandidate] Кнопка лайка сброшена в начале функции');
+    }
+  }
+  
+  // Сбрасываем флаг mutual match если он установлен
+  if (window.inMutualMatch) {
+    console.log('⚠️ [showCandidate] inMutualMatch был установлен, сбрасываем');
+    window.inMutualMatch = false;
+  }
+  
   // Экспортируем в глобальную область для использования в main.js
   window.showCandidateFromSwipe = showCandidate;
   const singleCard = document.getElementById("singleCard");
