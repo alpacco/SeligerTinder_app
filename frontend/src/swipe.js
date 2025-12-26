@@ -152,10 +152,17 @@ export function setupSwipeControls() {
 }
 
 export function showCandidate() {
+  console.log('🔄 [showCandidate] ВЫЗВАН, версия:', SWIPE_MODULE_VERSION);
   
   // КРИТИЧНО: Сбрасываем кнопки ПЕРЕД всеми проверками
   const dislikeBtn = document.querySelector(".dislike_d");
   const likeBtn = document.querySelector(".like_d");
+  
+  console.log('🔵 [showCandidate] Начало функции, кнопки найдены:', {
+    dislikeBtn: !!dislikeBtn,
+    likeBtn: !!likeBtn,
+    inMutualMatch: window.inMutualMatch
+  });
   
   if (dislikeBtn) {
     const hadWaveBtn = dislikeBtn.classList.contains('wave-btn');
@@ -458,6 +465,7 @@ export function moveToNextCandidate(direction = 'right') {
 }
 
 export function onMutualLike() {
+  console.log('🔄 [onMutualLike] ВЫЗВАН, версия:', SWIPE_MODULE_VERSION);
   window.updateMatchesCount && window.updateMatchesCount();
   window.inMutualMatch = true;
   
