@@ -158,16 +158,22 @@ def extract_data_if_needed():
     print("📦 [DATA] Проверка наличия архива данных...")
     data_base = Path(DATA_BASE_DIR)
     
-    # Ищем самый новый архив в /tmp
-    tmp_dir = Path("/tmp")
-    archives = sorted(tmp_dir.glob("data-backup-*.tar.gz"), key=lambda p: p.stat().st_mtime, reverse=True)
+    # Ищем архив сначала в /data (Volume, сохраняется), потом в /tmp (временный)
+    search_dirs = [Path(DATA_BASE_DIR), Path("/tmp")]
+    archive_path = None
     
-    if not archives:
-        print(f"⚠️ [DATA] Архивы данных не найдены в /tmp")
+    for search_dir in search_dirs:
+        if not search_dir.exists():
+            continue
+        archives = sorted(search_dir.glob("data-backup-*.tar.gz"), key=lambda p: p.stat().st_mtime, reverse=True)
+        if archives:
+            archive_path = archives[0]
+            print(f"✅ [DATA] Найден архив в {search_dir}: {archive_path}")
+            break
+    
+    if not archive_path:
+        print(f"⚠️ [DATA] Архивы данных не найдены в /data и /tmp")
         return
-    
-    archive_path = archives[0]
-    print(f"✅ [DATA] Найден архив: {archive_path}")
     
     print(f"✅ [DATA] Архив найден: {archive_path} (размер: {archive_path.stat().st_size / 1024 / 1024:.2f} MB)")
     
