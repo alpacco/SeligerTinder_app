@@ -560,54 +560,7 @@ if (profileEditBackBtn) {
   // ------------------- Обработка взаимного мэтча -------------------
   // УДАЛЕНО: локальная функция onMutualLike() - используется window.onMutualLike из swipe.js
   // Эта функция устанавливала кнопку "Помахать" без правильной проверки inMutualMatch
-
-      // Next
-      if (likeBtn) {
-        likeBtn.style.display = "flex";
-        likeBtn.innerHTML = `<img class="next" src="/img/next.svg" alt="next" />`;
-        likeBtn.onclick = () => {
-            moveToNextCandidate();
-        };
-      }
-      // Chat / Wave (Chat button styled blue)
-      if (dislikeBtn) {
-        dislikeBtn.style.display = "flex";
-        if (cand && cand.username) {
-          dislikeBtn.style.backgroundColor = "#55a6ff"; // голубой
-          dislikeBtn.innerHTML = `<img class="chat" src="/img/chat.svg" alt="chat" />`;
-          dislikeBtn.onclick = () => window.open(`https://t.me/${cand.username}`, "_blank");
-        } else {
-          dislikeBtn.innerHTML = "👋";
-          dislikeBtn.style.backgroundColor = "#ff5e5e";
-          dislikeBtn.style.fontSize = "36px";
-          dislikeBtn.onclick = async () => {
-            const btn = dislikeBtn;
-            try {
-              const resp = await fetch(`${API_URL}/sendPush`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                  senderId: currentUser.userId,
-                  senderUsername: currentUser.username || currentUser.name,
-                  receiverId: cand.id
-                })
-              });
-              const resJson = await resp.json();
-              if (resJson.success) {
-                btn.textContent = "👋";
-                btn.disabled = true;
-                btn.style.backgroundColor = "#ccc";
-              }
-            } catch (err) {
-              console.error("❌ /api/sendPush ошибка:", err);
-            }
-          };
-        }
-      }
-
-      updateMatchesCount();
-    }, 500);
-  }
+  // Все вызовы заменены на window.onMutualLike && window.onMutualLike()
 
   // Вспомогательная функция для кнопок «Пригласить», теперь везде одна
   function shareInvite() {
