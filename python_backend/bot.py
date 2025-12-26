@@ -495,6 +495,45 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await query.answer("❌ Ошибка: неверный формат команды", show_alert=True)
 
 
+async def web_app_data_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Обработчик данных от WebApp"""
+    if not update.message or not update.message.web_app_data:
+        return
+    
+    user_id = update.effective_user.id
+    data_str = update.message.web_app_data.data
+    
+    print(f"🔵 [BOT] Получены данные от WebApp: user_id={user_id}, data={data_str}")
+    
+    try:
+        import json
+        data = json.loads(data_str)
+        action = data.get("action")
+        
+        if action == "buy_pro_menu":
+            # Показываем меню с ценами PRO подписки
+            keyboard = InlineKeyboardMarkup([
+                [InlineKeyboardButton("7 дней - 100 ⭐", callback_data="buy_pro_7")],
+                [InlineKeyboardButton("30 дней - 350 ⭐", callback_data="buy_pro_30")],
+                [InlineKeyboardButton("90 дней - 900 ⭐", callback_data="buy_pro_90")],
+                [InlineKeyboardButton("Назад", callback_data="show_menu")]
+            ])
+            await update.message.reply_text(
+                "⭐ Выберите период PRO подписки:\n\n"
+                "✨ PRO функции:\n"
+                "• Неограниченные лайки\n"
+                "• Видеть, кто лайкнул вас\n"
+                "• Суперлайки\n"
+                "• Расширенная статистика",
+                reply_markup=keyboard
+            )
+            print(f"✅ [BOT] Меню покупки PRO отправлено пользователю {user_id}")
+    except json.JSONDecodeError:
+        print(f"⚠️ [BOT] Не удалось распарсить JSON данные от WebApp: {data_str}")
+    except Exception as e:
+        print(f"❌ [BOT] Ошибка обработки данных от WebApp: {e}")
+
+
 # Глобальная переменная для бота
 bot_application = None
 
@@ -598,6 +637,11 @@ def create_bot_application():
         print("  - Регистрация MessageHandler для successful_payment...")
         application.add_handler(MessageHandler(filters.SUCCESSFUL_PAYMENT, successful_payment_handler))
         print("✅ SuccessfulPaymentHandler зарегистрирован")
+        
+        # Регистрация обработчика данных от WebApp
+        print("  - Регистрация MessageHandler для WebApp данных...")
+        application.add_handler(MessageHandler(filters.StatusUpdate.WEB_APP_DATA, web_app_data_handler))
+        print("✅ WebAppDataHandler зарегистрирован")
         
         bot_application = application
         print("=" * 70)

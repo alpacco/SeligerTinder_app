@@ -65,16 +65,26 @@ function showProModal() {
   // Закрытие
   modal.querySelector('.pro-modal-close').onclick = hideProModal;
   modal.querySelector('.pro-modal-backdrop').onclick = hideProModal;
-  // Кнопка купить - закрываем приложение и возвращаемся в бота
+  // Кнопка купить - отправляем данные боту и закрываем приложение
   modal.querySelector('.pro-modal-buy').onclick = function() {
     // Закрываем модальное окно
     hideProModal();
     
     // Проверяем, доступен ли Telegram WebApp API
     if (window.Telegram && window.Telegram.WebApp) {
+      const tg = window.Telegram.WebApp;
+      
+      // Отправляем данные боту о том, что нужно показать меню покупки PRO
+      if (tg.sendData) {
+        tg.sendData(JSON.stringify({ action: "buy_pro_menu" }));
+        console.log("✅ [PRO Modal] Данные отправлены боту через sendData");
+      }
+      
       // Закрываем Web App и возвращаемся в бота
-      // Пользователь увидит меню бота с кнопкой "Купить PRO"
-      window.Telegram.WebApp.close();
+      // Бот получит данные и покажет меню с ценами
+      setTimeout(() => {
+        tg.close();
+      }, 100); // Небольшая задержка, чтобы данные успели отправиться
     } else {
       // Если WebApp API недоступен (например, в браузере), открываем ссылку на бота
       const botLink = 'https://t.me/SeligerTinderApp_bot';
