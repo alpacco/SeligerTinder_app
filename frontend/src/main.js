@@ -1598,10 +1598,19 @@ if (giftDetailBtn) {
     }
 
     /* ------------------- Поток инициализации ------------------- */
+    // КРИТИЧНО: Проверяем регистрацию ДО показа любого экрана
     (async function initFlow() {
       console.log("▶ initFlow()...");
       console.log("🔍 currentUser.userId:", currentUser.userId);
       
+      // Сначала скрываем все экраны (на случай, если какой-то был показан по умолчанию)
+      const allScreens = document.querySelectorAll('.screen');
+      allScreens.forEach(screen => {
+        screen.classList.remove('active');
+        screen.style.display = 'none';
+      });
+      
+      // Выполняем проверку регистрации
       const isReg = await checkIfRegistered();
       console.log("🔍 checkIfRegistered результат:", isReg);
       

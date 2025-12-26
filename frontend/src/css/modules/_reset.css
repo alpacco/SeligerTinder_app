@@ -30,8 +30,8 @@ body {
   overflow: hidden;
 }
 
-/* По умолчанию все экраны скрыты, кроме welcome */
-.screen:not(#screen-welcome) {
+/* По умолчанию все экраны скрыты */
+.screen {
   display: none;
 }
 
