@@ -1262,7 +1262,7 @@ export function updateSwipeScreen() {
 }
 
 // --- ДОБАВИТЬ: функция для обновления пользователя после изменений ---
-async function refreshCurrentUser() {
+export async function refreshCurrentUser() {
   try {
     const userId = window.currentUser?.userId;
     if (!userId) return;
