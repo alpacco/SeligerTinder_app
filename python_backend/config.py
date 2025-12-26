@@ -177,8 +177,9 @@ def extract_data_if_needed():
             break
     
     # Если архив найден в /tmp, КОПИРУЕМ его в /data/archive для сохранения
-    if found_in_tmp and archive_path and archive_storage.exists():
+    if found_in_tmp and archive_path:
         try:
+            archive_storage.mkdir(parents=True, exist_ok=True)
             target_path = archive_storage / archive_path.name
             if not target_path.exists():
                 print(f"📦 [DATA] Копируем архив из /tmp в {archive_storage} для сохранения...")
