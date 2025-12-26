@@ -435,10 +435,30 @@ export function moveToNextCandidate(direction = 'right') {
     }
     let dislikeBtn = document.querySelector(".dislike_d");
     if (dislikeBtn) {
+      // КРИТИЧНО: Проверяем, есть ли wave-btn или chat-btn перед сбросом
+      const hadWaveBtn = dislikeBtn.classList.contains('wave-btn');
+      const hadChatBtn = dislikeBtn.classList.contains('chat-btn');
+      const hadWaveSvg = dislikeBtn.innerHTML.includes('wave.svg');
+      const hadChatSvg = dislikeBtn.innerHTML.includes('chat.svg');
+      
+      if (hadWaveBtn || hadChatBtn || hadWaveSvg || hadChatSvg) {
+        console.error('🚨 [moveToNextCandidate transitionend] КРИТИЧНО: Обнаружена кнопка "Помахать" в transitionend! Сбрасываем...', {
+          hadWaveBtn,
+          hadChatBtn,
+          hadWaveSvg,
+          hadChatSvg,
+          className: dislikeBtn.className,
+          innerHTML: dislikeBtn.innerHTML.substring(0, 100)
+        });
+      }
+      
       // Полностью сбрасываем кнопку дизлайка - удаляем все классы (wave-btn, chat-btn и т.д.)
       dislikeBtn.innerHTML = `<svg class="dislike-icon" width="36" height="36" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><rect class="st0" x="29.5" y="14.61" width="5" height="34.78" rx="2.5" ry="2.5" transform="translate(-13.25 32) rotate(-45)"/><rect class="st0" x="14.61" y="29.5" width="34.78" height="5" rx="2.5" ry="2.5" transform="translate(-13.25 32) rotate(-45)"/></svg>`;
       dislikeBtn.onclick = null;
+      dislikeBtn.classList.remove('wave-btn', 'chat-btn'); // Явно удаляем классы
       dislikeBtn.className = 'dislike_d'; // Сброс всех классов (удаляем wave-btn, chat-btn и т.д.)
+      dislikeBtn.style.backgroundColor = '';
+      dislikeBtn.style.fontSize = '';
       dislikeBtn.style.backgroundColor = '';
       dislikeBtn.style.fontSize = '';
       dislikeBtn.style.display = 'flex';
