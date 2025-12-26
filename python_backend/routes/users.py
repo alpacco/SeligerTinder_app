@@ -251,13 +251,30 @@ async def get_candidates(
         raise HTTPException(status_code=400, detail="oppositeGender and userId required")
     
     try:
-        # Проверяем needPhoto текущего пользователя
-        user_row = await db_get('SELECT "needPhoto" FROM users WHERE "userId" = ?', [userId])
-        need_photo = user_row.get("needPhoto") if user_row else 0
-        # Преобразуем в число, если это строка
-        if isinstance(need_photo, str):
-            need_photo = int(need_photo) if need_photo.isdigit() else 0
-        print(f"[GET /api/candidates] needPhoto текущего пользователя: {need_photo}")
+        # Проверяем needPhoto текущего пользователя (как в get_user_frontend - проверяем наличие фото)
+        user_row = await db_get('SELECT "needPhoto", photo1, photo2, photo3, "photoUrl" FROM users WHERE "userId" = ?', [userId])
+        if not user_row:
+            return {"success": True, "data": []}
+        
+        # Проверяем наличие фотографий (как в get_user_frontend)
+        photos = []
+        if user_row.get("photo1"):
+            photos.append(user_row["photo1"])
+        if user_row.get("photo2"):
+            photos.append(user_row["photo2"])
+        if user_row.get("photo3"):
+            photos.append(user_row["photo3"])
+        
+        need_photo = user_row.get("needPhoto", 0)
+        if len(photos) > 0:
+            # Фильтруем дефолтные фото
+            valid_photos = [p for p in photos if p and p.strip() and p not in ["/img/logo.svg", "/img/avatar.svg", "/img/photo.svg"]]
+            if len(valid_photos) > 0:
+                need_photo = 0
+            else:
+                need_photo = 1
+        
+        print(f"[GET /api/candidates] needPhoto текущего пользователя (после проверки фото): {need_photo}")
         if need_photo == 1:
             print(f"[GET /api/candidates] Пользователь не имеет фото, возвращаем пустой массив")
             return {"success": True, "data": []}
