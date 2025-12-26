@@ -72,24 +72,32 @@ EOF
     PART_NUM=$((PART_NUM + 1))
 done
 
-# Объединяем части на Railway
+# Объединяем части на Railway в /data (Volume, сохраняется между перезапусками)
 echo ""
-echo "🔗 Объединение частей на Railway..."
+echo "🔗 Объединение частей на Railway в /data..."
 (cd "$PROJECT_DIR" && railway run --service "$SERVICE_NAME" bash -c "
-cd /tmp
+# Сначала пробуем /data, если не доступен - используем /tmp
+if [ -d /data ]; then
+    TARGET_DIR=/data
+    echo '✅ Используем /data (Volume, сохраняется между перезапусками)'
+else
+    TARGET_DIR=/tmp
+    echo '⚠️ /data недоступен, используем /tmp'
+fi
+cd \$TARGET_DIR
 ARCHIVE_NAME='$ARCHIVE_NAME'
-PARTS=\$(ls -1 part_* 2>/dev/null | sort)
+PARTS=\$(ls -1 /tmp/part_* 2>/dev/null | sort)
 if [ -z \"\$PARTS\" ]; then
     echo '❌ Части не найдены!'
     exit 1
 fi
 echo \"Найдено частей: \$(echo \"\$PARTS\" | wc -l)\"
-cat \$PARTS > \"\$ARCHIVE_NAME\"
-SIZE=\$(stat -f%z \"\$ARCHIVE_NAME\" 2>/dev/null || stat -c%s \"\$ARCHIVE_NAME\" 2>/dev/null)
+cat \$PARTS > \"\$TARGET_DIR/\$ARCHIVE_NAME\"
+SIZE=\$(stat -f%z \"\$TARGET_DIR/\$ARCHIVE_NAME\" 2>/dev/null || stat -c%s \"\$TARGET_DIR/\$ARCHIVE_NAME\" 2>/dev/null)
 echo \"Размер архива: \$SIZE байт\"
-rm -f part_*
-ls -lh \"\$ARCHIVE_NAME\"
-echo \"✅ Архив собран: /tmp/\$ARCHIVE_NAME\"
+rm -f /tmp/part_*
+ls -lh \"\$TARGET_DIR/\$ARCHIVE_NAME\"
+echo \"✅ Архив собран: \$TARGET_DIR/\$ARCHIVE_NAME\"
 ")
 
 # Удаляем временные файлы
@@ -98,6 +106,5 @@ rm -rf "$SPLIT_DIR"
 echo ""
 echo "✅ Архив загружен на Railway!"
 echo ""
-echo "Теперь распакуйте архив:"
-echo "  railway run --service $SERVICE_NAME --command 'cd /data && tar -xzf /tmp/$ARCHIVE_NAME && rm /tmp/$ARCHIVE_NAME'"
+echo "Архив сохранен в /data (Volume) и будет автоматически распакован при следующем деплое"
 
