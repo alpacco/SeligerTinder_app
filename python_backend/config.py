@@ -156,21 +156,18 @@ for directory in [IMAGES_DIR, LOG_DIR, GIFT_IMAGES_DIR]:
 def extract_data_if_needed():
     """Распаковывает данные из архива, если архив существует и директории пусты"""
     print("📦 [DATA] Проверка наличия архива данных...")
-    archive_path = Path("/tmp/data-backup-20251226-141714.tar.gz")
     data_base = Path(DATA_BASE_DIR)
     
-    # Проверяем, есть ли архив
-    if not archive_path.exists():
-        print(f"⚠️ [DATA] Архив не найден: {archive_path}")
-        # Проверяем другие возможные имена архивов
-        tmp_dir = Path("/tmp")
-        archives = list(tmp_dir.glob("data-backup-*.tar.gz"))
-        if archives:
-            archive_path = archives[0]
-            print(f"✅ [DATA] Найден архив: {archive_path}")
-        else:
-            print(f"⚠️ [DATA] Архивы данных не найдены в /tmp")
-            return
+    # Ищем самый новый архив в /tmp
+    tmp_dir = Path("/tmp")
+    archives = sorted(tmp_dir.glob("data-backup-*.tar.gz"), key=lambda p: p.stat().st_mtime, reverse=True)
+    
+    if not archives:
+        print(f"⚠️ [DATA] Архивы данных не найдены в /tmp")
+        return
+    
+    archive_path = archives[0]
+    print(f"✅ [DATA] Найден архив: {archive_path}")
     
     print(f"✅ [DATA] Архив найден: {archive_path} (размер: {archive_path.stat().st_size / 1024 / 1024:.2f} MB)")
     
