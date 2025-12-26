@@ -269,14 +269,17 @@ async def get_candidates(
         print(f"[GET /api/candidates] liked: {liked_ids}, disliked: {disliked_ids}")
         
         # Получаем всех пользователей противоположного пола
+        # Примечание: needPhoto может быть строкой или числом, поэтому используем CAST
         rows = await db_all(
-            """SELECT userId, name, username, gender, bio, age, photo1, photo2, photo3, photoUrl, badge
+            """SELECT "userId", name, username, gender, bio, age, photo1, photo2, photo3, "photoUrl", badge
                FROM users
-               WHERE gender = ? AND userId != ? AND blocked = 0 AND needPhoto = 0""",
+               WHERE gender = ? AND "userId" != ? AND blocked = 0 AND "needPhoto" = 0""",
             [oppositeGender, userId]
         )
         
         print(f"[GET /api/candidates] Найдено пользователей в БД: {len(rows)}")
+        if rows:
+            print(f"[GET /api/candidates] Пример первого пользователя: {rows[0]}")
         
         # Фильтруем лайкнутых/дизлайкнутых (сравниваем как строки)
         filtered = [row for row in rows if str(row["userId"]) not in liked_ids and str(row["userId"]) not in disliked_ids]
