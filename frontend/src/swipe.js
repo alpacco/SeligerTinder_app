@@ -1066,14 +1066,48 @@ export function customRenderPaginator(paginatorEl, count, activeIndex) {
 
 export function cyclePhoto() {
   const singleCard = document.getElementById("singleCard");
+  if (!singleCard) return;
+  
   const rawPhotos = singleCard.dataset.photos ? JSON.parse(singleCard.dataset.photos) : [];
-  if (rawPhotos.length < 2) return;
+  if (rawPhotos.length < 2) {
+    console.warn('[cyclePhoto] Меньше 2 фотографий, переключение невозможно');
+    return;
+  }
+  
+  // Инициализируем currentPhotoIndex если он не установлен
+  if (window.currentPhotoIndex === undefined || window.currentPhotoIndex === null) {
+    window.currentPhotoIndex = 0;
+  }
+  
+  // Переключаем на следующее фото
   window.currentPhotoIndex = (window.currentPhotoIndex + 1) % rawPhotos.length;
-  singleCard.style.backgroundImage = `url('${rawPhotos[window.currentPhotoIndex]}')`;
+  const nextPhotoUrl = rawPhotos[window.currentPhotoIndex];
+  
+  console.log('[cyclePhoto] Переключение фото:', {
+    index: window.currentPhotoIndex,
+    total: rawPhotos.length,
+    url: nextPhotoUrl
+  });
+  
+  if (!nextPhotoUrl) {
+    console.error('[cyclePhoto] Пустой URL для фото:', window.currentPhotoIndex);
+    return;
+  }
+  
+  // Устанавливаем новое фото
+  singleCard.style.backgroundImage = `url('${nextPhotoUrl}')`;
+  singleCard.style.backgroundSize = "cover";
+  singleCard.style.backgroundPosition = "center";
+  singleCard.style.backgroundRepeat = "no-repeat";
+  
+  // Обновляем пагинатор
   const paginatorEl = singleCard.querySelector(".paginator");
   if (paginatorEl) {
     customRenderPaginator(paginatorEl, rawPhotos.length, window.currentPhotoIndex);
   }
+  
+  // Обновляем dataset.photoIndex для совместимости
+  singleCard.dataset.photoIndex = window.currentPhotoIndex;
 }
 
 export function setupSwipeHandlers() {

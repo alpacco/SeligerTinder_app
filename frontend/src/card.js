@@ -16,19 +16,23 @@ export function fillCard(cardEl, data, options = {}) {
   // Универсальный рендер фото
   let validPhotos = (data.photos || []).filter(u => u && u.trim() !== "");
   if (validPhotos.length === 0) validPhotos = ["/img/photo.svg"];
-  const rawPhoto = validPhotos[0];
-  let finalPhotoUrl;
-  if (rawPhoto.startsWith('http') || rawPhoto.startsWith('data:')) {
-    finalPhotoUrl = rawPhoto;
-  } else if (rawPhoto.startsWith('/data/img/')) {
-    finalPhotoUrl = rawPhoto;
-  } else if (rawPhoto === '/img/photo.svg') {
-    // Заглушка для отсутствующих фото
-    finalPhotoUrl = rawPhoto;
-  } else {
-    const filename = rawPhoto.split('/').pop();
-    finalPhotoUrl = `/data/img/${data.userId || data.id}/${filename}`;
-  }
+  
+  // Нормализуем ВСЕ фотографии в массиве для правильного переключения
+  const normalizedPhotos = validPhotos.map(rawPhoto => {
+    if (rawPhoto.startsWith('http') || rawPhoto.startsWith('data:')) {
+      return rawPhoto;
+    } else if (rawPhoto.startsWith('/data/img/')) {
+      return rawPhoto;
+    } else if (rawPhoto === '/img/photo.svg') {
+      return rawPhoto;
+    } else {
+      // Если это только имя файла, формируем полный путь
+      const filename = rawPhoto.split('/').pop();
+      return `/data/img/${data.userId || data.id}/${filename}`;
+    }
+  });
+  
+  const finalPhotoUrl = normalizedPhotos[0];
   cardEl.style.position = "relative";
   cardEl.style.backgroundImage = `url(${finalPhotoUrl})`;
   cardEl.style.backgroundSize = "cover";
@@ -89,7 +93,8 @@ export function fillCard(cardEl, data, options = {}) {
     renderProfileFooter(cardEl.parentElement, data, options);
   }
 
-  cardEl.dataset.photos = JSON.stringify(validPhotos);
+  // Сохраняем нормализованные пути в dataset для правильного переключения
+  cardEl.dataset.photos = JSON.stringify(normalizedPhotos);
   cardEl.dataset.photoIndex = "0";
   cardEl.dataset.userId = data.userId || data.id;
 
