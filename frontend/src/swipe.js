@@ -1256,6 +1256,78 @@ function hideSwipeSkeleton() {
   }
 } 
 
+// КРИТИЧНО: Устанавливаем MutationObserver для отслеживания изменений кнопки "Помахать"
+function setupWaveButtonObserver() {
+  const observer = new MutationObserver((mutations) => {
+    const dislikeBtn = document.querySelector(".dislike_d");
+    if (dislikeBtn) {
+      const hasWaveBtn = dislikeBtn.classList.contains('wave-btn');
+      const hasChatBtn = dislikeBtn.classList.contains('chat-btn');
+      const hasWaveSvg = dislikeBtn.innerHTML.includes('wave.svg');
+      const hasChatSvg = dislikeBtn.innerHTML.includes('chat.svg');
+      
+      // Если кнопка "Помахать" появилась, но мы НЕ в mutual match режиме - сбрасываем
+      if ((hasWaveBtn || hasChatBtn || hasWaveSvg || hasChatSvg) && !window.inMutualMatch) {
+        console.error('🚨 [MutationObserver] КРИТИЧНО: Кнопка "Помахать" обнаружена, но inMutualMatch=false! Сбрасываем...', {
+          hasWaveBtn,
+          hasChatBtn,
+          hasWaveSvg,
+          hasChatSvg,
+          inMutualMatch: window.inMutualMatch
+        });
+        
+        // АГРЕССИВНЫЙ СБРОС
+        dislikeBtn.classList.remove('wave-btn', 'chat-btn');
+        dislikeBtn.className = 'dislike_d';
+        dislikeBtn.innerHTML = `<svg class="dislike-icon" width="36" height="36" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><rect class="st0" x="29.5" y="14.61" width="5" height="34.78" rx="2.5" ry="2.5" transform="translate(-13.25 32) rotate(-45)"/><rect class="st0" x="14.61" y="29.5" width="34.78" height="5" rx="2.5" ry="2.5" transform="translate(-13.25 32) rotate(-45)"/></svg>`;
+        dislikeBtn.style.backgroundColor = '';
+        dislikeBtn.style.fontSize = '';
+        dislikeBtn.onclick = null;
+      }
+    }
+  });
+  
+  // Наблюдаем за изменениями в DOM
+  const targetNode = document.body;
+  if (targetNode) {
+    observer.observe(targetNode, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['class', 'style']
+    });
+    console.log('✅ [MutationObserver] Наблюдатель за кнопкой "Помахать" установлен');
+  }
+}
+
+// Устанавливаем наблюдатель после загрузки DOM
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', setupWaveButtonObserver);
+} else {
+  setupWaveButtonObserver();
+}
+
+// Также устанавливаем периодическую проверку на всякий случай
+setInterval(() => {
+  const dislikeBtn = document.querySelector(".dislike_d");
+  if (dislikeBtn && !window.inMutualMatch) {
+    const hasWaveBtn = dislikeBtn.classList.contains('wave-btn');
+    const hasChatBtn = dislikeBtn.classList.contains('chat-btn');
+    const hasWaveSvg = dislikeBtn.innerHTML.includes('wave.svg');
+    const hasChatSvg = dislikeBtn.innerHTML.includes('chat.svg');
+    
+    if (hasWaveBtn || hasChatBtn || hasWaveSvg || hasChatSvg) {
+      console.error('🚨 [setInterval] КРИТИЧНО: Кнопка "Помахать" обнаружена в периодической проверке! Сбрасываем...');
+      dislikeBtn.classList.remove('wave-btn', 'chat-btn');
+      dislikeBtn.className = 'dislike_d';
+      dislikeBtn.innerHTML = `<svg class="dislike-icon" width="36" height="36" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><rect class="st0" x="29.5" y="14.61" width="5" height="34.78" rx="2.5" ry="2.5" transform="translate(-13.25 32) rotate(-45)"/><rect class="st0" x="14.61" y="29.5" width="34.78" height="5" rx="2.5" ry="2.5" transform="translate(-13.25 32) rotate(-45)"/></svg>`;
+      dislikeBtn.style.backgroundColor = '';
+      dislikeBtn.style.fontSize = '';
+      dislikeBtn.onclick = null;
+    }
+  }
+}, 100); // Проверяем каждые 100ms
+
 // Экспортируем все функции в window для глобального доступа
 window.showCandidate = showCandidate; 
 window.setupSwipeControls = setupSwipeControls;
