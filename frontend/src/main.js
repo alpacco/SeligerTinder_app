@@ -1123,16 +1123,7 @@ if (headerTitle) headerTitle.textContent = 'Ваш Match';
       });
     }
 
-    const giftBtn = document.getElementById("candidate-gift-btn");
-    if (giftBtn) {
-      const newGiftBtn = giftBtn.cloneNode(true);
-      giftBtn.parentNode.replaceChild(newGiftBtn, giftBtn);
-      
-      newGiftBtn.addEventListener("click", () => {
-        selectedCandidateId = match.id;
-        showGiftModal();
-      });
-    }
+    // Кнопка подарков удалена
   }
   // === Инициализация gift-modal as bottom sheet ===
   window.showGiftModal = function() {

@@ -827,14 +827,12 @@ export function renderProfileFooter(profileData, container) {
   if ((profileData.userId || profileData.id || '').startsWith('VALID_') && profileData.username && profileData.username.trim()) {
     footer.innerHTML = `
       <button id="candidate-write-btn" class="profile-button">Написать</button>
-      <button id="candidate-gift-btn" class="profile-button">Подарок</button>
     `;
   } else {
     const waveText = profileData.pushSent ? "Вы помахали" : "Помахать";
     const disabledAttr = profileData.pushSent ? "disabled" : "";
     footer.innerHTML = `
       <button id="candidate-wave-btn" class="profile-button" ${disabledAttr}>${waveText}</button>
-      <button id="candidate-gift-btn" class="profile-button">Подарок</button>
     `;
   }
 

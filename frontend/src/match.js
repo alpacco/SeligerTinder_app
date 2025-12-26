@@ -69,10 +69,8 @@ export async function renderMatches() {
       // Build main row with user info and actions in one line
       let actionsHTML = '';
       const candidateId = m.userId || m.id || "";
-      // Если суперлайк односторонний (pending) — только кнопка 'Подарок'
-      if (superLikeStatus === 'pending') {
-        actionsHTML += `<button class="match-gift-btn"><img src="/img/gift.svg" alt="Подарок"/></button>`;
-      } else {
+      // Кнопка подарков удалена
+      if (superLikeStatus !== 'pending') {
         // Кнопка НАПИСАТЬ только для VALID_ и username
         if (candidateId.startsWith('VALID_') && username) {
           actionsHTML += `<button class="match-write-btn">НАПИСАТЬ</button>`;
@@ -83,7 +81,6 @@ export async function renderMatches() {
             actionsHTML += `<button class="match-push-btn">ПОМAХАТЬ</button>`;
           }
         }
-        actionsHTML += `<button class="match-gift-btn"><img src="/img/gift.svg" alt="Подарок"/></button>`;
       }
       
       const mainRowHTML = `
