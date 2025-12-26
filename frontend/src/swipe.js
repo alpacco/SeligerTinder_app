@@ -165,6 +165,22 @@ export function showCandidate() {
     inMutualMatch: window.inMutualMatch
   });
   
+  // КРИТИЧНО: Проверяем кнопку ДО всех операций и логируем её состояние
+  if (dislikeBtn) {
+    const currentWaveBtn = dislikeBtn.classList.contains('wave-btn');
+    const currentChatBtn = dislikeBtn.classList.contains('chat-btn');
+    const currentWaveSvg = dislikeBtn.innerHTML.includes('wave.svg');
+    const currentChatSvg = dislikeBtn.innerHTML.includes('chat.svg');
+    console.log('🔵 [showCandidate] ТЕКУЩЕЕ состояние кнопки:', {
+      currentWaveBtn,
+      currentChatBtn,
+      currentWaveSvg,
+      currentChatSvg,
+      className: dislikeBtn.className,
+      innerHTML: dislikeBtn.innerHTML.substring(0, 150)
+    });
+  }
+  
   if (dislikeBtn) {
     const hadWaveBtn = dislikeBtn.classList.contains('wave-btn');
     const hadChatBtn = dislikeBtn.classList.contains('chat-btn');
