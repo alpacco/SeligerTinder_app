@@ -539,7 +539,10 @@ export function moveToNextCandidate(direction = 'right') {
     // Ensure buttons are visible
     document.querySelectorAll(".like_d, .dislike_d").forEach(b => b.style.display = 'flex');
     
-    // Показываем нового кандидата ПОСЛЕ сброса кнопок
+    // КРИТИЧНО: Показываем нового кандидата ПОСЛЕ сброса кнопок и переключения индекса
+    window.showCandidate && window.showCandidate();
+    window.setupSwipeHandlers && window.setupSwipeHandlers();
+    window.setupSwipeControls && window.setupSwipeControls();
     window.showCandidate && window.showCandidate();
   });
 }
