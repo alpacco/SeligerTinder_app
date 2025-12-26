@@ -1267,9 +1267,16 @@ export async function refreshCurrentUser() {
     const userId = window.currentUser?.userId;
     if (!userId) return;
     const updated = await window.getUser(userId);
-    if (updated && updated.success && updated.user) {
-      window.currentUser = updated.user;
+    if (updated && updated.success && updated.data) {
+      // Обновляем данные пользователя
+      const d = updated.data;
+      window.currentUser.likes = d.likes || window.currentUser.likes || [];
+      window.currentUser.dislikes = d.dislikes || window.currentUser.dislikes || [];
+      window.currentUser.matches = d.matches || window.currentUser.matches || [];
       if (typeof updateSwipeScreen === 'function') updateSwipeScreen();
+      
+      // Перезагружаем кандидатов, чтобы исключить уже лайкнутых/дизлайкнутых
+      await loadCandidates();
     }
   } catch (e) {
     console.error('Ошибка обновления пользователя:', e);
