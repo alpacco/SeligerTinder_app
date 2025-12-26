@@ -161,6 +161,7 @@ def extract_data_if_needed():
     # Ищем архив сначала в /data (Volume, сохраняется), потом в /tmp (временный)
     search_dirs = [Path(DATA_BASE_DIR), Path("/tmp")]
     archive_path = None
+    found_in_tmp = False
     
     for search_dir in search_dirs:
         if not search_dir.exists():
@@ -168,8 +169,26 @@ def extract_data_if_needed():
         archives = sorted(search_dir.glob("data-backup-*.tar.gz"), key=lambda p: p.stat().st_mtime, reverse=True)
         if archives:
             archive_path = archives[0]
+            if str(search_dir) == "/tmp":
+                found_in_tmp = True
             print(f"✅ [DATA] Найден архив в {search_dir}: {archive_path}")
             break
+    
+    # Если архив найден в /tmp, перемещаем его в /data для сохранения
+    if found_in_tmp and archive_path and data_base.exists():
+        try:
+            target_path = data_base / archive_path.name
+            if not target_path.exists():
+                print(f"📦 [DATA] Перемещаем архив из /tmp в /data для сохранения...")
+                archive_path.rename(target_path)
+                archive_path = target_path
+                print(f"✅ [DATA] Архив перемещен в /data: {archive_path}")
+            else:
+                print(f"✅ [DATA] Архив уже существует в /data, используем его")
+                archive_path = target_path
+        except Exception as e:
+            print(f"⚠️ [DATA] Не удалось переместить архив в /data: {e}")
+            # Продолжаем с архивом из /tmp
     
     if not archive_path:
         print(f"⚠️ [DATA] Архивы данных не найдены в /data и /tmp")
