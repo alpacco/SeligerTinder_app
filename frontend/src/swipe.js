@@ -1,7 +1,8 @@
 // Модуль swipe.js: ВСЯ ЛОГИКА СВАЙПОВ, анимаций, обработчиков свайпов, кнопок и спец.событий
 // Версия модуля для отладки кэша
-const SWIPE_MODULE_VERSION = '2025-01-19-wave-btn-fix-v1';
+const SWIPE_MODULE_VERSION = '2025-01-19-wave-btn-fix-v2';
 console.log('🔄 [CACHE] swipe.js загружен, версия:', SWIPE_MODULE_VERSION);
+console.log('🔄 [CACHE] swipe.js загружен, timestamp:', new Date().toISOString());
 // Экспортируемые функции:
 // - showPreviousCandidate, setupSwipeControls, showCandidate, fillCard, shareInvite, customHideBadges, moveToNextCandidate
 // - onMutualLike, onSuperMatch, onSuperPending, onSuperRejected
@@ -1330,23 +1331,46 @@ function setupWaveButtonObserver() {
 }
 
 // Устанавливаем наблюдатель после загрузки DOM
+console.log('🔵 [setupWaveButtonObserver] Инициализация, readyState:', document.readyState);
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', setupWaveButtonObserver);
+  console.log('🔵 [setupWaveButtonObserver] DOM еще загружается, ждем DOMContentLoaded');
+  document.addEventListener('DOMContentLoaded', () => {
+    console.log('🔵 [setupWaveButtonObserver] DOMContentLoaded, устанавливаем наблюдатель');
+    setupWaveButtonObserver();
+  });
 } else {
+  console.log('🔵 [setupWaveButtonObserver] DOM уже готов, устанавливаем наблюдатель сразу');
   setupWaveButtonObserver();
 }
 
 // Также устанавливаем периодическую проверку на всякий случай
-setInterval(() => {
+let checkCount = 0;
+const intervalId = setInterval(() => {
+  checkCount++;
   const dislikeBtn = document.querySelector(".dislike_d");
-  if (dislikeBtn && !window.inMutualMatch) {
+  if (dislikeBtn) {
     const hasWaveBtn = dislikeBtn.classList.contains('wave-btn');
     const hasChatBtn = dislikeBtn.classList.contains('chat-btn');
     const hasWaveSvg = dislikeBtn.innerHTML.includes('wave.svg');
     const hasChatSvg = dislikeBtn.innerHTML.includes('chat.svg');
+    const inMutualMatch = window.inMutualMatch;
     
-    if (hasWaveBtn || hasChatBtn || hasWaveSvg || hasChatSvg) {
-      console.error('🚨 [setInterval] КРИТИЧНО: Кнопка "Помахать" обнаружена в периодической проверке! Сбрасываем...');
+    // Логируем каждые 50 проверок (5 секунд)
+    if (checkCount % 50 === 0) {
+      console.log('🔵 [setInterval] Проверка #' + checkCount + ', кнопка найдена:', !!dislikeBtn, 'inMutualMatch:', inMutualMatch, 'hasWaveBtn:', hasWaveBtn, 'hasWaveSvg:', hasWaveSvg);
+    }
+    
+    if ((hasWaveBtn || hasChatBtn || hasWaveSvg || hasChatSvg) && !inMutualMatch) {
+      console.error('🚨 [setInterval] КРИТИЧНО: Кнопка "Помахать" обнаружена в периодической проверке! Сбрасываем...', {
+        checkCount,
+        hasWaveBtn,
+        hasChatBtn,
+        hasWaveSvg,
+        hasChatSvg,
+        inMutualMatch,
+        className: dislikeBtn.className,
+        innerHTML: dislikeBtn.innerHTML.substring(0, 100)
+      });
       dislikeBtn.classList.remove('wave-btn', 'chat-btn');
       dislikeBtn.className = 'dislike_d';
       dislikeBtn.innerHTML = `<svg class="dislike-icon" width="36" height="36" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><rect class="st0" x="29.5" y="14.61" width="5" height="34.78" rx="2.5" ry="2.5" transform="translate(-13.25 32) rotate(-45)"/><rect class="st0" x="14.61" y="29.5" width="34.78" height="5" rx="2.5" ry="2.5" transform="translate(-13.25 32) rotate(-45)"/></svg>`;
@@ -1356,6 +1380,7 @@ setInterval(() => {
     }
   }
 }, 100); // Проверяем каждые 100ms
+console.log('✅ [setInterval] Периодическая проверка установлена, intervalId:', intervalId);
 
 // Экспортируем все функции в window для глобального доступа
 window.showCandidate = showCandidate; 
