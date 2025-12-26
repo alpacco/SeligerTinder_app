@@ -78,8 +78,12 @@ export function setupSwipeControls() {
   if (existingBackBtn) existingBackBtn.remove();
   if (existingSuperBtn) existingSuperBtn.remove();
   
-  // Проверяем, является ли пользователь PRO (проверяем как boolean и как строку)
-  const isPro = window.currentUser && (window.currentUser.is_pro === true || window.currentUser.is_pro === 'true' || window.currentUser.is_pro === 1);
+  // Проверяем, является ли пользователь PRO (с учетом срока действия, как в pro.js)
+  const now = Date.now();
+  const isPro = window.currentUser && 
+    (window.currentUser.is_pro === true || window.currentUser.is_pro === 'true' || window.currentUser.is_pro === 1) &&
+    window.currentUser.pro_end && 
+    new Date(window.currentUser.pro_end).getTime() > now;
   
   // Back button for PRO users
   if (isPro) {
@@ -402,11 +406,16 @@ export function showCandidate() {
   
   // Для PRO показываем Back и SuperLike (если они были созданы)
   // Для обычных пользователей скрываем PRO-кнопки
-  const isPro = window.currentUser && (window.currentUser.is_pro === true || window.currentUser.is_pro === 'true' || window.currentUser.is_pro === 1);
+  // Используем ту же логику проверки, что и в pro.js (с учетом срока действия)
+  const now = Date.now();
+  const isPro = window.currentUser && 
+    (window.currentUser.is_pro === true || window.currentUser.is_pro === 'true' || window.currentUser.is_pro === 1) &&
+    window.currentUser.pro_end && 
+    new Date(window.currentUser.pro_end).getTime() > now;
   if (isPro && !window.currentUser.needPhoto) {
     document.querySelectorAll(".back-cnd-btn, .superlike_d").forEach(b => b.style.display = "flex");
   } else {
-    // Скрываем PRO-кнопки для обычных пользователей
+    // Скрываем PRO-кнопки для обычных пользователей или с истекшим сроком
     document.querySelectorAll(".back-cnd-btn, .superlike_d").forEach(b => b.style.display = "none");
   }
 }
