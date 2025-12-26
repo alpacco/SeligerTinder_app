@@ -16,9 +16,6 @@
 // ВАЖНО: версия должна быть СТАТИЧЕСКОЙ, иначе будет бесконечная перезагрузка!
 const APP_VERSION = '2025-01-19-wave-btn-fix-v1';
 console.log('🔄 [CACHE] main.js загружен, версия:', APP_VERSION);
-console.log('🔄 [CACHE] Время загрузки:', new Date().toISOString());
-console.log('🔄 [CACHE] Уникальный ID модуля:', Math.random().toString(36).substr(2, 9));
-console.log('🔄 [CACHE] Уникальный ID:', Math.random().toString(36).substr(2, 9));
 
 // Импортируем CSS (Vite обработает и скомпилирует)
 // CSS не собирается через Vite, загружается напрямую из /css/main.css
@@ -86,20 +83,11 @@ export let currentUser = {
   API_URL: API_URL
 };
 
-console.log("ℹ️ Изначальный currentUser:", currentUser);
 
 // Извлечение данных пользователя из Telegram
-console.log("🔍 tg объект:", tg);
-console.log("🔍 tg.initDataUnsafe:", tg?.initDataUnsafe);
-console.log("🔍 tg.initDataUnsafe.user:", tg?.initDataUnsafe?.user);
 
 if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
   const u = tg.initDataUnsafe.user;
-  console.log("ℹ️ tg.initDataUnsafe.user =", u);
-  console.log("🔍 u.id:", u.id, "тип:", typeof u.id);
-  console.log("🔍 u.first_name:", u.first_name, "тип:", typeof u.first_name);
-  console.log("🔍 u.username:", u.username, "тип:", typeof u.username);
-  console.log("🔍 u.photo_url:", u.photo_url, "тип:", typeof u.photo_url);
   
   currentUser.userId = String(u.id || "UserID");
   currentUser.name = u.first_name || "Username";
@@ -107,23 +95,16 @@ if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
   if (u.photo_url && u.photo_url.startsWith("http")) {
     currentUser.photoUrl = u.photo_url;
   }
-  console.log("✅ currentUser обновлён из tg.initDataUnsafe:", currentUser);
 } else {
   console.warn("⚠ Не получили initDataUnsafe.user — используем заглушку");
-  console.log("🔍 tg:", !!tg);
-  console.log("🔍 tg.initDataUnsafe:", !!tg?.initDataUnsafe);
-  console.log("🔍 tg.initDataUnsafe.user:", !!tg?.initDataUnsafe?.user);
 }
 
 // Устанавливаем window.currentUser и window.API_URL СРАЗУ (до DOMContentLoaded)
 // Это нужно для того, чтобы имя отображалось на главном экране и проверка регистрации работала
-console.log("🔵 [MAIN.JS] Устанавливаем window.currentUser и window.API_URL СРАЗУ...");
 window.currentUser = currentUser;
 window.API_URL = API_URL;
 window.API_BASE_URL = API_URL;
 window.WEB_APP_URL = WEB_APP_URL;
-console.log("  ✅ window.currentUser установлен:", window.currentUser);
-console.log("  ✅ window.API_URL установлен:", window.API_URL);
 
 // Обновляем имя на главном экране сразу, если DOM уже готов
 function updateWelcomeScreenName() {
@@ -158,9 +139,6 @@ function renderPaginator(paginatorEl, count, activeIndex) {
   }
 }
 
-console.log("🔵 [MAIN.JS] Скрипт main.js загружен (до DOMContentLoaded)");
-console.log("  - document.readyState:", document.readyState);
-console.log("  - window.API_URL:", window.API_URL);
 console.log("  - window.API_BASE_URL:", window.API_BASE_URL);
 
 // Функция инициализации, которая будет вызвана когда DOM готов
