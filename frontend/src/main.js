@@ -558,34 +558,8 @@ if (profileEditBackBtn) {
   // Все вызовы заменены на window.showCandidate()
 
   // ------------------- Обработка взаимного мэтча -------------------
-  function onMutualLike() {
-    inMutualMatch = true;
-    // Свайп-карточка улетает вправо
-    singleCard.style.transition = "transform 0.5s ease";
-    singleCard.style.transform = "translate(1000px, 0) rotate(45deg)";
-    setTimeout(() => {
-      // Возврат в центр и подготовка
-      singleCard.style.transition = "transform 0.3s ease";
-      singleCard.style.transform = "none";
-      hideBadges(singleCard);
-
-      // Анимация сердца
-      const matchBadge = singleCard.querySelector(".badge-match");
-      if (matchBadge) {
-        matchBadge.innerHTML = "❤️‍🔥";
-        matchBadge.style.opacity = "";
-        matchBadge.style.transform = "";
-        matchBadge.classList.add("match-animation");
-        matchBadge.addEventListener("animationend", () => {
-          matchBadge.classList.remove("match-animation");
-        }, { once: true });
-      }
-      if ("vibrate" in navigator) navigator.vibrate([50,30,80,30,110,30,150]);
-
-      // Кнопки swipe: like -> Next, dislike -> Chat/Wave
-      const likeBtn = document.querySelector(".like_d");
-      const dislikeBtn = document.querySelector(".dislike_d");
-      const cand = candidates.find(c => String(c.id) === singleCard.dataset.userId);
+  // УДАЛЕНО: локальная функция onMutualLike() - используется window.onMutualLike из swipe.js
+  // Эта функция устанавливала кнопку "Помахать" без правильной проверки inMutualMatch
 
       // Next
       if (likeBtn) {
