@@ -50,22 +50,62 @@
   <script>
     // КРИТИЧНО: Агрессивный сброс кнопки "Помахать" при загрузке страницы
     (function() {
+      let checkCount = 0;
       function resetWaveButton() {
+        checkCount++;
         const dislikeBtn = document.querySelector(".dislike_d");
         if (dislikeBtn) {
           const hasWaveBtn = dislikeBtn.classList.contains('wave-btn');
           const hasChatBtn = dislikeBtn.classList.contains('chat-btn');
           const hasWaveSvg = dislikeBtn.innerHTML.includes('wave.svg');
           const hasChatSvg = dislikeBtn.innerHTML.includes('chat.svg');
+          const hasWaveText = dislikeBtn.textContent && (dislikeBtn.textContent.includes('👋') || dislikeBtn.textContent.includes('Помахать'));
+          const hasWaveImg = dislikeBtn.querySelector('img[src*="wave"]') || dislikeBtn.querySelector('img[alt*="wave" i]');
+          const bgColor = window.getComputedStyle(dislikeBtn).backgroundColor;
+          const isRedBg = bgColor.includes('255, 94, 94') || bgColor.includes('rgb(255, 94, 94)') || bgColor.includes('#ff5e5e');
           
-          if (hasWaveBtn || hasChatBtn || hasWaveSvg || hasChatSvg) {
-            console.error('🚨 [INLINE] КРИТИЧНО: Кнопка "Помахать" обнаружена при загрузке! Сбрасываем...');
+          // Логируем каждые 100 проверок (5 секунд)
+          if (checkCount % 100 === 0) {
+            console.log('🔵 [INLINE] Проверка #' + checkCount, {
+              hasWaveBtn,
+              hasChatBtn,
+              hasWaveSvg,
+              hasChatSvg,
+              hasWaveText,
+              hasWaveImg: !!hasWaveImg,
+              isRedBg,
+              className: dislikeBtn.className,
+              innerHTML: dislikeBtn.innerHTML.substring(0, 100),
+              textContent: dislikeBtn.textContent,
+              backgroundColor: bgColor
+            });
+          }
+          
+          // Сбрасываем если найдено ЛЮБОЕ из условий
+          if (hasWaveBtn || hasChatBtn || hasWaveSvg || hasChatSvg || hasWaveText || hasWaveImg || (isRedBg && !window.inMutualMatch)) {
+            console.error('🚨 [INLINE] КРИТИЧНО: Кнопка "Помахать" обнаружена! Сбрасываем...', {
+              checkCount,
+              hasWaveBtn,
+              hasChatBtn,
+              hasWaveSvg,
+              hasChatSvg,
+              hasWaveText,
+              hasWaveImg: !!hasWaveImg,
+              isRedBg,
+              inMutualMatch: window.inMutualMatch
+            });
             dislikeBtn.classList.remove('wave-btn', 'chat-btn');
             dislikeBtn.className = 'dislike_d';
             dislikeBtn.innerHTML = `<svg class="dislike-icon" width="36" height="36" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><rect class="st0" x="29.5" y="14.61" width="5" height="34.78" rx="2.5" ry="2.5" transform="translate(-13.25 32) rotate(-45)"/><rect class="st0" x="14.61" y="29.5" width="34.78" height="5" rx="2.5" ry="2.5" transform="translate(-13.25 32) rotate(-45)"/></svg>`;
             dislikeBtn.style.backgroundColor = '';
             dislikeBtn.style.fontSize = '';
+            dislikeBtn.style.color = '';
+            dislikeBtn.textContent = '';
             dislikeBtn.onclick = null;
+            
+            // Удаляем все дочерние элементы с wave
+            const waveImgs = dislikeBtn.querySelectorAll('img[src*="wave"], img[alt*="wave" i]');
+            waveImgs.forEach(img => img.remove());
           }
         }
       }
@@ -79,6 +119,7 @@
       
       // Периодическая проверка каждые 50ms
       setInterval(resetWaveButton, 50);
+      console.log('✅ [INLINE] Агрессивный сброс кнопки "Помахать" установлен');
     })();
     
     // Версия приложения для обхода кэша Telegram
