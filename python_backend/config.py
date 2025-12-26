@@ -155,19 +155,32 @@ for directory in [IMAGES_DIR, LOG_DIR, GIFT_IMAGES_DIR]:
 # Автоматическая распаковка данных из архива, если архив существует и директории пусты
 def extract_data_if_needed():
     """Распаковывает данные из архива, если архив существует и директории пусты"""
+    print("📦 [DATA] Проверка наличия архива данных...")
     archive_path = Path("/tmp/data-backup-20251226-141714.tar.gz")
     data_base = Path(DATA_BASE_DIR)
     
     # Проверяем, есть ли архив
     if not archive_path.exists():
-        return
+        print(f"⚠️ [DATA] Архив не найден: {archive_path}")
+        # Проверяем другие возможные имена архивов
+        tmp_dir = Path("/tmp")
+        archives = list(tmp_dir.glob("data-backup-*.tar.gz"))
+        if archives:
+            archive_path = archives[0]
+            print(f"✅ [DATA] Найден архив: {archive_path}")
+        else:
+            print(f"⚠️ [DATA] Архивы данных не найдены в /tmp")
+            return
+    
+    print(f"✅ [DATA] Архив найден: {archive_path} (размер: {archive_path.stat().st_size / 1024 / 1024:.2f} MB)")
     
     # Проверяем, пусты ли директории
     img_dir = Path(IMAGES_DIR)
     has_images = img_dir.exists() and any(img_dir.iterdir())
     
     if has_images:
-        print(f"✅ [DATA] Данные уже распакованы в {DATA_BASE_DIR}")
+        img_count = sum(1 for _ in img_dir.rglob('*') if _.is_file())
+        print(f"✅ [DATA] Данные уже распакованы в {DATA_BASE_DIR} ({img_count} файлов в {IMAGES_DIR})")
         return
     
     print(f"📦 [DATA] Найден архив данных, начинаем распаковку...")
