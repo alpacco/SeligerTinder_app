@@ -928,7 +928,9 @@ export function moveToNextCandidate(direction = 'right') {
         e.stopPropagation();
         console.log('🔄 [moveToNextCandidate] Кнопка лайка нажата (из moveToNextCandidate)');
         if (!window.candidates || window.candidates.length === 0 || window.currentIndex >= window.candidates.length) {
-          window.showCandidate && window.showCandidate();
+          if (window.showCandidate) {
+            await window.showCandidate();
+          }
         } else {
           window.doLike && window.doLike();
         }
@@ -973,7 +975,9 @@ export function moveToNextCandidate(direction = 'right') {
         e.stopPropagation();
         console.log('🔄 [moveToNextCandidate] Кнопка дизлайка нажата (из moveToNextCandidate)');
         if (!window.candidates || window.candidates.length === 0 || window.currentIndex >= window.candidates.length) {
-          window.showCandidate && window.showCandidate();
+          if (window.showCandidate) {
+            await window.showCandidate();
+          }
         } else {
           window.doDislike && window.doDislike();
         }
