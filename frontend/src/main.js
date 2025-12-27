@@ -1334,133 +1334,17 @@ if (headerTitle) headerTitle.textContent = 'Ваш Match';
     }
     updateMatchesCount();
     // ------------------- Загрузка данных текущего пользователя -------------------
+    // Функция loadUserData теперь импортируется из user-actions.js
+    // Если она еще не загружена, используем временную заглушку
     async function loadUserData() {
-      if (isLocal) return;
-      try {
-        console.log(`🔵 [loadUserData] Загружаем данные для userId=${currentUser.userId}`);
-        const resp = await fetch(`${API_URL}/getUser?userId=${currentUser.userId}`);
-        console.log(`🔵 [loadUserData] Ответ получен, status=${resp.status}, statusText=${resp.statusText}`);
-        
-        // Проверяем статус ответа
-        if (!resp.ok) {
-          console.error(`❌ [loadUserData] HTTP ошибка: ${resp.status} ${resp.statusText}`);
-          return;
-        }
-        
-        // Проверяем, что ответ не пустой
-        const text = await resp.text();
-        console.log(`🔵 [loadUserData] Текст ответа получен, длина=${text.length}`);
-        
-        if (!text || text.trim() === '') {
-          console.warn("⚠️ loadUserData: пустой ответ от сервера");
-          return;
-        }
-        
-        let json;
-        try {
-          json = JSON.parse(text);
-          console.log(`✅ [loadUserData] JSON распарсен успешно, success=${json.success}`);
-        } catch (parseErr) {
-          console.error("❌ loadUserData: ошибка парсинга JSON:", parseErr);
-          console.error("  Ответ сервера (первые 500 символов):", text.substring(0, 500));
-          return;
-        }
-        
-        if (!json.success) {
-          console.warn(`⚠️ [loadUserData] json.success=false, error=${json.error || 'unknown'}`);
-          return;
-        }
-
-        const d = json.data;
-        currentUser.name     = d.name     || currentUser.name;
-        currentUser.username = d.username || currentUser.username;
-        currentUser.gender   = d.gender;
-        currentUser.bio      = d.bio      || currentUser.bio;
-        currentUser.age      = d.age      || currentUser.age;
-        // Используем массив photos из ответа, если он есть, иначе формируем из photo1, photo2, photo3
-        if (d.photos && Array.isArray(d.photos) && d.photos.length > 0) {
-          // Фильтруем дефолтные фото
-          currentUser.photos = d.photos.filter(photo => 
-            photo && photo.trim() && photo !== '/img/logo.svg' && photo !== '/img/avatar.svg'
-          );
-        } else {
-          // Fallback: формируем из photo1, photo2, photo3
-          currentUser.photos = [];
-          if (d.photo1 && d.photo1.trim() && d.photo1 !== '/img/logo.svg' && d.photo1 !== '/img/avatar.svg') {
-            currentUser.photos.push(d.photo1);
-          }
-          if (d.photo2 && d.photo2.trim() && d.photo2 !== '/img/logo.svg' && d.photo2 !== '/img/avatar.svg') {
-            currentUser.photos.push(d.photo2);
-          }
-          if (d.photo3 && d.photo3.trim() && d.photo3 !== '/img/logo.svg' && d.photo3 !== '/img/avatar.svg') {
-            currentUser.photos.push(d.photo3);
-          }
-        }
-        
-        // Если нет фото, используем photoUrl как fallback
-        if (currentUser.photos.length === 0) {
-          const fallbackUrl = d.photoUrl || "/img/logo.svg";
-          if (fallbackUrl && fallbackUrl !== '/img/logo.svg' && fallbackUrl !== '/img/avatar.svg') {
-            currentUser.photos.push(fallbackUrl);
-          }
-        }
-        
-        // Устанавливаем photoUrl из первого фото или из d.photoUrl
-        currentUser.photoUrl = currentUser.photos.length > 0 ? currentUser.photos[0] : (d.photoUrl || "/img/logo.svg");
-        
-        console.log(`✅ [loadUserData] photos загружены:`, currentUser.photos, `photoUrl:`, currentUser.photoUrl);
-        // Парсим likes и dislikes, если они строки, иначе используем как есть
-        try {
-          currentUser.likes = typeof d.likes === 'string' ? JSON.parse(d.likes || "[]") : (d.likes || []);
-        } catch (e) {
-          console.warn("⚠️ [loadUserData] Ошибка парсинга likes:", e);
-          currentUser.likes = [];
-        }
-        try {
-          currentUser.dislikes = typeof d.dislikes === 'string' ? JSON.parse(d.dislikes || "[]") : (d.dislikes || []);
-        } catch (e) {
-          console.warn("⚠️ [loadUserData] Ошибка парсинга dislikes:", e);
-          currentUser.dislikes = [];
-        }
-        currentUser.badge    = d.badge    || "";
-        currentUser.needPhoto = Number(d.needPhoto || 0);
-        currentUser.is_pro    = Number(d.is_pro) === 1;
-        currentUser.pro_end   = d.pro_end;
-        currentUser.hideAge   = Number(d.hideAge || 0) === 1;
-        
-        console.log(`✅ [loadUserData] Данные загружены: needPhoto=${currentUser.needPhoto}, hideAge=${currentUser.hideAge}, is_pro=${currentUser.is_pro}`);
-        
-        // Загружаем цели пользователя
-        try {
-          const goalsResp = await fetch(`${API_URL}/goals?userId=${currentUser.userId}`);
-          const goalsJson = await goalsResp.json();
-          if (goalsJson.success) {
-            currentUser.goals = goalsJson.goals || [];
-          } else {
-            currentUser.goals = [];
-          }
-        } catch (err) {
-          console.error("❌ Ошибка загрузки целей:", err);
-          currentUser.goals = [];
-        }
-        
-        // Обновляем window.currentUser после загрузки данных
-        window.currentUser = currentUser;
-        // Обновляем имя на главном экране
-        updateWelcomeScreenName();
-        
-        // Инициализируем PRO-функции
-        if (window.initProFeatures) {
-          window.initProFeatures(currentUser);
-        }
-        
-        // Убеждаемся, что renderProInfo вызывается для обновления header-pro-info
-        if (window.renderProInfo) {
-          window.renderProInfo(currentUser);
-        }
-      } catch (err) {
-        console.error("❌ loadUserData:", err);
+      // Если loadUserData уже импортирована из user-actions.js, используем её
+      if (window.loadUserData && window.loadUserData !== loadUserData) {
+        return await window.loadUserData();
       }
+      // Иначе ждем загрузки модуля
+      const module = await import('./user-actions.js');
+      window.loadUserData = module.loadUserData;
+      return await module.loadUserData();
     }
 
     /* ------------------- Поток инициализации ------------------- */
