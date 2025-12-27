@@ -1818,8 +1818,17 @@ export async function doDislike() {
         // Обновляем данные пользователя после дизлайка
         await refreshCurrentUser();
         
+        // КРИТИЧНО: Если мы были в истории, удаляем все элементы после текущей позиции
+        // Это нужно, чтобы при дизлайке после возврата история обновлялась правильно
+        if (window.swipeHistoryIndex >= 0) {
+            console.log('🔄 [doDislike] Обрезаем историю после индекса', window.swipeHistoryIndex, 'было элементов:', window.swipeHistory.length);
+            window.swipeHistory = window.swipeHistory.slice(0, window.swipeHistoryIndex + 1);
+            console.log('🔄 [doDislike] После обрезки элементов:', window.swipeHistory.length);
+        }
         // Сохраняем кандидата в истории с типом действия
         window.swipeHistory.push({ candidate: window.candidates[idx], index: idx, action: 'dislike' });
+        window.swipeHistoryIndex = -1; // Выходим из истории, так как переходим к новому кандидату
+        console.log('🔄 [doDislike] Добавили кандидата в историю, swipeHistory.length:', window.swipeHistory.length, 'swipeHistoryIndex:', window.swipeHistoryIndex);
         
         window.moveToNextCandidate && window.moveToNextCandidate('left');
     } catch (err) {
