@@ -101,34 +101,21 @@ async def superlike_user(data: SuperlikeRequest):
 
 @router.get("/likesReceived")
 async def get_likes_received(userId: str = Query(..., description="ID пользователя")):
-    """Получить список пользователей, которые лайкнули текущего пользователя"""
-    user_row = await db_get("SELECT likes FROM users WHERE userId = ?", [userId])
-    if not user_row:
-        return {"success": True, "likes": []}
-    
-    liked_by_user_ids = safe_json_parse(user_row.get("likes"), [])
-    if not liked_by_user_ids:
-        return {"success": True, "likes": []}
-    
-    # Получаем информацию о пользователях
-    placeholders = ",".join(["?"] * len(liked_by_user_ids))
-    sql = f"""
-        SELECT userId, username, photo1, photo2, photo3, bio, age, name
+    """Получить количество пользователей, которые лайкнули текущего пользователя"""
+    # Находим всех пользователей, у которых в likes есть userId текущего пользователя
+    # Используем JSONB оператор для поиска в массиве
+    sql = """
+        SELECT COUNT(*) as count
         FROM users
-        WHERE userId IN ({placeholders})
+        WHERE likes::jsonb ? ?
     """
-    rows = await db_all(sql, liked_by_user_ids)
+    result = await db_get(sql, [userId])
     
-    # Фильтруем только взаимные лайки
-    mutual_likes = []
-    for user in rows:
-        user_likes_row = await db_get("SELECT likes FROM users WHERE userId = ?", [user["userId"]])
-        if user_likes_row:
-            user_likes = safe_json_parse(user_likes_row.get("likes"), [])
-            if userId in user_likes:
-                mutual_likes.append(user)
+    if not result:
+        return {"success": True, "count": 0}
     
-    return {"success": True, "likes": mutual_likes}
+    count = result.get("count", 0)
+    return {"success": True, "count": count}
 
 
 @router.get("/likesMade")

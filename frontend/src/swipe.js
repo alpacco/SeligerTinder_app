@@ -427,10 +427,19 @@ export function showCandidate() {
     window.currentUser.pro_end && 
     new Date(window.currentUser.pro_end).getTime() > now;
   if (isPro && !window.currentUser.needPhoto) {
-    document.querySelectorAll(".back-cnd-btn, .superlike_d").forEach(b => b.style.display = "flex");
+    // Показываем PRO-кнопки для активных PRO пользователей
+    document.querySelectorAll(".back-cnd-btn, .superlike_d").forEach(b => {
+      if (b) {
+        b.style.display = "flex";
+      }
+    });
   } else {
     // Скрываем PRO-кнопки для обычных пользователей или с истекшим сроком
-    document.querySelectorAll(".back-cnd-btn, .superlike_d").forEach(b => b.style.display = "none");
+    document.querySelectorAll(".back-cnd-btn, .superlike_d").forEach(b => {
+      if (b) {
+        b.style.display = "none";
+      }
+    });
   }
 }
 
