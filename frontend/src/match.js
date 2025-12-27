@@ -38,6 +38,8 @@ function getAvatarUrl(match) {
  */
 export async function renderMatches() {
   console.log('[match.js] renderMatches called');
+  // Сбрасываем флаг при перерисовке списка мэтчей
+  resetCandidateProfileFlag();
   const matchesListEl = document.getElementById('matches-list');
   if (!matchesListEl) {
     return;
@@ -166,6 +168,13 @@ let isShowingCandidateProfile = false;
 let lastShownCandidateId = null;
 // Кэш для lastLogin, чтобы не делать повторные запросы
 const lastLoginCache = new Map();
+
+// Функция для сброса флага (вызывается при возврате на экран мэтчей)
+export function resetCandidateProfileFlag() {
+  isShowingCandidateProfile = false;
+  lastShownCandidateId = null;
+  console.log('[match.js] Флаг isShowingCandidateProfile сброшен');
+}
 
 export async function showCandidateProfile(match) {
   const candidateId = String(match?.id || match?.userId || '');
