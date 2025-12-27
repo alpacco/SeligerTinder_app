@@ -239,7 +239,7 @@ export async function showCandidateProfile(match) {
 
   // 2. ПОДГОТОВКА И РЕНДЕР DOM
   const profileScreen = document.getElementById('screen-profile');
-  const pic = document.getElementById("profileCard");
+  let pic = document.getElementById("profileCard");
   const userInfo = document.querySelector("#screen-profile .user-info");
   const headerTitle = document.querySelector('#screen-profile .profile-header h2');
   const nameEl = document.querySelector("#screen-profile .name-age-container .user-name");
@@ -542,19 +542,25 @@ export async function showCandidateProfile(match) {
     // Удаляем старый обработчик через клонирование
     const newPic = pic.cloneNode(true);
     pic.parentNode.replaceChild(newPic, pic);
-    pic = newPic;
+    // Получаем элемент заново после замены
+    pic = document.getElementById("profileCard");
   }
   
   // КРИТИЧНО: Инициализируем индекс фото из data-атрибута или 0
-  let candPhotoIndex = parseInt(pic?.dataset?.photoIndex || '0', 10);
-  if (isNaN(candPhotoIndex) || candPhotoIndex < 0 || candPhotoIndex >= photosArr.length) {
-    candPhotoIndex = 0;
+  // Сбрасываем индекс при смене кандидата
+  let candPhotoIndex = 0;
+  if (pic && pic.dataset.candidateId === candidateId) {
+    // Если это тот же кандидат, сохраняем индекс
+    candPhotoIndex = parseInt(pic.dataset.photoIndex || '0', 10);
+    if (isNaN(candPhotoIndex) || candPhotoIndex < 0 || candPhotoIndex >= photosArr.length) {
+      candPhotoIndex = 0;
+    }
   }
   
   // КРИТИЧНО: Сохраняем ID кандидата в data-атрибуте для проверки
   if (pic) {
     pic.dataset.candidateId = candidateId;
-    pic.dataset.photoIndex = candPhotoIndex;
+    pic.dataset.photoIndex = String(candPhotoIndex);
   }
   
   if (photosArr.length > 1) {
@@ -585,19 +591,34 @@ export async function showCandidateProfile(match) {
         
         // КРИТИЧНО: Получаем актуальные фото из window.viewingCandidate
         const currentMatch = window.viewingCandidate;
-        const currentPhotos = currentMatch?.photos || photosArr;
+        if (!currentMatch || !currentMatch.photos || currentMatch.photos.length === 0) {
+          console.warn('[match.js] ⚠️ Нет актуальных данных кандидата для переключения фото');
+          return;
+        }
+        const currentPhotos = currentMatch.photos;
+        
+        // КРИТИЧНО: Получаем элемент заново, чтобы убедиться, что это правильный элемент
+        const currentPic = document.getElementById("profileCard");
+        if (!currentPic || currentPic.dataset.candidateId !== currentCandidateId) {
+          console.warn('[match.js] ⚠️ Элемент фото не найден или кандидат изменился');
+          return;
+        }
         
         // Обновляем индекс
-        candPhotoIndex = (parseInt(pic.dataset.photoIndex || '0', 10) + 1) % currentPhotos.length;
-        pic.dataset.photoIndex = candPhotoIndex;
+        const currentIndex = parseInt(currentPic.dataset.photoIndex || '0', 10);
+        const nextIndex = (currentIndex + 1) % currentPhotos.length;
+        currentPic.dataset.photoIndex = String(nextIndex);
         
         // Обновляем фото
-        pic.style.backgroundImage = `url('${currentPhotos[candPhotoIndex]}?cb=${Date.now()}')`;
+        currentPic.style.backgroundImage = `url('${currentPhotos[nextIndex]}?cb=${Date.now()}')`;
         
         // Обновляем пагинатор при переключении фото
-        if (paginatorEl) {
-          customRenderPaginator(paginatorEl, currentPhotos.length, candPhotoIndex);
+        const currentPaginator = document.querySelector("#screen-profile .user-info .paginator");
+        if (currentPaginator) {
+          customRenderPaginator(currentPaginator, currentPhotos.length, nextIndex);
         }
+        
+        console.log('[match.js] ✅ Фото переключено на индекс', nextIndex, 'для кандидата', currentCandidateId);
       };
     }
   } else {
