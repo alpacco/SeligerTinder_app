@@ -371,6 +371,10 @@ export function showCandidate() {
     // Устанавливаем обработчики для кнопок лайк/дизлайк
     window.attachLikeHandler && window.attachLikeHandler();
     window.attachDislikeHandler && window.attachDislikeHandler();
+    
+    // КРИТИЧНО: Пересоздаем PRO-кнопки после показа кандидата
+    // Это нужно, так как кнопки могут быть удалены или скрыты
+    window.setupSwipeControls && window.setupSwipeControls();
   }, 0);
   
   // КРИТИЧНО: Принудительно сбрасываем кнопки к обычному состоянию для обычных кандидатов
