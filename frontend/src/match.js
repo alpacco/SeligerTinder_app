@@ -221,14 +221,24 @@ export async function showCandidateProfile(match) {
   }
   if (paginatorEl) paginatorEl.innerHTML = '';
   if (headerTitle) headerTitle.textContent = 'Ваш Match';
-  // ПОКАЗ LAST LOGIN для PRO-пользователей
-  if (window.currentUser.is_pro) {
+  // ПОКАЗ LAST LOGIN для PRO-пользователей (с учетом срока действия)
+  const now = Date.now();
+  const isProActive = window.currentUser && 
+    (window.currentUser.is_pro === true || window.currentUser.is_pro === 'true' || window.currentUser.is_pro === 1) &&
+    window.currentUser.pro_end && 
+    new Date(window.currentUser.pro_end).getTime() > now;
+  
+  if (isProActive) {
     const headerSelector = '#screen-profile .profile-header';
-    const userIdForLastLogin = window.viewingCandidate.id;
+    const userIdForLastLogin = window.viewingCandidate.id || window.viewingCandidate.userId;
     const header = document.querySelector(headerSelector);
     if (header) {
       const subRow = header.querySelector('.header-sub-row');
       if (subRow) {
+        // Удаляем старую статистику лайков, если она есть (чтобы не конфликтовала с last login)
+        const oldStats = subRow.querySelector('.profile-likes-stats');
+        if (oldStats) oldStats.remove();
+        
         const old = subRow.querySelector('.candidate-last-login');
         if (old) old.remove();
         const el = document.createElement('div');
@@ -263,6 +273,8 @@ export async function showCandidateProfile(match) {
             }
           })
           .catch(() => { el.textContent = '—'; });
+        } else {
+          el.textContent = '—';
         }
       }
     }
