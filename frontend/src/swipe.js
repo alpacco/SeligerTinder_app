@@ -741,12 +741,26 @@ export async function showCandidate() {
   
   // КРИТИЧНО: Показываем плашку "Мэтч 💯" СРАЗУ после fillCard
   // Плашка должна показываться ДО того, как пользователь взаимодействует с карточкой
-  // Используем двойной requestAnimationFrame для гарантии, что DOM полностью обновлен
-  requestAnimationFrame(() => {
-    requestAnimationFrame(async () => {
-      await showMatchBadgeIfLiked(singleCard, currentCandidate);
+  // Проверяем синхронно, если данные уже загружены, иначе ждем загрузки
+  if (isPro && window.likesReceivedList && window.likesReceivedList.size > 0) {
+    // Данные уже загружены - показываем плашку сразу
+    const candidateId = String(currentCandidate.id || currentCandidate.userId || '');
+    if (window.likesReceivedList.has(candidateId)) {
+      const badge = document.createElement('div');
+      badge.className = 'match-badge-pro';
+      badge.textContent = 'Мэтч 💯';
+      badge.style.cssText = 'position: absolute !important; top: 20px !important; right: 20px !important; background-color: #9f722f !important; color: #ffffff !important; padding: 8px 16px !important; border-radius: 20px !important; font-size: 14px !important; font-weight: bold !important; z-index: 10000 !important; box-shadow: none !important; display: flex !important; align-items: center !important; justify-content: center !important; visibility: visible !important; opacity: 0.9 !important; pointer-events: none !important;';
+      singleCard.appendChild(badge);
+      console.log('[swipe.js] ✅ Плашка "Мэтч 💯" добавлена СРАЗУ для кандидата:', candidateId);
+    }
+  } else {
+    // Данные еще не загружены - используем requestAnimationFrame
+    requestAnimationFrame(() => {
+      requestAnimationFrame(async () => {
+        await showMatchBadgeIfLiked(singleCard, currentCandidate);
+      });
     });
-  });
+  }
   
   singleCard.classList.remove("show-match", "returning");
   // Добавляю анимацию появления
