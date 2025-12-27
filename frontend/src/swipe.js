@@ -90,6 +90,19 @@ export async function showPreviousCandidate() {
     // Обновляем данные пользователя после отмены действия
     await refreshCurrentUser();
     
+    // КРИТИЧНО: Перезагружаем likesReceivedList, чтобы убедиться, что данные актуальны
+    // Плашка должна показываться, если кандидат поставил лайк ДО нашего действия
+    const now = Date.now();
+    const isPro = window.currentUser && 
+      (window.currentUser.is_pro === true || window.currentUser.is_pro === 'true' || window.currentUser.is_pro === 1) &&
+      window.currentUser.pro_end && 
+      new Date(window.currentUser.pro_end).getTime() > now;
+    
+    if (isPro) {
+      console.log('🔄 [showPreviousCandidate] Перезагружаем likesReceivedList для актуальных данных');
+      await loadLikesReceived();
+    }
+    
     // Вставляем кандидата обратно в массив
     window.candidates.splice(index, 0, candidate);
     window.currentIndex = index;
