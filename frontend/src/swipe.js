@@ -131,10 +131,12 @@ export async function showPreviousCandidate() {
     fillCard(singleCard, candidate);
     
     // Показываем плашку "Мэтч 💯" для PRO пользователей, если кандидат поставил лайк
-    // Вызываем с задержкой, чтобы убедиться, что likesReceivedList обновлен
-    setTimeout(() => {
-      window.showMatchBadgeIfLiked && window.showMatchBadgeIfLiked(singleCard, candidate);
-    }, 150);
+    // Вызываем с задержкой, чтобы убедиться, что likesReceivedList обновлен и карточка отрендерена
+    setTimeout(async () => {
+      if (window.showMatchBadgeIfLiked) {
+        await window.showMatchBadgeIfLiked(singleCard, candidate);
+      }
+    }, 250);
     
     // КРИТИЧНО: Сбрасываем флаг mutual match, если мы не в mutual match режиме
     // Это нужно, чтобы кнопки не оставались в режиме "Next" или "Помахать"
@@ -269,9 +271,12 @@ export async function showNextCandidate() {
     fillCard(singleCard, candidate);
     
     // Показываем плашку "Мэтч 💯" для PRO пользователей, если кандидат поставил лайк
-    setTimeout(() => {
-      window.showMatchBadgeIfLiked && window.showMatchBadgeIfLiked(singleCard, candidate);
-    }, 150);
+    // Вызываем с задержкой, чтобы убедиться, что likesReceivedList обновлен и карточка отрендерена
+    setTimeout(async () => {
+      if (window.showMatchBadgeIfLiked) {
+        await window.showMatchBadgeIfLiked(singleCard, candidate);
+      }
+    }, 250);
     
     // КРИТИЧНО: Сбрасываем флаг mutual match, если мы не в mutual match режиме
     // Это нужно, чтобы кнопки не оставались в режиме "Next" или "Помахать"
