@@ -58,6 +58,12 @@ body.is-pro .profile-button {
   border-radius: 60px !important;
 }
 
+/* Кнопка "Написать" должна быть синей даже в PRO режиме */
+body.is-pro #candidate-write-btn {
+  background-color: var(--color-blue) !important;
+  color: var(--color-white) !important;
+}
+
 body.is-pro .invite-button {
   color: var(--color-white) !important;
   background-color: var(--color-gray-dark-tr) !important;
