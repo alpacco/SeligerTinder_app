@@ -1386,54 +1386,36 @@ export async function onSuperPending() {
     // }, 500);
   } else {
   }
-  // Переходим к Next/Chat кнопкам
+  
+  // КРИТИЧНО: При pending НЕ показываем кнопки Next/Chat
+  // Кнопки Next/Chat должны появляться только при mutual match или super match
+  // При pending просто возвращаемся к обычному состоянию
+  // Сбрасываем кнопки к обычному состоянию
   let likeBtn = document.querySelector(".like_d");
   if (likeBtn) {
-    const btnClone = likeBtn.cloneNode(true);
-    likeBtn.parentNode.replaceChild(btnClone, likeBtn);
-    likeBtn = btnClone;
+    likeBtn.style.display = "flex";
+    likeBtn.innerHTML = `<svg class="like-icon" width="36" height="36" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><path class="st0" d="M40.2,19.3c-5.1-0.5-7.5,2.5-8.2,3.5c-0.6-1-3.1-4-8.2-3.5c-5.4,0.6-10.8,7-5.7,15.6c4.2,6.9,13.6,11.9,13.9,12.1l0,0l0,0l0,0l0,0c0.2-0.1,9.7-5.1,13.9-12.1C51,26.3,45.6,19.9,40.2,19.3L40.2,19.3z"/></svg>`;
+    likeBtn.className = 'like_d';
+    likeBtn.onclick = null;
+    // Восстанавливаем обработчик через attachLikeHandler
+    setTimeout(() => {
+      window.attachLikeHandler && window.attachLikeHandler();
+    }, 100);
   }
   let dislikeBtn = document.querySelector(".dislike_d");
   if (dislikeBtn) {
-    const btnClone = dislikeBtn.cloneNode(true);
-    dislikeBtn.parentNode.replaceChild(btnClone, dislikeBtn);
-    dislikeBtn = btnClone;
-  }
-  const cand = window.candidates?.find(c => String(c.id || c.userId) === window.singleCard?.dataset?.userId);
-  if (likeBtn) {
-    likeBtn.style.display = "flex";
-    likeBtn.innerHTML = `<img class="next" src="/img/next.svg" alt="next" />`;
-    likeBtn.onclick = () => {
-      window.singleCard.style.transition = "transform 0.5s ease";
-      window.singleCard.style.transform = "translate(1000px, 0) rotate(45deg)";
-      setTimeout(() => {
-        // УБИРАЕМ удаление кандидата отсюда - оно будет в moveToNextCandidate
-        // const idx = window.candidates?.findIndex(c => String(c.id || c.userId) === window.singleCard?.dataset?.userId);
-        // if (idx >= 0) {
-        //   window.swipeHistory?.push(window.candidates[idx]);
-        //   window.candidates.splice(idx, 1);
-        // }
-        window.singleCard.style.transition = "none";
-        window.singleCard.style.transform = "none";
-        window.customHideBadges && window.customHideBadges(window.singleCard);
-        window.moveToNextCandidate && window.moveToNextCandidate('right');
-        window.showCandidate && window.showCandidate();
-        window.setupSwipeControls && window.setupSwipeControls();
-        window.updateMatchesCount && window.updateMatchesCount();
-      }, 500);
-    };
-  }
-  if (dislikeBtn) {
     dislikeBtn.style.display = "flex";
-    if (cand && cand.username) {
-      dislikeBtn.style.backgroundColor = "#55a6ff";
-      dislikeBtn.innerHTML = `<img class="chat" src="/img/chat.svg" alt="chat" />`;
-      dislikeBtn.onclick = () => {
-        window.openChat && window.openChat(cand.username);
-      };
-    } else {
-      dislikeBtn.innerHTML = "\ud83d\udc4b";
-      dislikeBtn.style.backgroundColor = "#ff5e5e";
+    dislikeBtn.innerHTML = `<svg class="dislike-icon" width="36" height="36" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><rect class="st0" x="29.5" y="14.61" width="5" height="34.78" rx="2.5" ry="2.5" transform="translate(-13.25 32) rotate(-45)"/><rect class="st0" x="14.61" y="29.5" width="34.78" height="5" rx="2.5" ry="2.5" transform="translate(-13.25 32) rotate(-45)"/></svg>`;
+    dislikeBtn.className = 'dislike_d';
+    dislikeBtn.classList.remove('wave-btn', 'chat-btn');
+    dislikeBtn.style.backgroundColor = '';
+    dislikeBtn.style.fontSize = '';
+    dislikeBtn.onclick = null;
+    // Восстанавливаем обработчик через attachDislikeHandler
+    setTimeout(() => {
+      window.attachDislikeHandler && window.attachDislikeHandler();
+    }, 100);
+  }
       dislikeBtn.style.fontSize = "36px";
       dislikeBtn.onclick = async () => {
         try {
