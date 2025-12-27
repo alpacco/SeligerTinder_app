@@ -90,7 +90,8 @@ async def superlike_user(data: SuperlikeRequest):
     if not data.receiverId:
         raise HTTPException(status_code=400, detail="receiverId обязателен")
     
-    sender_row = await db_get("SELECT super_likes_count FROM users WHERE userId = ?", [data.senderId])
+    # В БД колонка называется superLikesCount (camelCase)!
+    sender_row = await db_get("SELECT \"superLikesCount\" FROM users WHERE \"userId\" = ?", [data.senderId])
     if not sender_row:
         raise HTTPException(status_code=404, detail="Отправитель не найден")
     

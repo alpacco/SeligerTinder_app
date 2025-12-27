@@ -118,14 +118,15 @@ async def get_user_frontend(userId: str = Query(..., description="ID польз�
                 print(f"[getUser] Ошибка проверки Pro срока для userId={userId}: {e}")
         
         # Формируем данные для фронтенда
-        super_likes_raw = row.get("super_likes_count")
-        super_likes_alt = row.get("superLikesCount")
-        super_likes_final = super_likes_raw if super_likes_raw is not None else (super_likes_alt if super_likes_alt is not None else 0)
-        print(f"[getUser] 🔵 super_likes_count для userId={userId}: raw={super_likes_raw}, alt={super_likes_alt}, final={super_likes_final}")
+        # В БД колонка называется superLikesCount (camelCase), не super_likes_count!
+        super_likes_camel = row.get("superLikesCount")
+        super_likes_snake = row.get("super_likes_count")
+        super_likes_final = super_likes_camel if super_likes_camel is not None else (super_likes_snake if super_likes_snake is not None else 0)
+        print(f"[getUser] 🔵 superLikesCount для userId={userId}: camel={super_likes_camel}, snake={super_likes_snake}, final={super_likes_final}")
         print(f"[getUser] 🔵 row keys: {list(row.keys())}")
-        print(f"[getUser] 🔵 'super_likes_count' in row: {'super_likes_count' in row}")
-        print(f"[getUser] 🔵 row.get('super_likes_count'): {row.get('super_likes_count')}")
-        print(f"[getUser] 🔵 type(row.get('super_likes_count')): {type(row.get('super_likes_count'))}")
+        print(f"[getUser] 🔵 'superLikesCount' in row: {'superLikesCount' in row}")
+        print(f"[getUser] 🔵 row.get('superLikesCount'): {row.get('superLikesCount')}")
+        print(f"[getUser] 🔵 type(row.get('superLikesCount')): {type(row.get('superLikesCount'))}")
         
         user_data = {
             "userId": row.get("userId"),
