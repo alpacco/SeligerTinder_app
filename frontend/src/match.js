@@ -4,7 +4,6 @@
 
 import { renderPaginator } from './utils.js';
 import { openChat, shareInvite, customRenderPaginator } from './swipe.js';
-import { showGiftModal, hideGiftModal, showToast, handleGiftOrder } from './gift.js';
 import { getMatches, sendPush, sendDislike, fetchGoals } from './api.js';
 import { renderProfileFooter } from './profile.js';
 import { renderCardGoals } from './card.js';
@@ -452,7 +451,6 @@ export async function showCandidateProfile(match) {
   });
 }
 
-// Все вызовы showGiftModal/hideGiftModal теперь через импортированные функции
 // Если есть логика заказа подарка или тостов — выношу в gift.js и импортирую здесь
 
 /**

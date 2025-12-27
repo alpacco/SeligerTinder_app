@@ -392,36 +392,6 @@
     </div>
   </div>
 
-<!-- Gift Modal -->
-<div class="gift-backdrop"></div>
-<div id="gift-modal" class="gift-modal">
-<div class="gift-modal-content">
-    <!-- Сюда добавляем верхний фиксированный блок -->
-    <div class="gift-modal-fixed-top">
-      <div class="gift-modal-header">
-        <h2 class="gift-modal-title">Подарки</h2>
-        <button id="gift-modal-close" class="gift-modal-close-btn">
-          <img src="/img/dislike.svg" alt="Закрыть" width="36" height="36" />
-        </button>
-      </div>
-      <p class="gift-modal-description">
-        Дарите эмоции в реальности! Выберите подарок, и мы передадим его от вашего имени
-      </p>
-    </div>
-
-  <!-- Скроллируемое тело -->
-  <div class="gift-modal-body">
-    <div class="gift-cards-container">
-      <p>Подарков пока нет.</p>
-    </div>
-  </div>
-
-  <!-- Фиксированная кнопка внизу -->
-  <div class="gift-modal-fixed-bottom">
-    <button id="gift-detail-btn" class="gift-detail-button">Узнать подробнее</button>
-  </div>
-  </div>
-</div>
     <!-- Модальное окно (pop-up) для PUSH -->
     <div class="tg-modal" id="tg-modal" style="display: none;">
       <div class="tg-modal-content">
@@ -473,7 +443,7 @@
           
           // Загружаем JS файлы с cache busting и обработкой ошибок
           const APP_VERSION = '2025-01-27-superlikes-lastlogin-fix-v1';
-          const scripts = ['main', 'profile', 'swipe', 'card', 'api', 'utils', 'gift', 'match', 'pro'];
+          const scripts = ['main', 'profile', 'swipe', 'card', 'api', 'utils', 'match', 'pro'];
           console.log('🔵 [INIT] Загрузка JS файлов...');
           console.log('🔄 [CACHE] Версия приложения:', APP_VERSION);
           
@@ -571,7 +541,7 @@
           
           // Загружаем JS файлы без hash (fallback с версией и обработкой ошибок)
           const APP_VERSION_FALLBACK = '2025-01-27-superlikes-lastlogin-fix-v1';
-          const scripts = ['main', 'profile', 'swipe', 'card', 'api', 'utils', 'gift', 'match', 'pro'];
+          const scripts = ['main', 'profile', 'swipe', 'card', 'api', 'utils', 'match', 'pro'];
           scripts.forEach(name => {
             const script = document.createElement('script');
             script.type = 'module';

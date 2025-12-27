@@ -232,35 +232,6 @@ flex: 1;
   cursor: default;
 }
 
-.match-gift-btn {
-  background: var(--color-red);
-  border: none;
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 8px;
-  max-width: 40px;
-  max-height: 40px;
-}
-
-.match-gift-btn .gift-icon {
-  display: block;
-  width: 34px;
-  height: 34px;
-  background: transparent;
-}
-
-.match-gift-btn .gift-icon .gift-body,
-.match-gift-btn .gift-icon .gift-bow,
-.match-gift-btn .gift-icon .gift-box-left,
-.match-gift-btn .gift-icon .gift-box-center,
-.match-gift-btn .gift-icon .gift-box-right {
-  fill: white;
-  stroke: white;
-}
-
 /* Кнопка «Написать» */
 #candidate-write-btn {
   background-color: var(--color-blue);
@@ -268,9 +239,8 @@ flex: 1;
   font-weight: bold;
 }
 
-/* Кнопка «Подарок» (акцентная, нейтральная) */
-#candidate-wave-btn,
-#candidate-gift-btn {
+/* Кнопка «Помахать» */
+#candidate-wave-btn {
   background-color: var(--color-red);
   color: var(--color-white);
   font-weight: bold;
@@ -576,7 +546,6 @@ flex: 1;
 .back-cnd-btn img,
 .dislike_d img,
 .like_d img,
-.match-gift-btn img,
 .superlike_d img, .delete-match-btn img {
   width: var(--swipe-btn-icon-size);
   height: var(--swipe-btn-icon-size);
@@ -1399,7 +1368,6 @@ flex: 1;
 
 .profile-actions button,
 .candidate-write-btn,
-.candidate-gift-btn,
 #candidate-wave-btn {
         flex: 1;
     height: 50px;
@@ -1411,199 +1379,6 @@ flex: 1;
 }    
 
 /* Screen 5: Profile name indent inside card */
-/* ========== Gift bottom-sheet and cards ========== */
-/* Header */
-.gift-modal-header {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-  padding: 30px;
-  z-index: 2;
-  width: 100%;
-  pointer-events: auto;
-  z-index: 3;
-}
-.gift-modal-header .gift-modal-title {
-  margin: 0;
-  font-size: var(--font-size-lg);
-  font-weight: bold;
-  text-align: center;
-  flex: 1;
-}
-.gift-modal-header .gift-modal-close-btn {
-  position: absolute;
-  top: 20px;
-  right: 20px;
-  width: 36px;
-  height: 36px;
-  background: var(--color-black-trl);
-  border: none;
-  border-radius: var(--radius-rd);
-  padding: 0;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  pointer-events: auto;
-  z-index: 4;
-}
-.gift-modal-description {
-  text-align: center;
-  font-size: var(--font-size-sm);
-  color: var(--color-gray-dark);
-  padding: 0 40px 20px;
-}
-/* Grid of gift cards */
-.gift-cards-container {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 16px;
-  padding: 110px 0px 10px;
-}
-.gift-card {
-  display: flex;
-  flex-direction: column;
-  background: var(--color-white);
-  border-radius: var(--radius-md);
-  overflow: hidden;
-  box-shadow: 0 0px 10px var(--color-black-trl);
-  cursor: pointer;
-}
-.gift-card-img {
-  width: 100%;
-  height: auto;
-  object-fit: cover;
-  border-top-left-radius: var(--radius-md);
-  border-top-right-radius: var(--radius-md);
-}
-
-/* Card body: description, price, order button */
-.gift-card-body {
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
-  align-items: center;
-  padding: 10px;
-}
-.gift-desc {
-  flex: 1;
-  margin: 0;
-  font-size: var(--font-size-sm);
-  color: var(--color-black);
-  padding: 10px 10px 0px 10px;
-}
-.gift-price {
-  margin-bottom: 10px;
-  align-content: center;
-  font-weight: bold;
-  color: var(--color-black);
-}
-.gift-order-btn {
-  padding: 4px 10px;
-  border: none;
-  background-color: var(--color-red);
-  color: var(--color-white);
-  border-radius: var(--radius-md);
-  font-size: var(--font-size-sm);
-  margin-bottom: 10px;
-  cursor: pointer;
-}
-/* Gift modal content */
-.gift-modal-content {
-  position: relative;
-  height: 100%;
-  width: 100%;
-  box-sizing: border-box;
-  overflow: hidden;
-}
-
-.gift-modal-fixed-top {
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 140px;
-  pointer-events: none;
-  z-index: 1;
-  position: absolute;
-  background: linear-gradient(to bottom, var(--color-white) 70%, var(--color-white) 100%);
-}
-.gift-modal-fixed-bottom {
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 120px;
-  pointer-events: none;
-  z-index: 1;
-  position: absolute;
- background: linear-gradient(to top, var(--color-white) 70%, var(--color-white) 100%);
-  text-align: center;
-}
-.gift-modal-body {
-  position: absolute;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  padding: 40px 20px 150px;
-  overflow-y: auto;
-  z-index: 0;
-}
-/* Detail button below cards */
-.gift-detail-button {
-  position: relative;
-  bottom: auto;
-  left: auto;
-  transform: none;
-  font-size: var(--font-size-sm);
-  font-weight: bold;
-  z-index: 3;
-  margin-top: 40px;
-  padding: 10px 30px;
-  background: transparent;
-  border: 1px solid var(--color-gray);
-  color: var(--color-gray-dark);
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  pointer-events: auto;
-}
-
-
-/* Modal sheet (bottom sheet) */
-.gift-modal {
-  position: fixed;
-  left: 0;
-  bottom: -90vh;
-  width: 100%;
-  height: 90vh;
-  max-height: 90vh;
-  background: var(--color-white); 
-  border-top-left-radius: var(--radius-lg);
-  border-top-right-radius: var(--radius-lg);
-  box-shadow: 0 -2px 20px var(--color-black-trl);
-  transition: bottom 0.3s ease;
-  overflow: hidden;
-  z-index: 2000;
-}
-.gift-modal.open {
-  bottom: 0;
-}
-.gift-backdrop {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0vh;
-  background: var(--color-black-tr);
-  opacity: 0;
-  transition: opacity 0.3s ease;
-  z-index: 1999;
-  pointer-events: none;
-}
-.gift-backdrop.open {
-  opacity: 1;
-  pointer-events: auto;
-}
 .match-card:last-child {
   border-bottom: none;
   margin-bottom: 0;
@@ -1736,8 +1511,7 @@ flex: 1;
 
 }
 .profile-footer button,
-#candidate-wave-btn,
-#candidate-gift-btn {
+#candidate-wave-btn {
   flex: 1;
   height: 50px;
   border: none;
@@ -1779,7 +1553,6 @@ flex: 1;
 .invite-button,
 .match-write-btn,
 .match-push-btn,
-.gift-order-btn,
 .profile-footer button,
 .edit-buttons-container button,
 .tg-modal-ok,
@@ -1802,8 +1575,7 @@ flex: 1;
 
 .edit-save-button,
 .add-btn,
-.match-push-btn,
-.gift-order-btn {
+.match-push-btn {
   background-color: var(--color-red);
   color: var(--color-white);
 }
@@ -1836,8 +1608,7 @@ flex: 1;
 .add-btn:hover,
 .btn-main:hover,
 .edit-save-button:hover,
-.match-push-btn:hover,
-.gift-order-btn:hover {
+.match-push-btn:hover {
   background-color: var(--color-red-light) !important;
   color: var(--color-white);
 }
@@ -1865,7 +1636,6 @@ flex: 1;
 .welcome-container,
 .center-container,
 .matches-container,
-.gift-modal-content,
 .tg-modal-content,
 .gender-content {
   width: 100%;

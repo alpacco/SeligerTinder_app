@@ -43,12 +43,7 @@ const FUNCTION_IDS = {
   // Модальные окна
   SHOW_TELEGRAM_MODAL: "showTelegramModal",
   HIDE_TELEGRAM_MODAL: "hideTelegramModal",
-  SHOW_GIFT_MODAL: "showGiftModal",
-  HIDE_GIFT_MODAL: "hideGiftModal",
   SHOW_TOAST: "showToast",
-
-  // Подарки
-  HANDLE_GIFT_ORDER: "handleGiftOrder",
 
   // Вспомогательные
 };

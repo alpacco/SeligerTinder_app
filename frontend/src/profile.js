@@ -27,7 +27,6 @@ import { updateProfile, saveGoals, fetchGoals, sendPush } from './api.js';
 import { renderPaginator } from './utils.js';
 import { fillCard, renderCardGoals } from './card.js';
 import { openChat } from './swipe.js';
-import { showGiftModal } from './gift.js';
 import { showProModal, initProModalHandlers } from './pro-modal.js';
 // Динамический импорт user-actions для избежания проблем с Vite
 let loadUserData, handlePhotoAddition;
