@@ -724,14 +724,23 @@ export async function showCandidate() {
     await loadLikesReceived();
   }
   
+  // КРИТИЧНО: Сохраняем плашку "Мэтч 💯" перед fillCard, если она есть
+  const existingBadge = singleCard.querySelector('.match-badge-pro');
+  const badgeData = existingBadge ? {
+    candidateId: String(currentCandidate.id || currentCandidate.userId || ''),
+    shouldShow: true
+  } : null;
+  
   fillCard(singleCard, { ...currentCandidate });
   
-  // Показываем плашку "Мэтч 💯" для PRO пользователей, если кандидат поставил лайк
-  // Вызываем с задержкой, чтобы убедиться, что карточка отрендерена
-  // И что likesReceivedList загружен
-  setTimeout(async () => {
-    await showMatchBadgeIfLiked(singleCard, currentCandidate);
-  }, 250);
+  // КРИТИЧНО: Показываем плашку "Мэтч 💯" СРАЗУ после fillCard
+  // Плашка должна показываться ДО того, как пользователь взаимодействует с карточкой
+  // Используем двойной requestAnimationFrame для гарантии, что DOM полностью обновлен
+  requestAnimationFrame(() => {
+    requestAnimationFrame(async () => {
+      await showMatchBadgeIfLiked(singleCard, currentCandidate);
+    });
+  });
   
   singleCard.classList.remove("show-match", "returning");
   // Добавляю анимацию появления
