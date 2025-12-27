@@ -103,11 +103,17 @@ function renderProLikesStats(currentUser) {
   const subRow = document.querySelector('.profile-header .header-sub-row');
   if (!subRow) return;
   
-  // Очищаем строку для всех пользователей
+  // Если просматриваем профиль кандидата - НЕ трогаем header-sub-row (там может быть last login)
+  if (window.viewingCandidate) {
+    console.log('[pro.js] Просматриваем профиль кандидата, не изменяем header-sub-row');
+    return;
+  }
+  
+  // Очищаем строку только если это НЕ профиль кандидата
   subRow.innerHTML = '';
   
-  // Если просматриваем профиль кандидата или пользователь не PRO - не показываем статистику
-  if (window.viewingCandidate || !currentUser.is_pro) {
+  // Если пользователь не PRO - не показываем статистику
+  if (!currentUser.is_pro) {
     return;
   }
   
