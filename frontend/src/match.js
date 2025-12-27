@@ -268,11 +268,13 @@ export async function showCandidateProfile(match) {
       console.log('[match.js] subRow найден:', !!subRow);
       if (subRow) {
         // Удаляем старую статистику лайков, если она есть (чтобы не конфликтовала с last login)
-        const oldStats = subRow.querySelector('.profile-likes-stats');
-        if (oldStats) {
-          console.log('[match.js] Удаляем старую статистику лайков');
-          oldStats.remove();
-        }
+        // ВАЖНО: Удаляем ВСЕ элементы статистики лайков из subRow
+        const allStats = subRow.querySelectorAll('.profile-likes-stats');
+        console.log('[match.js] Найдено элементов статистики лайков:', allStats.length);
+        allStats.forEach((stat, index) => {
+          console.log(`[match.js] Удаляем статистику лайков #${index + 1}`);
+          stat.remove();
+        });
         
         const old = subRow.querySelector('.candidate-last-login');
         if (old) {

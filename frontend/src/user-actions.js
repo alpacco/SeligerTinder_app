@@ -125,6 +125,11 @@ export async function loadUserData() {
     
     // Загружаем superLikesCount из БД - используем значение напрямую, без автоматического выделения
     const dbSuperLikes = Number(json.data.super_likes_count) || 0;
+    console.log("🔵 [loadUserData] ========== ЗАГРУЗКА СУПЕРЛАЙКОВ ==========");
+    console.log("🔵 [loadUserData] json.data.super_likes_count (raw):", json.data.super_likes_count);
+    console.log("🔵 [loadUserData] dbSuperLikes (parsed):", dbSuperLikes);
+    console.log("🔵 [loadUserData] d.super_likes_count:", d.super_likes_count);
+    
     currentUser.needPhoto = Number(d.needPhoto || 0);
     currentUser.is_pro = Number(d.is_pro) === 1;
     currentUser.pro_end = d.pro_end;
@@ -137,37 +142,42 @@ export async function loadUserData() {
     
     // ВАЖНО: Суперлайки выделяются только при покупке/выдаче PRO в БД
     // Используем значение из БД напрямую, но проверяем localStorage для актуального значения после использования
-    console.log("▶ [loadUserData] superLikesCount из БД:", dbSuperLikes);
-    
-    // Проверяем localStorage (там может быть более актуальное значение после использования суперлайка)
+    console.log("🔵 [loadUserData] Проверяем localStorage для superLikesCount");
     const stored = localStorage.getItem('superLikesCount');
+    console.log("🔵 [loadUserData] localStorage superLikesCount:", stored);
+    
     if (stored !== null) {
       const storedCount = parseInt(stored, 10);
+      console.log("🔵 [loadUserData] storedCount (parsed):", storedCount);
       if (!isNaN(storedCount) && storedCount >= 0) {
         // Используем значение из localStorage, если оно не больше значения из БД
         // (защита от манипуляций)
         if (storedCount <= dbSuperLikes) {
           currentUser.superLikesCount = storedCount;
-          console.log("▶ [loadUserData] SuperLikes из localStorage:", currentUser.superLikesCount);
+          console.log("✅ [loadUserData] SuperLikes из localStorage:", currentUser.superLikesCount);
         } else {
-          console.log("▶ [loadUserData] localStorage значение больше БД, используем БД:", dbSuperLikes);
+          console.log("⚠️ [loadUserData] localStorage значение больше БД, используем БД:", dbSuperLikes);
           currentUser.superLikesCount = dbSuperLikes;
           // Синхронизируем localStorage с БД
           localStorage.setItem('superLikesCount', String(dbSuperLikes));
         }
       } else {
+        console.log("⚠️ [loadUserData] storedCount невалидный, используем БД:", dbSuperLikes);
         currentUser.superLikesCount = dbSuperLikes;
       }
     } else {
       // Если localStorage пустой, используем значение из БД
+      console.log("✅ [loadUserData] localStorage пустой, используем БД:", dbSuperLikes);
       currentUser.superLikesCount = dbSuperLikes;
       // Синхронизируем localStorage с БД
       if (dbSuperLikes > 0) {
         localStorage.setItem('superLikesCount', String(dbSuperLikes));
+        console.log("✅ [loadUserData] Сохранили в localStorage:", dbSuperLikes);
       }
     }
     
-    console.log("▶ [loadUserData] Финальное значение superLikesCount:", currentUser.superLikesCount);
+    console.log("✅ [loadUserData] ФИНАЛЬНОЕ значение superLikesCount:", currentUser.superLikesCount);
+    console.log("🔵 [loadUserData] ========== КОНЕЦ ЗАГРУЗКИ СУПЕРЛАЙКОВ ==========");
     console.log("✅ [loadUserData] currentUser обновлён:", currentUser);
   } catch (err) {
     console.error("❌ [loadUserData] Ошибка:", err);
