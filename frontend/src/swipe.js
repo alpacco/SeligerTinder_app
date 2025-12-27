@@ -1416,16 +1416,6 @@ export async function onSuperPending() {
       window.attachDislikeHandler && window.attachDislikeHandler();
     }, 100);
   }
-      dislikeBtn.style.fontSize = "36px";
-      dislikeBtn.onclick = async () => {
-        try {
-          sendPush({ senderId: window.currentUser.userId, senderUsername: window.currentUser.username || window.currentUser.name, receiverId: cand.id || cand.userId });
-        } catch (err) {
-          console.error("\u274c /api/sendPush error after superlike pending:", err);
-        }
-      };
-    }
-  }
 }
 
 export function onSuperRejected() {
