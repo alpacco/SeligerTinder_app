@@ -551,7 +551,8 @@ async def update_profile(data: Dict[str, Any] = Body(...)):
 async def get_last_login(userId: str):
     """Получить время последнего входа"""
     try:
-        row = await db_get("SELECT lastLogin FROM users WHERE userId = ?", [userId])
+        # В БД колонка называется lastLogin (camelCase), нужны кавычки для PostgreSQL!
+        row = await db_get('SELECT "lastLogin" FROM users WHERE "userId" = ?', [userId])
         if not row:
             raise HTTPException(status_code=404, detail="User not found")
         last_login = row.get("lastLogin")
@@ -579,7 +580,8 @@ async def update_last_login(data: Dict[str, str] = Body(...)):
     last_login = datetime.now().isoformat()
     
     try:
-        await db_run("UPDATE users SET lastLogin = ? WHERE userId = ?", [last_login, userId])
+        # В БД колонка называется lastLogin (camelCase), нужны кавычки для PostgreSQL!
+        await db_run('UPDATE users SET "lastLogin" = ? WHERE "userId" = ?', [last_login, userId])
         return {"success": True, "message": "Last login time updated"}
     except Exception as e:
         print(f"[POST /api/last-login] Ошибка: {e}")
