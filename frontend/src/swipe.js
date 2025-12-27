@@ -2190,6 +2190,14 @@ export async function initSwipeScreen() {
   
   window.setupSwipeControls && window.setupSwipeControls();
   
+  // КРИТИЧНО: Убеждаемся, что likesReceivedList загружен ПЕРЕД показом первого кандидата
+  // Это нужно, чтобы плашка "Мэтч 💯" могла показаться сразу
+  if (isPro && (!window.likesReceivedList || window.likesReceivedList.size === 0)) {
+    console.log('[swipe.js] 🔵 initSwipeScreen: Загружаем likesReceivedList перед показом первого кандидата');
+    await loadLikesReceived();
+    console.log('[swipe.js] ✅ initSwipeScreen: likesReceivedList загружен, список:', Array.from(window.likesReceivedList || []));
+  }
+  
   // После загрузки кандидатов и лайков показываем первого кандидата с бейджем
   if (window.candidates && window.candidates.length > 0) {
     if (window.showCandidate) {
