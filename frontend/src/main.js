@@ -14,7 +14,7 @@
 
 // Версия приложения для обхода кэша Telegram
 // ВАЖНО: версия должна быть СТАТИЧЕСКОЙ, иначе будет бесконечная перезагрузка!
-const APP_VERSION = '2025-01-27-superlikes-lastlogin-fix-v2';
+const APP_VERSION = '2025-01-27-superlikes-lastlogin-fix-v3';
 console.log('🔄 [CACHE] main.js загружен, версия:', APP_VERSION);
 
 // Импортируем CSS (Vite обработает и скомпилирует)
@@ -30,6 +30,9 @@ import { renderProInfo, initProFeatures } from './pro.js';
 // Импортируем функции из pro-modal.js
 import { showProModal, initProModalHandlers } from './pro-modal.js';
 
+// Импортируем функции из match.js
+import { showCandidateProfile as showCandidateProfileFromMatch, renderMatches as renderMatchesFromMatch } from './match.js';
+
 // Убеждаемся, что функции доступны глобально
 window.initProfileEditScreen = initProfileEditScreen;
 window.exitProfileEditMode = exitProfileEditMode;
@@ -39,6 +42,8 @@ window.renderProInfo = renderProInfo;
 window.initProFeatures = initProFeatures;
 window.showProModal = showProModal;
 window.initProModalHandlers = initProModalHandlers;
+window.showCandidateProfile = showCandidateProfileFromMatch; // Используем правильную версию из match.js
+window.renderMatches = renderMatchesFromMatch; // Используем правильную версию из match.js
 
 let tg = null;
 if (window.Telegram && window.Telegram.WebApp) {
@@ -776,7 +781,7 @@ function showScreen(screenId) {
   if (screenId === "screen-profile" && viewingCandidate) {
     document.querySelectorAll(".screen").forEach(scr => scr.style.display = "none");
     document.getElementById("screen-profile").style.display = "block";
-    showCandidateProfile(viewingCandidate);
+    window.showCandidateProfile && window.showCandidateProfile(viewingCandidate); // Используем версию из match.js
     return;
   }
   // 1. Скрываем все
@@ -842,7 +847,7 @@ function showScreen(screenId) {
   if (screenId === "screen-profile") {
     // Если это профиль кандидата (viewingCandidate), показываем его профиль
     if (viewingCandidate) {
-      showCandidateProfile(viewingCandidate);
+      window.showCandidateProfile && window.showCandidateProfile(viewingCandidate); // Используем версию из match.js
       return;
     }
     
@@ -909,7 +914,8 @@ function showScreen(screenId) {
       }
   
   // Обновление экрана профиля (screen‑5) - функция импортируется из profile.js
-async function renderMatches() {
+// Функция renderMatches теперь импортируется из match.js
+async function renderMatchesOld() {
   const matchesListEl = document.getElementById("matches-list");
   if (!matchesListEl) return;
   matchesListEl.innerHTML = ""; // очистили
@@ -1022,96 +1028,8 @@ async function renderMatches() {
     matchesListEl.innerHTML = "<p class='no-matches'>Ошибка загрузки матчей</p>";
   }
 }
-  // Показать детальный профиль кандидата (при клике на матч)
-  function showCandidateProfile(match) {
-    viewingCandidate = match;
-    // Поменять заголовок на «Ваш Match»
-const headerTitle = document.querySelector('#screen-profile .profile-header h2');
-if (headerTitle) headerTitle.textContent = 'Ваш Match';
-    const pic = document.getElementById("profileCard");
-    const firstPhoto = (match.photos && match.photos.length > 0)
-      ? match.photos[0]
-      : (match.avatar || "/img/photo.svg");
-    pic.style.backgroundImage = `url('${firstPhoto}')`;
-
-    const nameEl = document.querySelector("#screen-profile .name-age-container .user-name");
-    const ageEl = document.querySelector("#screen-profile .name-age-container .user-age");
-    if (nameEl) nameEl.textContent = match.name;
-    if (ageEl) {
-      if (match.age) {
-        ageEl.textContent = `${match.age} лет`;
-        ageEl.style.display = "";
-      } else {
-        ageEl.style.display = "none";
-      }
-    }
-
-    const bioEl = document.querySelector("#screen-profile .user-bio");
-    if (bioEl) bioEl.textContent = match.bio || "";
-
-    const paginator = document.querySelector("#screen-profile .paginator");
-    renderPaginator(paginator, (match.photos || []).length, 0);
-
-    const editBtn = document.getElementById("edit-profile-button");
-    if (editBtn) {
-      editBtn.style.display = "none";
-      const oldActions = document.querySelector("#screen-profile .profile-actions");
-      if (oldActions) oldActions.remove();
-      const actions = document.createElement("div");
-      actions.className = "profile-actions";
-      actions.innerHTML = `
-        <button id="candidate-write-btn">Написать</button>
-      `;
-      editBtn.insertAdjacentElement("afterend", actions);
-
-      let deleteBtn = document.getElementById("candidate-delete-btn");
-      if (deleteBtn) deleteBtn.remove();
-      deleteBtn = document.createElement("button");
-      deleteBtn.id = "candidate-delete-btn";
-      deleteBtn.className = "delete-match-btn";
-      deleteBtn.innerHTML = `<img src="/img/unlike.svg" alt="Удалить" width="24" height="24" /> Удалить Мэтч`;
-      pic.appendChild(deleteBtn);
-      deleteBtn.addEventListener("click", async () => {
-        try {
-          // Remove mutual like so candidate no longer appears in Matches
-          await fetch(`${API_URL}/like`, {
-            method: "DELETE",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ fromUser: currentUser.userId, toUser: match.id })
-          });
-          // Add a dislike so candidate won't reappear in swipes
-          await fetch(`${API_URL}/dislike`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ fromUser: currentUser.userId, toUser: match.id })
-          });
-          await renderMatches();
-          showScreen("screen-matches");
-          updateMatchesCount();
-        } catch (err) {
-          console.error("Ошибка удаления из матчей:", err);
-          window.Telegram.WebApp.showAlert("Не удалось удалить из Мэтчей");
-        }
-      });
-    }
-
-    // Обработчики для кнопок "Написать" и "Подарок" (удаляем старые, добавляем новые)
-    const writeBtn = document.getElementById("candidate-write-btn");
-    if (writeBtn) {
-      const newWriteBtn = writeBtn.cloneNode(true);
-      writeBtn.parentNode.replaceChild(newWriteBtn, writeBtn);
-      
-      newWriteBtn.addEventListener("click", () => {
-        if (match.username) {
-          window.open(`https://t.me/${match.username}`, "_blank");
-        } else {
-          window.Telegram.WebApp.showAlert("Пользователь не указал username");
-        }
-      });
-    }
-
-    // Кнопка подарков удалена
-  }
+  // Функция showCandidateProfile теперь импортируется из match.js
+  // Старая версия удалена, так как она не показывала last login
   /* ----------------- Логика редактирования профиля (screen‑6) ----------------- */
   // Функция входа в режим редактирования
   function enterProfileEditMode() {
