@@ -31,15 +31,29 @@ export let inMutualMatch = false;
 export let viewingCandidate = null;
 export let swipeHistory = [];
 window.swipeHistory = swipeHistory;
+// Указатель текущей позиции в истории для навигации назад/вперед
+window.swipeHistoryIndex = -1; // -1 означает, что мы не в истории, а на текущем кандидате
 
 window.currentIndex = 0;
 
 export async function showPreviousCandidate() {
-  console.log('🔄 [showPreviousCandidate] ВЫЗВАНА, swipeHistory.length:', window.swipeHistory.length);
-  if (window.swipeHistory.length > 0) {
+  console.log('🔄 [showPreviousCandidate] ВЫЗВАНА, swipeHistory.length:', window.swipeHistory.length, 'swipeHistoryIndex:', window.swipeHistoryIndex);
+  
+  // Если мы не в истории, сохраняем текущего кандидата перед переходом назад
+  if (window.swipeHistoryIndex === -1 && window.candidates[window.currentIndex]) {
+    const currentCandidate = window.candidates[window.currentIndex];
+    const currentAction = 'like'; // По умолчанию считаем, что это был лайк (можно улучшить, отслеживая последнее действие)
+    window.swipeHistory.push({ candidate: currentCandidate, index: window.currentIndex, action: currentAction });
+    window.swipeHistoryIndex = window.swipeHistory.length - 1;
+    console.log('🔄 [showPreviousCandidate] Сохранили текущего кандидата в историю перед переходом назад');
+  }
+  
+  // Переходим назад в истории
+  if (window.swipeHistoryIndex > 0) {
+    window.swipeHistoryIndex--;
     window._isBackAction = true;
-    const historyItem = window.swipeHistory.pop();
-    console.log('🔄 [showPreviousCandidate] Извлекаем из истории:', historyItem);
+    const historyItem = window.swipeHistory[window.swipeHistoryIndex];
+    console.log('🔄 [showPreviousCandidate] Извлекаем из истории по индексу', window.swipeHistoryIndex, ':', historyItem);
     
     // Обрабатываем как старый формат (просто кандидат), так и новый (объект с candidate и index)
     let candidate, index, action;
@@ -130,9 +144,121 @@ export async function showPreviousCandidate() {
     }, 50);
     
     window.updateMatchesCount && window.updateMatchesCount();
-    console.log('🔄 [showPreviousCandidate] Кандидат восстановлен, currentIndex:', window.currentIndex);
+    console.log('🔄 [showPreviousCandidate] Кандидат восстановлен, currentIndex:', window.currentIndex, 'swipeHistoryIndex:', window.swipeHistoryIndex);
   } else {
-    console.warn('🔄 [showPreviousCandidate] История пуста, нечего восстанавливать');
+    console.warn('🔄 [showPreviousCandidate] Нельзя перейти назад, swipeHistoryIndex:', window.swipeHistoryIndex);
+  }
+}
+
+export async function showNextCandidate() {
+  console.log('🔄 [showNextCandidate] ВЫЗВАНА, swipeHistory.length:', window.swipeHistory.length, 'swipeHistoryIndex:', window.swipeHistoryIndex);
+  
+  // Переходим вперед в истории
+  if (window.swipeHistoryIndex >= 0 && window.swipeHistoryIndex < window.swipeHistory.length - 1) {
+    window.swipeHistoryIndex++;
+    window._isBackAction = true;
+    const historyItem = window.swipeHistory[window.swipeHistoryIndex];
+    console.log('🔄 [showNextCandidate] Извлекаем из истории по индексу', window.swipeHistoryIndex, ':', historyItem);
+    
+    // Обрабатываем как старый формат (просто кандидат), так и новый (объект с candidate и index)
+    let candidate, index, action;
+    if (historyItem && typeof historyItem === 'object' && historyItem.candidate) {
+      // Новый формат: { candidate, index, action? }
+      candidate = historyItem.candidate;
+      index = historyItem.index !== undefined ? historyItem.index : window.currentIndex;
+      action = historyItem.action; // 'like' или 'dislike'
+    } else {
+      // Старый формат: просто кандидат
+      candidate = historyItem;
+      index = window.currentIndex;
+      action = null; // Неизвестно, какое действие было
+    }
+    
+    console.log('🔄 [showNextCandidate] Восстанавливаем кандидата:', candidate.id || candidate.userId, 'на индекс:', index, 'действие:', action);
+    
+    // КРИТИЧНО: Отменяем действие (лайк или дизлайк) на бэкенде
+    const candidateId = String(candidate.id || candidate.userId || '');
+    if (action === 'like') {
+      console.log('🔄 [showNextCandidate] Отменяем лайк для кандидата:', candidateId);
+      try {
+        const { removeLike } = await import('./api.js');
+        await removeLike(window.currentUser.userId, candidateId);
+        // Удаляем из локального массива likes
+        if (window.currentUser.likes && Array.isArray(window.currentUser.likes)) {
+          window.currentUser.likes = window.currentUser.likes.filter(id => String(id) !== String(candidateId));
+        }
+        console.log('🔄 [showNextCandidate] Лайк отменен');
+      } catch (err) {
+        console.error('❌ [showNextCandidate] Ошибка отмены лайка:', err);
+      }
+    } else if (action === 'dislike') {
+      console.log('🔄 [showNextCandidate] Отменяем дизлайк для кандидата:', candidateId);
+      try {
+        const { removeDislike } = await import('./api.js');
+        await removeDislike(window.currentUser.userId, candidateId);
+        // Удаляем из локального массива dislikes
+        if (window.currentUser.dislikes && Array.isArray(window.currentUser.dislikes)) {
+          window.currentUser.dislikes = window.currentUser.dislikes.filter(id => String(id) !== String(candidateId));
+        }
+        console.log('🔄 [showNextCandidate] Дизлайк отменен');
+      } catch (err) {
+        console.error('❌ [showNextCandidate] Ошибка отмены дизлайка:', err);
+      }
+    }
+    
+    // Обновляем данные пользователя после отмены действия
+    await refreshCurrentUser();
+    
+    // КРИТИЧНО: Перезагружаем likesReceivedList, чтобы убедиться, что данные актуальны
+    const now = Date.now();
+    const isPro = window.currentUser && 
+      (window.currentUser.is_pro === true || window.currentUser.is_pro === 'true' || window.currentUser.is_pro === 1) &&
+      window.currentUser.pro_end && 
+      new Date(window.currentUser.pro_end).getTime() > now;
+    
+    if (isPro) {
+      console.log('🔄 [showNextCandidate] Перезагружаем likesReceivedList для актуальных данных');
+      await loadLikesReceived();
+    }
+    
+    // Вставляем кандидата обратно в массив
+    window.candidates.splice(index, 0, candidate);
+    window.currentIndex = index;
+    
+    const singleCard = document.getElementById("singleCard");
+    if (!singleCard) {
+      console.error('🔄 [showNextCandidate] singleCard не найден!');
+      return;
+    }
+    
+    // Заполняем карточку
+    fillCard(singleCard, candidate);
+    
+    // Показываем плашку "Мэтч 💯" для PRO пользователей, если кандидат поставил лайк
+    setTimeout(() => {
+      window.showMatchBadgeIfLiked && window.showMatchBadgeIfLiked(singleCard, candidate);
+    }, 150);
+    
+    // Восстанавливаем обработчики кнопок
+    window.setupSwipeControls && window.setupSwipeControls();
+    setTimeout(() => {
+      window.attachLikeHandler && window.attachLikeHandler();
+      window.attachDislikeHandler && window.attachDislikeHandler();
+    }, 50);
+    
+    window.updateMatchesCount && window.updateMatchesCount();
+    console.log('🔄 [showNextCandidate] Кандидат восстановлен, currentIndex:', window.currentIndex, 'swipeHistoryIndex:', window.swipeHistoryIndex);
+  } else if (window.swipeHistoryIndex === window.swipeHistory.length - 1) {
+    // Если мы в конце истории, переходим к следующему новому кандидату
+    window.swipeHistoryIndex = -1; // Выходим из истории
+    window._isBackAction = false;
+    if (window.candidates.length > 0) {
+      window.currentIndex = (window.currentIndex + 1) % window.candidates.length;
+      window.showCandidate && window.showCandidate();
+    }
+    console.log('🔄 [showNextCandidate] Выходим из истории, переходим к следующему новому кандидату');
+  } else {
+    console.warn('🔄 [showNextCandidate] Нельзя перейти вперед, swipeHistoryIndex:', window.swipeHistoryIndex);
   }
 }
 
@@ -654,7 +780,13 @@ export function moveToNextCandidate(direction = 'right') {
     if (currentCandidate) {
       // Определяем тип действия по направлению свайпа
       const action = direction === 'right' ? 'like' : 'dislike';
+      // Если мы были в истории, удаляем все элементы после текущей позиции
+      if (window.swipeHistoryIndex >= 0) {
+        window.swipeHistory = window.swipeHistory.slice(0, window.swipeHistoryIndex + 1);
+      }
+      // Добавляем текущего кандидата в историю
       window.swipeHistory.push({ candidate: currentCandidate, index: window.currentIndex, action });
+      window.swipeHistoryIndex = -1; // Выходим из истории, так как переходим к новому кандидату
       window.candidates.splice(window.currentIndex, 1);
       if (window.currentIndex >= window.candidates.length) {
         window.currentIndex = 0;
