@@ -1,6 +1,6 @@
 // Модуль swipe.js: ВСЯ ЛОГИКА СВАЙПОВ, анимаций, обработчиков свайпов, кнопок и спец.событий
 // Версия модуля для отладки кэша
-const SWIPE_MODULE_VERSION = '2025-01-27-forward-button-fix-v1';
+const SWIPE_MODULE_VERSION = '2025-01-27-invite-screen-fix-v1';
 console.log('🔄 [CACHE] swipe.js загружен, версия:', SWIPE_MODULE_VERSION);
 console.log('🔄 [CACHE] swipe.js загружен, timestamp:', new Date().toISOString());
 // Экспортируемые функции:
@@ -1060,7 +1060,15 @@ export async function moveToNextCandidate(direction = 'right') {
       window.swipeHistoryIndex = -1; // Выходим из истории, так как переходим к новому кандидату
       console.log('🔄 [moveToNextCandidate] Добавили кандидата в историю, swipeHistory.length:', window.swipeHistory.length, 'swipeHistoryIndex:', window.swipeHistoryIndex);
       window.candidates.splice(window.currentIndex, 1);
-      if (window.currentIndex >= window.candidates.length) {
+      // КРИТИЧНО: Проверяем, остались ли кандидаты после удаления
+      if (window.candidates.length === 0) {
+        window.currentIndex = 0;
+        // Если кандидатов не осталось, показываем экран "Пригласить" сразу
+        if (window.showCandidate) {
+          await window.showCandidate();
+          return;
+        }
+      } else if (window.currentIndex >= window.candidates.length) {
         window.currentIndex = 0;
       }
     }
@@ -1090,6 +1098,15 @@ export async function moveToNextCandidate(direction = 'right') {
     // Переходим к следующему кандидату
     if (window.candidates.length > 0) {
       window.currentIndex = (window.currentIndex + 1) % window.candidates.length;
+      // КРИТИЧНО: Проверяем, что после увеличения индекса у нас все еще есть кандидаты
+      if (window.currentIndex >= window.candidates.length || window.candidates.length === 0) {
+        // Если индекс вышел за границы или кандидатов не осталось, показываем экран "Пригласить"
+        window.currentIndex = 0;
+        if (window.showCandidate) {
+          await window.showCandidate();
+          return; // Выходим, так как showCandidate уже показал экран приглашения
+        }
+      }
     } else {
       window.currentIndex = 0;
       // КРИТИЧНО: Если кандидатов нет, показываем экран "Пригласить"
@@ -1345,7 +1362,14 @@ export function onMutualLike() {
         const idx = window.candidates.findIndex(c => String(c.id || c.userId) === String(currentCandidate.id || currentCandidate.userId));
         if (idx >= 0) {
           window.candidates.splice(idx, 1);
-          if (window.currentIndex >= window.candidates.length) {
+          // КРИТИЧНО: Проверяем, остались ли кандидаты после удаления
+          if (window.candidates.length === 0) {
+            window.currentIndex = 0;
+            if (window.showCandidate) {
+              await window.showCandidate();
+              return;
+            }
+          } else if (window.currentIndex >= window.candidates.length) {
             window.currentIndex = 0;
           }
         }
@@ -1440,14 +1464,21 @@ export function onSuperMatch() {
     if (likeBtn) {
         likeBtn.style.display = "flex";
         likeBtn.innerHTML = `<img class="next" src="/img/next.svg" alt="next" />`;
-        likeBtn.onclick = () => {
+        likeBtn.onclick = async () => {
             window.singleCard.style.transition = "transform 0.5s ease";
             window.singleCard.style.transform = "translate(1000px, 0) rotate(45deg)";
-            setTimeout(() => {
+            setTimeout(async () => {
                 // УДАЛЯЕМ кандидата из массива при супер-мэтче
                 if (currentCandidate) {
                     window.candidates.splice(window.currentIndex, 1);
-                    if (window.currentIndex >= window.candidates.length) {
+                    // КРИТИЧНО: Проверяем, остались ли кандидаты после удаления
+                    if (window.candidates.length === 0) {
+                        window.currentIndex = 0;
+                        if (window.showCandidate) {
+                            await window.showCandidate();
+                            return;
+                        }
+                    } else if (window.currentIndex >= window.candidates.length) {
                         window.currentIndex = 0;
                     }
                 }
