@@ -2135,11 +2135,9 @@ export async function initSwipeScreen() {
       await window.showCandidate();
     }
   }
-  // Проверяем PRO статус с учетом срока действия (как в pro.js)
-  // Используем переменные now и isPro, объявленные выше (строки 1531-1535)
-  if (isPro) {
-    sendPush({ userId: window.currentUser.userId });
-  }
+  // КРИТИЧНО: Удаляем вызов sendPush с только userId - это вызывает ошибку
+  // sendPush требует senderId и receiverId, а не только userId
+  // Если нужно отправлять push при инициализации, это должно быть сделано отдельно
   if (window.currentUser.needPhoto === 1) {
     window.candidates = [];
     if (window.showCandidate) {
