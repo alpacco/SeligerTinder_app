@@ -266,18 +266,22 @@ flex: 1;
   flex: 0 0 auto;
   width: 44px;
   height: 44px;
-  padding: 0;
-  margin: 0;
-  margin-right: 10px;
-    background: none;
-    border: none;
+  padding: 0 !important;
+  margin: 0 !important;
+  background: none;
+  border: none;
   outline: none;
-    cursor: pointer;
+  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   position: relative;
   z-index: 1;
+}
+
+/* КРИТИЧНО: В grid layout (.header-main-row) margin-right не нужен, так как позиционирование через grid */
+.header-main-row .back-btn {
+  margin-right: 0 !important;
 }
 
 .back-btn img {
@@ -2009,6 +2013,8 @@ flex: 1;
 .header-main-row .back-btn {
   justify-self: start;
   grid-column: 1;
+  margin: 0 !important; /* Убираем margin-right из общего стиля .back-btn */
+  padding: 0 !important; /* Убираем padding */
 }
 
 .header-main-row h2 {
