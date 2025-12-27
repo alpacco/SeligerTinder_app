@@ -391,12 +391,25 @@ body.is-pro .candidate-last-login {
 }
 
 /* PRO стили для инпутов редактирования профиля */
+/* PRO стили для инпутов редактирования профиля */
 body.is-pro #edit-bio-input,
 body.is-pro #edit-age-input {
   color: var(--color-white) !important;
 }
 
 body.is-pro #edit-bio-input::placeholder {
+  color: rgba(255, 255, 255, 0.6) !important;
+}
+
+body.is-pro #edit-bio-input::-webkit-input-placeholder {
+  color: rgba(255, 255, 255, 0.6) !important;
+}
+
+body.is-pro #edit-bio-input::-moz-placeholder {
+  color: rgba(255, 255, 255, 0.6) !important;
+}
+
+body.is-pro #edit-bio-input:-ms-input-placeholder {
   color: rgba(255, 255, 255, 0.6) !important;
 }
 
