@@ -113,26 +113,14 @@ export async function showPreviousCandidate() {
       return;
     }
     
-    // Сохраняем информацию о плашке перед fillCard
-    const shouldShowBadge = window.likesReceivedList && window.likesReceivedList.has(candidateId);
-    
     // Заполняем карточку
     fillCard(singleCard, candidate);
     
-    // Восстанавливаем плашку после fillCard, если нужно
-    if (shouldShowBadge) {
-      const newBadge = document.createElement('div');
-      newBadge.className = 'match-badge-pro';
-      newBadge.textContent = 'Мэтч 💯';
-      newBadge.style.cssText = 'position: absolute !important; top: 20px !important; right: 20px !important; background-color: #9f722f !important; color: #ffffff !important; padding: 8px 16px !important; border-radius: 20px !important; font-size: 14px !important; font-weight: bold !important; z-index: 10000 !important; box-shadow: none !important; display: flex !important; align-items: center !important; justify-content: center !important; visibility: visible !important; opacity: 0.9 !important; pointer-events: none !important;';
-      singleCard.appendChild(newBadge);
-      console.log('[swipe.js] ✅ Плашка восстановлена в showPreviousCandidate для кандидата:', candidateId);
-    }
-    
-    // Показываем плашку "Мэтч 💯" для PRO пользователей
+    // Показываем плашку "Мэтч 💯" для PRO пользователей, если кандидат поставил лайк
+    // Вызываем с задержкой, чтобы убедиться, что likesReceivedList обновлен
     setTimeout(() => {
       window.showMatchBadgeIfLiked && window.showMatchBadgeIfLiked(singleCard, candidate);
-    }, 100);
+    }, 150);
     
     // Восстанавливаем обработчики кнопок
     window.setupSwipeControls && window.setupSwipeControls();
