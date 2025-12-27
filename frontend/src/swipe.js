@@ -1655,6 +1655,12 @@ export async function refreshCurrentUser() {
   try {
     const userId = window.currentUser?.userId;
     if (!userId) return;
+    
+    // КРИТИЧНО: Сохраняем currentIndex перед обновлением, чтобы не потерять его
+    const savedIndex = window.currentIndex;
+    const wasInMutualMatch = window.inMutualMatch;
+    console.log('[refreshCurrentUser] Сохраняем currentIndex перед обновлением:', savedIndex, 'inMutualMatch:', wasInMutualMatch);
+    
     const updated = await window.getUser(userId);
     if (updated && updated.success && updated.data) {
       // Обновляем данные пользователя
@@ -1664,8 +1670,20 @@ export async function refreshCurrentUser() {
       window.currentUser.matches = d.matches || window.currentUser.matches || [];
       if (typeof updateSwipeScreen === 'function') updateSwipeScreen();
       
-      // Перезагружаем кандидатов, чтобы исключить уже лайкнутых/дизлайкнутых
-      await loadCandidates();
+      // КРИТИЧНО: НЕ перезагружаем кандидатов, если мы в режиме mutual match
+      // Это предотвращает изменение currentIndex и потерю текущего кандидата
+      if (!wasInMutualMatch && window.candidates.length === 0) {
+        // Перезагружаем кандидатов только если список пуст и мы НЕ в mutual match
+        await loadCandidates();
+      } else if (!wasInMutualMatch) {
+        // Если не в mutual match и список не пуст, восстанавливаем индекс
+        window.currentIndex = savedIndex;
+        console.log('[refreshCurrentUser] Восстановлен currentIndex:', window.currentIndex);
+      } else {
+        // В режиме mutual match сохраняем индекс
+        window.currentIndex = savedIndex;
+        console.log('[refreshCurrentUser] Сохраняем currentIndex в mutual match режиме:', window.currentIndex);
+      }
     }
   } catch (e) {
     console.error('Ошибка обновления пользователя:', e);
