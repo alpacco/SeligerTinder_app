@@ -147,7 +147,7 @@ GIFT_IMAGES_DIR = os.getenv("GIFT_IMAGES_DIR", f"{DATA_BASE_DIR}/giftimg")
 # Создаем директории если не существуют
 for directory in [IMAGES_DIR, LOG_DIR, GIFT_IMAGES_DIR]:
     try:
-    Path(directory).mkdir(parents=True, exist_ok=True)
+        Path(directory).mkdir(parents=True, exist_ok=True)
         print(f"✅ Директория готова: {directory}")
     except (OSError, PermissionError) as e:
         print(f"⚠️ Не удалось создать директорию {directory}: {e}")
