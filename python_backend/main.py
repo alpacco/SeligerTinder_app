@@ -150,7 +150,7 @@ if public_dir.exists():
     app.mount("/img", StaticFiles(directory=str(public_dir / "img")), name="img")
     # Бейджи находятся в /img/labels/, но также поддерживаем /labels/ для совместимости
     if (public_dir / "labels").exists():
-        app.mount("/labels", StaticFiles(directory=str(public_dir / "labels")), name="labels")
+    app.mount("/labels", StaticFiles(directory=str(public_dir / "labels")), name="labels")
     # Монтируем /img/labels/ для прямого доступа
     if (public_dir / "img" / "labels").exists():
         app.mount("/img/labels", StaticFiles(directory=str(public_dir / "img" / "labels")), name="img_labels")
