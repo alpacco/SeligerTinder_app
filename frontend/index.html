@@ -81,8 +81,14 @@
             });
           }
           
-          // Сбрасываем если найдено ЛЮБОЕ из условий
-          if (hasWaveBtn || hasChatBtn || hasWaveSvg || hasChatSvg || hasWaveText || hasWaveImg || (isRedBg && !window.inMutualMatch)) {
+          // КРИТИЧНО: НЕ сбрасываем кнопку, если мы в режиме mutual match
+          if (window.inMutualMatch) {
+            // В режиме мэтча кнопка "Помахать" должна быть видна
+            return;
+          }
+          
+          // Сбрасываем если найдено ЛЮБОЕ из условий (только если НЕ в mutual match)
+          if (hasWaveBtn || hasChatBtn || hasWaveSvg || hasChatSvg || hasWaveText || hasWaveImg || isRedBg) {
             console.error('🚨 [INLINE] КРИТИЧНО: Кнопка "Помахать" обнаружена! Сбрасываем...', {
               checkCount,
               hasWaveBtn,
@@ -124,7 +130,7 @@
     
     // Версия приложения для обхода кэша Telegram
     // ВАЖНО: версия должна быть СТАТИЧЕСКОЙ, иначе будет бесконечная перезагрузка!
-    const APP_VERSION = '2025-01-27-match-badge-like-animation-fix-v6';
+    const APP_VERSION = '2025-01-27-match-badge-like-animation-fix-v7';
     
     // Принудительная перезагрузка при изменении версии
     (function forceReloadIfVersionChanged() {
@@ -442,7 +448,7 @@
           }
           
           // Загружаем JS файлы с cache busting и обработкой ошибок
-          const APP_VERSION = '2025-01-27-match-badge-like-animation-fix-v6';
+          const APP_VERSION = '2025-01-27-match-badge-like-animation-fix-v7';
           const scripts = ['main', 'profile', 'swipe', 'card', 'api', 'utils', 'match', 'pro'];
           console.log('🔵 [INIT] Загрузка JS файлов...');
           console.log('🔄 [CACHE] Версия приложения:', APP_VERSION);

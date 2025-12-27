@@ -1,6 +1,6 @@
 // Модуль swipe.js: ВСЯ ЛОГИКА СВАЙПОВ, анимаций, обработчиков свайпов, кнопок и спец.событий
 // Версия модуля для отладки кэша
-const SWIPE_MODULE_VERSION = '2025-01-27-match-badge-like-animation-fix-v6';
+const SWIPE_MODULE_VERSION = '2025-01-27-match-badge-like-animation-fix-v7';
 console.log('🔄 [CACHE] swipe.js загружен, версия:', SWIPE_MODULE_VERSION);
 console.log('🔄 [CACHE] swipe.js загружен, timestamp:', new Date().toISOString());
 // Экспортируемые функции:
@@ -671,15 +671,21 @@ export function onMutualLike() {
   window.updateMatchesCount && window.updateMatchesCount();
   window.inMutualMatch = true;
   
+  // КРИТИЧНО: Сохраняем текущий индекс ДО любых изменений
+  const savedIndex = window.currentIndex;
+  console.log('🔄 [onMutualLike] Сохраняем индекс:', savedIndex);
+  
   // Сохраняем текущего кандидата - НЕ удаляем из массива сразу!
-  const currentCandidate = window.candidates[window.currentIndex];
+  const currentCandidate = window.candidates[savedIndex];
   if (!currentCandidate) {
     console.warn('[onMutualLike] currentCandidate не найден!');
     return;
   }
   
+  console.log('🔄 [onMutualLike] Сохраняем кандидата:', currentCandidate.id || currentCandidate.userId);
+  
   // Сохраняем кандидата в истории для кнопки Back
-  window.swipeHistory.push({ candidate: currentCandidate, index: window.currentIndex });
+  window.swipeHistory.push({ candidate: currentCandidate, index: savedIndex });
   
   console.log('🎬 [onMutualLike] Начинаем анимацию: карточка улетает вправо');
   // Свайп-карточка улетает вправо
@@ -693,8 +699,17 @@ export function onMutualLike() {
     window.singleCard.style.transform = "none";
     window.customHideBadges && window.customHideBadges(window.singleCard);
 
+    // КРИТИЧНО: Восстанавливаем индекс, чтобы показать правильного кандидата
+    window.currentIndex = savedIndex;
+    console.log('🔄 [onMutualLike] Восстановлен индекс:', window.currentIndex);
+    
     // Обновляем карточку с данными текущего кандидата (чтобы убедиться, что данные актуальны)
     fillCard(window.singleCard, currentCandidate);
+    
+    // Показываем плашку "Мэтч 💯" для PRO пользователей
+    setTimeout(() => {
+      window.showMatchBadgeIfLiked && window.showMatchBadgeIfLiked(window.singleCard, currentCandidate);
+    }, 100);
 
     // Находим или создаем элемент .badge-match для анимации мэтча
     // Элемент уже есть в HTML (index.html строка 273), но может быть скрыт
@@ -808,9 +823,14 @@ export function onMutualLike() {
         // Для TEST_ пользователей или пользователей без username показываем Wave
         dislikeBtn.classList.remove('chat-btn');
         dislikeBtn.classList.add('wave-btn');
-        dislikeBtn.innerHTML = `<img class="wave" src="/img/wave.svg" alt="wave" />`;
+        // КРИТИЧНО: Убеждаемся, что иконка загружается правильно
+        dislikeBtn.innerHTML = `<img class="wave" src="/img/wave.svg" alt="wave" style="width: 36px; height: 36px; display: block;" />`;
         dislikeBtn.style.backgroundColor = "#ff5e5e";
         dislikeBtn.style.fontSize = "36px";
+        dislikeBtn.style.display = "flex";
+        dislikeBtn.style.alignItems = "center";
+        dislikeBtn.style.justifyContent = "center";
+        console.log('🔵 [onMutualLike] Кнопка "Помахать" установлена, innerHTML:', dislikeBtn.innerHTML);
         dislikeBtn.onclick = async () => {
           const btn = dislikeBtn;
           try {
