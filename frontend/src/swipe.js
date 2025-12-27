@@ -785,11 +785,7 @@ export async function showCandidate() {
   // Для PRO показываем Back и SuperLike (если они были созданы)
   // Для обычных пользователей скрываем PRO-кнопки
   // Используем ту же логику проверки, что и в pro.js (с учетом срока действия)
-  // Переиспользуем переменную now, объявленную выше
-  const isPro = window.currentUser && 
-    (window.currentUser.is_pro === true || window.currentUser.is_pro === 'true' || window.currentUser.is_pro === 1) &&
-    window.currentUser.pro_end && 
-    new Date(window.currentUser.pro_end).getTime() > now;
+  // Переиспользуем переменные now и isPro, объявленные выше
   
   console.log('[showCandidate] PRO статус:', {
     isPro,
