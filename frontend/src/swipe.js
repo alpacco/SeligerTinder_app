@@ -371,7 +371,31 @@ export function showCandidate() {
     console.warn('[swipe.js] ⚠️ showCandidate: нет кандидата по индексу', window.currentIndex);
     return;
   }
+  // КРИТИЧНО: Сохраняем плашку перед fillCard, так как fillCard перезаписывает innerHTML
+  const existingBadge = singleCard.querySelector('.match-badge-pro');
+  const badgeData = existingBadge ? {
+    candidateId: String(currentCandidate.id || currentCandidate.userId || ''),
+    element: existingBadge
+  } : null;
+  
   fillCard(singleCard, { ...currentCandidate });
+  
+  // КРИТИЧНО: Восстанавливаем плашку после fillCard, если она была
+  if (badgeData && badgeData.element && badgeData.candidateId) {
+    const candidateId = String(currentCandidate.id || currentCandidate.userId || '');
+    if (candidateId === badgeData.candidateId) {
+      // Проверяем, должен ли кандидат иметь плашку
+      if (window.likesReceivedList && window.likesReceivedList.has(candidateId)) {
+        // Восстанавливаем плашку
+        const newBadge = document.createElement('div');
+        newBadge.className = 'match-badge-pro';
+        newBadge.textContent = 'Мэтч 💯';
+        newBadge.style.cssText = 'position: absolute !important; top: 20px !important; right: 20px !important; background-color: #9f722f !important; color: #ffffff !important; padding: 8px 16px !important; border-radius: 20px !important; font-size: 14px !important; font-weight: bold !important; z-index: 10000 !important; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important; display: flex !important; align-items: center !important; justify-content: center !important; visibility: visible !important; opacity: 1 !important; pointer-events: none !important;';
+        singleCard.appendChild(newBadge);
+        console.log('[swipe.js] ✅ Плашка восстановлена после fillCard для кандидата:', candidateId);
+      }
+    }
+  }
   
   // Показываем плашку "Мэтч 💯" для PRO пользователей, если кандидат поставил лайк
   // Вызываем с небольшой задержкой, чтобы убедиться, что карточка отрендерена
@@ -1194,9 +1218,22 @@ export function handleDislikeClick() {
 
 // Функция для навешивания обработчика на кнопку Dislike
 export function attachDislikeHandler() {
+    console.log('🔄 [attachDislikeHandler] ВЫЗВАН, версия:', SWIPE_MODULE_VERSION);
     const dislikeBtn = document.querySelector('.dislike_d');
     if (dislikeBtn) {
-        dislikeBtn.addEventListener('click', handleDislikeClick);
+        // Удаляем старые обработчики через клонирование
+        const newDislikeBtn = dislikeBtn.cloneNode(true);
+        dislikeBtn.parentNode.replaceChild(newDislikeBtn, dislikeBtn);
+        // Добавляем новый обработчик
+        newDislikeBtn.addEventListener('click', (e) => {
+            console.log('🔄 [attachDislikeHandler] Кнопка дизлайка нажата!');
+            e.preventDefault();
+            e.stopPropagation();
+            handleDislikeClick();
+        });
+        console.log('🔄 [attachDislikeHandler] Обработчик дизлайка установлен');
+    } else {
+        console.warn('🔄 [attachDislikeHandler] Кнопка .dislike_d не найдена!');
     }
 }
 
@@ -1874,4 +1911,10 @@ window.customHideBadges = customHideBadges;
 window.customRenderPaginator = customRenderPaginator;
 window.cyclePhoto = cyclePhoto;
 window.openChat = openChat;
-window.showToast = showToast; 
+window.showToast = showToast;
+// КРИТИЧНО: Экспортируем обработчики кнопок лайк/дизлайк
+window.attachLikeHandler = attachLikeHandler;
+window.attachDislikeHandler = attachDislikeHandler;
+window.handleLikeClick = handleLikeClick;
+window.handleDislikeClick = handleDislikeClick;
+window.showMatchBadgeIfLiked = showMatchBadgeIfLiked; 
