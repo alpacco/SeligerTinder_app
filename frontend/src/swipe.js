@@ -431,13 +431,24 @@ export function setupSwipeControls() {
     backBtn.className = "back-cnd-btn";
     backBtn.innerHTML = `<svg class="back-icon" width="36" height="36" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><g><path class="st0" d="M25,30.3L25,30.3c1-1,2.6-1,3.5,0L39,40.8c1,1,1,2.6,0,3.5l0,0c-1,1-2.6,1-3.5,0L25,33.8C24,32.8,24,31.2,25,30.3z"/><path class="st0" d="M25,30.2l10.5-10.5c1-1,2.6-1,3.5,0l0,0c1,1,1,2.6,0,3.5L28.5,33.7c-1,1-2.6,1-3.5,0l0,0C24,32.8,24,31.2,25,30.2z"/></g></svg>`;
     backBtn.style.display = "flex";
-    backBtn.addEventListener("click", () => {
+    backBtn.addEventListener("click", async (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      console.log('🔄 [backBtn] Кнопка "Назад" нажата, swipeHistory.length:', window.swipeHistory.length, 'swipeHistoryIndex:', window.swipeHistoryIndex);
+      if (!window.singleCard) {
+        console.error('🔄 [backBtn] singleCard не найден!');
+        return;
+      }
       window.singleCard.style.transition = "transform 0.5s ease";
       window.singleCard.style.transform = "translate(-1000px, 0) rotate(-45deg)";
-      setTimeout(() => {
-        window.showPreviousCandidate && window.showPreviousCandidate();
-        window.singleCard.style.transition = "none";
-        window.singleCard.style.transform = "none";
+      setTimeout(async () => {
+        if (window.showPreviousCandidate) {
+          await window.showPreviousCandidate();
+        }
+        if (window.singleCard) {
+          window.singleCard.style.transition = "none";
+          window.singleCard.style.transform = "none";
+        }
       }, 500);
     });
     
