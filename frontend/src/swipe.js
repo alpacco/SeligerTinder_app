@@ -289,8 +289,10 @@ export function setupSwipeControls() {
   // Удаляем только PRO-кнопки, если они были созданы ранее
   // НЕ трогаем кнопки лайк/дизлайк - они в HTML
   const existingBackBtn = cardsBtns.querySelector(".back-cnd-btn");
+  const existingForwardBtn = cardsBtns.querySelector(".forward-cnd-btn");
   const existingSuperBtn = cardsBtns.querySelector(".superlike_d");
   if (existingBackBtn) existingBackBtn.remove();
+  if (existingForwardBtn) existingForwardBtn.remove();
   if (existingSuperBtn) existingSuperBtn.remove();
   
   // Проверяем, является ли пользователь PRO (с учетом срока действия, как в pro.js)
