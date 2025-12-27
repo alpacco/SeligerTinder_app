@@ -103,7 +103,7 @@ body.is-pro .edit-photo-card.add-photo::before {
 
 body.is-pro #edit-bio-input,
 body.is-pro #edit-age-input {
-  color: var(--color-white);
+  color: var(--color-white) !important;
   background-color: var(--color-gray-dark-tr);
   border-color: var(--color-gray-dark-tr);
 }
