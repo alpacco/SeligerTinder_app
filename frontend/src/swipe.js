@@ -643,10 +643,13 @@ export function onMutualLike() {
   // Сохраняем кандидата в истории для кнопки Back
   window.swipeHistory.push({ candidate: currentCandidate, index: window.currentIndex });
   
+  console.log('🎬 [onMutualLike] Начинаем анимацию: карточка улетает вправо');
   // Свайп-карточка улетает вправо
   window.singleCard.style.transition = "transform 0.5s ease";
   window.singleCard.style.transform = "translate(1000px, 0) rotate(45deg)";
+  
   setTimeout(() => {
+    console.log('🎬 [onMutualLike] Возвращаем карточку в центр');
     // Возврат в центр с ТЕМ ЖЕ кандидатом
     window.singleCard.style.transition = "transform 0.3s ease";
     window.singleCard.style.transform = "none";
@@ -658,18 +661,38 @@ export function onMutualLike() {
     // Анимация сердца
     const matchBadge = window.singleCard.querySelector(".badge-match");
     if (matchBadge) {
+      console.log('🎬 [onMutualLike] Показываем эмодзи ❤️‍🔥 с анимацией');
       matchBadge.innerHTML = "❤️‍🔥";
       matchBadge.style.opacity = "1";
       matchBadge.style.transform = "";
+      // Принудительно перерисовываем для запуска анимации
+      matchBadge.offsetWidth; // trigger reflow
       matchBadge.classList.add("match-animation");
       matchBadge.addEventListener("animationend", () => {
+        console.log('🎬 [onMutualLike] Анимация эмодзи завершена');
         matchBadge.classList.remove("match-animation");
         matchBadge.style.opacity = "0";
       }, { once: true });
     } else {
-      console.warn('[swipe.js] Элемент .badge-match не найден!');
+      console.warn('[swipe.js] Элемент .badge-match не найден! Создаем его...');
+      // Создаем элемент, если его нет
+      const newBadge = document.createElement('div');
+      newBadge.className = 'badge-match';
+      newBadge.style.opacity = '1';
+      newBadge.innerHTML = "❤️‍🔥";
+      window.singleCard.appendChild(newBadge);
+      newBadge.offsetWidth; // trigger reflow
+      newBadge.classList.add("match-animation");
+      newBadge.addEventListener("animationend", () => {
+        console.log('🎬 [onMutualLike] Анимация эмодзи завершена (созданный элемент)');
+        newBadge.classList.remove("match-animation");
+        newBadge.style.opacity = "0";
+      }, { once: true });
     }
-    if ("vibrate" in navigator) navigator.vibrate([50,30,80,30,110,30,150]);
+    if ("vibrate" in navigator) {
+      console.log('📳 [onMutualLike] Вибрация');
+      navigator.vibrate([50,30,80,30,110,30,150]);
+    }
 
     // Кнопки swipe: like -> Next, dislike -> Chat/Wave
     let likeBtn = document.querySelector(".like_d");
