@@ -1705,10 +1705,16 @@ export async function loadCandidates() {
   const userId = window.currentUser?.userId;
   const gender = window.currentUser?.gender;
   
+  // КРИТИЧНО: Сохраняем индекс перед загрузкой, если мы в mutual match режиме
+  const savedIndex = window.inMutualMatch ? window.currentIndex : null;
+  console.log('[loadCandidates] Начало загрузки, inMutualMatch:', window.inMutualMatch, 'savedIndex:', savedIndex);
+  
   if (!userId || !gender) {
     console.warn('[loadCandidates] Недостаточно данных: userId или gender отсутствует');
     window.candidates = [];
-    window.currentIndex = 0;
+    if (!window.inMutualMatch) {
+      window.currentIndex = 0;
+    }
     if (typeof updateSwipeScreen === 'function') updateSwipeScreen();
     return;
   }
@@ -1722,7 +1728,9 @@ export async function loadCandidates() {
     if (!json || !json.success) {
       window.showToast && window.showToast('Ошибка загрузки кандидатов: ' + (json?.error || 'Неизвестная ошибка'));
       window.candidates = [];
-      window.currentIndex = 0;
+      if (!window.inMutualMatch) {
+        window.currentIndex = 0;
+      }
       if (typeof updateSwipeScreen === 'function') updateSwipeScreen();
       return;
     }
@@ -1738,12 +1746,26 @@ export async function loadCandidates() {
     );
     
     window.candidates = filtered;
-    window.currentIndex = 0;
-    if (typeof updateSwipeScreen === 'function') updateSwipeScreen();
+    
+    // КРИТИЧНО: Восстанавливаем индекс, если мы в mutual match режиме
+    if (window.inMutualMatch && savedIndex !== null && savedIndex < window.candidates.length) {
+      window.currentIndex = savedIndex;
+      console.log('[loadCandidates] Восстановлен индекс в mutual match режиме:', window.currentIndex);
+      // НЕ вызываем showCandidate, так как карточка уже заполнена в onMutualLike
+    } else if (!window.inMutualMatch && window.candidates.length > 0) {
+      // Показываем первого кандидата только если НЕ в mutual match режиме
+      window.currentIndex = 0;
+      window.showCandidate && window.showCandidate();
+    } else if (!window.inMutualMatch) {
+      window.currentIndex = 0;
+      if (typeof updateSwipeScreen === 'function') updateSwipeScreen();
+    }
   } catch (e) {
     console.error('[loadCandidates] error:', e);
     window.candidates = [];
-    window.currentIndex = 0;
+    if (!window.inMutualMatch) {
+      window.currentIndex = 0;
+    }
     if (typeof updateSwipeScreen === 'function') updateSwipeScreen();
   }
 }
