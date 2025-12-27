@@ -2024,6 +2024,8 @@ flex: 1;
   grid-column: 1;
   margin: 0 !important; /* Убираем margin-right из общего стиля .back-btn */
   padding: 0 !important; /* Убираем padding */
+  width: 44px !important; /* Единый размер на всех экранах */
+  height: 44px !important; /* Единый размер на всех экранах */
 }
 
 .header-main-row h2 {
