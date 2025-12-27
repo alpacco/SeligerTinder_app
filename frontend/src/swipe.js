@@ -1110,6 +1110,7 @@ export async function doLike() {
         console.log('🔄 [doLike] Отправляем лайк...');
         const json = await sendLike(window.currentUser.userId, topUserId);
         console.log('🔄 [doLike] Ответ от сервера:', json);
+        console.log('🔄 [doLike] json.match:', json.match, 'json.isMatch:', json.isMatch, 'json.mutual:', json.mutual);
 
         
         if (json && json.success) {
@@ -1120,8 +1121,10 @@ export async function doLike() {
             await refreshCurrentUser();
             
             // Проверяем, есть ли взаимный лайк
-            console.log('🔄 [doLike] Проверяем мэтч: json.isMatch =', json.isMatch);
-            if (json.isMatch || ((candidate.id || candidate.userId) && (candidate.id || candidate.userId).startsWith('VALID_') && candidate.username)) {
+            // ВАЖНО: бэкенд возвращает "match", а не "isMatch"
+            console.log('🔄 [doLike] Проверяем мэтч: json.match =', json.match, 'json.isMatch =', json.isMatch);
+            const isMatch = json.match === true || json.isMatch === true || ((candidate.id || candidate.userId) && (candidate.id || candidate.userId).startsWith('VALID_') && candidate.username);
+            if (isMatch) {
                 console.log('🔄 [doLike] МЭТЧ! Вызываем onMutualLike');
                 window.onMutualLike && window.onMutualLike();
             } else {

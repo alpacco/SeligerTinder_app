@@ -1801,7 +1801,7 @@ flex: 1;
     display: flex;
     flex-direction: column;
     justify-content: flex-end;
-    overflow: hidden;
+    overflow: visible; /* Изменено с hidden на visible, чтобы плашка "Мэтч 💯" была видна */
 
 }
 
