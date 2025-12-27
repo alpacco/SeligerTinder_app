@@ -273,6 +273,36 @@ export async function showNextCandidate() {
       window.showMatchBadgeIfLiked && window.showMatchBadgeIfLiked(singleCard, candidate);
     }, 150);
     
+    // КРИТИЧНО: Сбрасываем флаг mutual match, если мы не в mutual match режиме
+    // Это нужно, чтобы кнопки не оставались в режиме "Next" или "Помахать"
+    if (!window.inMutualMatch) {
+      // Сбрасываем кнопки к обычному состоянию
+      let likeBtn = document.querySelector(".like_d");
+      if (likeBtn) {
+        // Проверяем, не в режиме ли "Next"
+        if (likeBtn.innerHTML.includes('next.svg') || likeBtn.classList.contains('nextMode')) {
+          console.log('🔄 [showNextCandidate] Сбрасываем кнопку лайка из режима Next');
+          likeBtn.innerHTML = `<svg class="like-icon" width="36" height="36" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><path class="st0" d="M40.2,19.3c-5.1-0.5-7.5,2.5-8.2,3.5c-0.6-1-3.1-4-8.2-3.5c-5.4,0.6-10.8,7-5.7,15.6c4.2,6.9,13.6,11.9,13.9,12.1l0,0l0,0l0,0l0,0c0.2-0.1,9.7-5.1,13.9-12.1C51,26.3,45.6,19.9,40.2,19.3L40.2,19.3z"/></svg>`;
+          likeBtn.className = 'like_d';
+          likeBtn.onclick = null;
+        }
+      }
+      let dislikeBtn = document.querySelector(".dislike_d");
+      if (dislikeBtn) {
+        // Проверяем, не в режиме ли "Помахать" или "Написать"
+        if (dislikeBtn.classList.contains('wave-btn') || dislikeBtn.classList.contains('chat-btn') || 
+            dislikeBtn.innerHTML.includes('wave.svg') || dislikeBtn.innerHTML.includes('chat.svg')) {
+          console.log('🔄 [showNextCandidate] Сбрасываем кнопку дизлайка из режима Wave/Chat');
+          dislikeBtn.innerHTML = `<svg class="dislike-icon" width="36" height="36" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><rect class="st0" x="29.5" y="14.61" width="5" height="34.78" rx="2.5" ry="2.5" transform="translate(-13.25 32) rotate(-45)"/><rect class="st0" x="14.61" y="29.5" width="34.78" height="5" rx="2.5" ry="2.5" transform="translate(-13.25 32) rotate(-45)"/></svg>`;
+          dislikeBtn.className = 'dislike_d';
+          dislikeBtn.classList.remove('wave-btn', 'chat-btn');
+          dislikeBtn.style.backgroundColor = '';
+          dislikeBtn.style.fontSize = '';
+          dislikeBtn.onclick = null;
+        }
+      }
+    }
+    
     // Восстанавливаем обработчики кнопок
     // КРИТИЧНО: Сначала вызываем setupSwipeControls, который также вызывает attachLikeHandler/attachDislikeHandler
     // Затем еще раз вызываем их с задержкой, чтобы гарантировать, что обработчики установлены
