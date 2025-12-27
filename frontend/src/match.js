@@ -458,6 +458,8 @@ export async function showCandidateProfile(match) {
           })
           .catch((err) => { 
             console.error('[match.js] Ошибка при загрузке last login:', err);
+            // Кэшируем null при ошибке, чтобы не делать повторные запросы
+            lastLoginCache.set(userIdForLastLogin, null);
             // При ошибке тоже показываем "Была/Был давно"
             let verb;
             if (window.currentUser.gender === 'male') verb = 'Была';
@@ -473,6 +475,7 @@ export async function showCandidateProfile(match) {
           else if (window.currentUser.gender === 'female') verb = 'Был';
           else verb = ((match.gender || window.viewingCandidate?.gender) === 'female' ? 'Была' : 'Был');
           updateLastLoginText(`${verb} давно`);
+          // Не кэшируем, так как userId отсутствует
         }
       } else {
         console.warn('[match.js] header-sub-row не найден в header');
