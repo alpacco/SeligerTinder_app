@@ -493,6 +493,12 @@ export async function showCandidateProfile(match) {
   // ВАЖНО: Устанавливаем window.viewingCandidate ПЕРЕД вызовом showScreen
   window.viewingCandidate = match;
   console.log('[match.js] showCandidateProfile: window.viewingCandidate установлен перед showScreen:', window.viewingCandidate);
+  
+  // Сбрасываем флаг после небольшой задержки, чтобы предотвратить повторные вызовы
+  setTimeout(() => {
+    isShowingCandidateProfile = false;
+  }, 1000);
+  
   window.showScreen && window.showScreen('screen-profile');
 
   // 5. ИНТЕРАКТИВНОСТЬ: КНОПКИ
