@@ -303,7 +303,8 @@ export function showCandidate() {
     `;
     singleCard.style.boxShadow = "none";
     // Скрываем кнопки лайк/дизлайк, но НЕ удаляем их из DOM
-    document.querySelectorAll(".back-cnd-btn, .superlike_d, .like_d, .dislike_d").forEach(b => b.style.display = "none");
+    // PRO-кнопки скрываем только если needPhoto, иначе они управляются отдельно
+    document.querySelectorAll(".like_d, .dislike_d").forEach(b => b.style.display = "none");
     const btn = document.getElementById("add-photo-swipe-btn");
     if (btn) {
       // Удаляем старые обработчики
@@ -331,7 +332,8 @@ export function showCandidate() {
     `;
     newCard.style.boxShadow = "none";
     newCard.className = "card";
-    document.querySelectorAll(".back-cnd-btn, .superlike_d, .like_d, .dislike_d").forEach(b => b.style.display = "none");
+    // Скрываем кнопки лайк/дизлайк, PRO-кнопки управляются отдельно
+    document.querySelectorAll(".like_d, .dislike_d").forEach(b => b.style.display = "none");
     const btn = newCard.querySelector(`#${buttonId}`);
     if (btn) {
       if (window.currentUser && window.currentUser.needPhoto === 1) {
