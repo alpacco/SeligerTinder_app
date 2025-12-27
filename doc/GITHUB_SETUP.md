@@ -115,7 +115,7 @@ git remote set-url github git@github.com:USERNAME/REPO.git
 git remote remove github
 
 # Отправить в несколько remotes
-git push amverum master  # в amverum
+git push github main  # в GitHub (Railway автоматически деплоит из GitHub)
 git push github master   # в GitHub
 ```
 

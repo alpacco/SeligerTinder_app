@@ -26,7 +26,7 @@
 **Конфигурация:**
 - `package.json`, `package-lock.json`
 - `Procfile`, `nixpacks.toml`
-- `amvera.yml`, `railway.json`
+- `railway.json`
 
 ### 3. Очистка проекта
 - ✅ Удалены неиспользуемые файлы Node.js
