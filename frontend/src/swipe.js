@@ -502,7 +502,7 @@ export function setupSwipeControls() {
   }
 }
 
-export function showCandidate() {
+export async function showCandidate() {
   console.log('🔄 [showCandidate] ВЫЗВАН, версия:', SWIPE_MODULE_VERSION);
   
   // КРИТИЧНО: Сбрасываем кнопки ПЕРЕД всеми проверками
