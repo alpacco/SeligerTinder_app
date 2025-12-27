@@ -49,7 +49,8 @@ export async function showPreviousCandidate() {
   }
   
   // Переходим назад в истории
-  if (window.swipeHistoryIndex > 0) {
+  // КРИТИЧНО: Проверяем, что есть элементы в истории и мы не на первом элементе
+  if (window.swipeHistory.length > 0 && window.swipeHistoryIndex > 0) {
     window.swipeHistoryIndex--;
     window._isBackAction = true;
     const historyItem = window.swipeHistory[window.swipeHistoryIndex];
@@ -326,19 +327,42 @@ export async function showNextCandidate() {
       if (likeBtn && canGoForward && !window.inMutualMatch) {
         // Заменяем кнопку "Лайк" на кнопку "Вперед"
         likeBtn.innerHTML = `<svg class="forward-icon" width="36" height="36" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><g><path class="st0" d="M39,33.7L28.5,23.2c-1-1-2.6-1-3.5,0l0,0c-1,1-1,2.6,0,3.5L35.5,37.3c1,1,2.6,1,3.5,0l0,0C40,36.3,40,34.7,39,33.7z"/><path class="st0" d="M39,33.8l-10.5,10.5c-1,1-2.6,1-3.5,0l0,0c-1-1-1-2.6,0-3.5L35.5,30.3c1-1,2.6-1,3.5,0l0,0C40,31.2,40,32.8,39,33.8z"/></g></svg>`;
-        likeBtn.onclick = () => {
+        likeBtn.onclick = async (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          console.log('🔄 [forwardBtn] Кнопка "Вперед" нажата, swipeHistory.length:', window.swipeHistory.length, 'swipeHistoryIndex:', window.swipeHistoryIndex);
+          if (!window.singleCard) {
+            console.error('🔄 [forwardBtn] singleCard не найден!');
+            return;
+          }
           window.singleCard.style.transition = "transform 0.5s ease";
           window.singleCard.style.transform = "translate(1000px, 0) rotate(45deg)";
-          setTimeout(() => {
-            window.showNextCandidate && window.showNextCandidate();
-            window.singleCard.style.transition = "none";
-            window.singleCard.style.transform = "none";
+          setTimeout(async () => {
+            if (window.showNextCandidate) {
+              await window.showNextCandidate();
+            }
+            if (window.singleCard) {
+              window.singleCard.style.transition = "none";
+              window.singleCard.style.transform = "none";
+            }
           }, 500);
         };
       } else {
         window.attachLikeHandler && window.attachLikeHandler();
       }
       window.attachDislikeHandler && window.attachDislikeHandler();
+      
+      // Обновляем видимость кнопки "Назад"
+      const backBtn = document.querySelector(".back-cnd-btn");
+      const canGoBack = window.swipeHistory.length > 0 && window.swipeHistoryIndex > 0;
+      if (backBtn) {
+        if (canGoBack) {
+          backBtn.style.display = "flex";
+        } else {
+          backBtn.style.display = "none";
+        }
+      }
+      
       console.log('🔄 [showNextCandidate] Обработчики кнопок восстановлены');
     }, 150);
     
