@@ -336,6 +336,9 @@ flex: 1;
   margin-right: 4px;
 }
 /* ========== COMMON HEADER ========== */
+/* КРИТИЧНО: Старые классы .profile-header, .matches-header, .candidate-header больше не используются */
+/* Все экраны теперь используют .app-header с .header-main-row (grid layout) */
+/* Оставляем эти стили для обратной совместимости, но они не должны применяться */
 .common-header,
 .profile-header,
 .matches-header,
@@ -353,6 +356,14 @@ flex: 1;
   background: transparent;
   padding: 20px 20px 10px 20px;
   box-sizing: border-box;
+}
+
+/* КРИТИЧНО: Если .profile-header или .profile-edit-header используются вместе с .app-header, 
+   они не должны переопределять padding - используем стили из .app-header */
+.app-header.profile-header,
+.app-header.profile-edit-header,
+.app-header.matches-header {
+  /* Используем стили из .app-header, не переопределяем */
 }
 
 .profile-header h2, .matches-header h2, .candidate-header h2 {
