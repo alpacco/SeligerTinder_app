@@ -47,9 +47,19 @@ async def grant_pro(data: GrantProRequest):
     
     new_end = (base_time + timedelta(days=data.days)).isoformat()
     
-    await db_run('UPDATE users SET is_pro = 1, "pro_end" = ? WHERE "userId" = ?', [new_end, data.userId])
+    # Получаем текущее количество суперлайков
+    user_row = await db_get('SELECT "super_likes_count" FROM users WHERE "userId" = ?', [data.userId])
+    current_super_likes = user_row.get("super_likes_count", 0) if user_row else 0
     
-    print(f"PRO granted for user {data.userId}, new end: {new_end}")
+    # Если суперлайков 0 или отсутствуют, выделяем 3 при выдаче PRO
+    if current_super_likes == 0 or current_super_likes is None:
+        await db_run('UPDATE users SET is_pro = 1, "pro_end" = ?, "super_likes_count" = 3 WHERE "userId" = ?', 
+                     [new_end, data.userId])
+        print(f"PRO granted for user {data.userId}, new end: {new_end}, super_likes_count set to 3")
+    else:
+        await db_run('UPDATE users SET is_pro = 1, "pro_end" = ? WHERE "userId" = ?', [new_end, data.userId])
+        print(f"PRO granted for user {data.userId}, new end: {new_end}, super_likes_count kept: {current_super_likes}")
+    
     return {"success": True, "is_pro": 1, "pro_end": new_end, "end": new_end}
 
 
@@ -74,9 +84,19 @@ async def upgrade_pro(data: UpgradeProRequest):
     
     new_end = (base_time + timedelta(days=data.durationDays)).isoformat()
     
-    await db_run('UPDATE users SET is_pro = 1, "pro_end" = ? WHERE "userId" = ?', [new_end, data.userId])
+    # Получаем текущее количество суперлайков
+    user_row = await db_get('SELECT "super_likes_count" FROM users WHERE "userId" = ?', [data.userId])
+    current_super_likes = user_row.get("super_likes_count", 0) if user_row else 0
     
-    print(f"PRO upgraded for user {data.userId}, new end: {new_end}")
+    # Если суперлайков 0 или отсутствуют, выделяем 3 при обновлении PRO
+    if current_super_likes == 0 or current_super_likes is None:
+        await db_run('UPDATE users SET is_pro = 1, "pro_end" = ?, "super_likes_count" = 3 WHERE "userId" = ?', 
+                     [new_end, data.userId])
+        print(f"PRO upgraded for user {data.userId}, new end: {new_end}, super_likes_count set to 3")
+    else:
+        await db_run('UPDATE users SET is_pro = 1, "pro_end" = ? WHERE "userId" = ?', [new_end, data.userId])
+        print(f"PRO upgraded for user {data.userId}, new end: {new_end}, super_likes_count kept: {current_super_likes}")
+    
     return {"success": True, "is_pro": 1, "pro_end": new_end}
 
 

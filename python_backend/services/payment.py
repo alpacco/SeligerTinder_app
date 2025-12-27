@@ -167,12 +167,23 @@ async def process_successful_payment(
         
         new_end = (base_time + timedelta(days=days)).isoformat()
         
-        await db_run(
-            'UPDATE users SET is_pro = 1, "pro_end" = %s WHERE "userId" = %s',
-            [new_end, user_id]
-        )
+        # Получаем текущее количество суперлайков
+        user_row = await db_get('SELECT "super_likes_count" FROM users WHERE "userId" = %s', [user_id])
+        current_super_likes = user_row.get("super_likes_count", 0) if user_row else 0
         
-        logger.info(f"✅ [PAYMENT] PRO выдана: user_id={user_id}, days={days}, pro_end={new_end}")
+        # Если суперлайков 0 или отсутствуют, выделяем 3 при покупке PRO
+        if current_super_likes == 0 or current_super_likes is None:
+            await db_run(
+                'UPDATE users SET is_pro = 1, "pro_end" = %s, "super_likes_count" = 3 WHERE "userId" = %s',
+                [new_end, user_id]
+            )
+            logger.info(f"✅ [PAYMENT] PRO выдана: user_id={user_id}, days={days}, pro_end={new_end}, super_likes_count set to 3")
+        else:
+            await db_run(
+                'UPDATE users SET is_pro = 1, "pro_end" = %s WHERE "userId" = %s',
+                [new_end, user_id]
+            )
+            logger.info(f"✅ [PAYMENT] PRO выдана: user_id={user_id}, days={days}, pro_end={new_end}, super_likes_count kept: {current_super_likes}")
         
         return {
             "success": True,
