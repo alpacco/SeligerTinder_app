@@ -84,6 +84,60 @@ async def dislike_user(data: DislikeRequest):
     return {"success": True}
 
 
+@router.delete("/like")
+async def remove_like(data: LikeRequest):
+    """Удалить лайк пользователю"""
+    if not data.toUser:
+        raise HTTPException(status_code=400, detail="toUser обязателен")
+    
+    from_user_row = await db_get("SELECT likes, matches FROM users WHERE userId = ?", [data.fromUser])
+    if not from_user_row:
+        raise HTTPException(status_code=404, detail="Отправитель не найден")
+    
+    likes = safe_json_parse(from_user_row.get("likes"), [])
+    matches = safe_json_parse(from_user_row.get("matches"), [])
+    
+    # Удаляем лайк, если он есть
+    if data.toUser in likes:
+        likes.remove(data.toUser)
+        await db_run("UPDATE users SET likes = ? WHERE userId = ?", [json.dumps(likes), data.fromUser])
+    
+    # Удаляем из matches, если есть взаимный лайк
+    if data.toUser in matches:
+        matches.remove(data.toUser)
+        await db_run("UPDATE users SET matches = ? WHERE userId = ?", [json.dumps(matches), data.fromUser])
+        
+        # Также удаляем из matches у получателя
+        to_user_row = await db_get("SELECT matches FROM users WHERE userId = ?", [data.toUser])
+        if to_user_row:
+            matches2 = safe_json_parse(to_user_row.get("matches"), [])
+            if data.fromUser in matches2:
+                matches2.remove(data.fromUser)
+                await db_run("UPDATE users SET matches = ? WHERE userId = ?", [json.dumps(matches2), data.toUser])
+    
+    return {"success": True}
+
+
+@router.delete("/dislike")
+async def remove_dislike(data: DislikeRequest):
+    """Удалить дизлайк пользователю"""
+    if not data.toUser:
+        raise HTTPException(status_code=400, detail="toUser обязателен")
+    
+    from_user_row = await db_get("SELECT dislikes FROM users WHERE userId = ?", [data.fromUser])
+    if not from_user_row:
+        raise HTTPException(status_code=404, detail="Отправитель не найден")
+    
+    dislikes = safe_json_parse(from_user_row.get("dislikes"), [])
+    
+    # Удаляем дизлайк, если он есть
+    if data.toUser in dislikes:
+        dislikes.remove(data.toUser)
+        await db_run("UPDATE users SET dislikes = ? WHERE userId = ?", [json.dumps(dislikes), data.fromUser])
+    
+    return {"success": True}
+
+
 @router.post("/superlike")
 async def superlike_user(data: SuperlikeRequest):
     """Поставить суперлайк пользователю"""

@@ -34,7 +34,7 @@ window.swipeHistory = swipeHistory;
 
 window.currentIndex = 0;
 
-export function showPreviousCandidate() {
+export async function showPreviousCandidate() {
   console.log('🔄 [showPreviousCandidate] ВЫЗВАНА, swipeHistory.length:', window.swipeHistory.length);
   if (window.swipeHistory.length > 0) {
     window._isBackAction = true;
@@ -42,18 +42,53 @@ export function showPreviousCandidate() {
     console.log('🔄 [showPreviousCandidate] Извлекаем из истории:', historyItem);
     
     // Обрабатываем как старый формат (просто кандидат), так и новый (объект с candidate и index)
-    let candidate, index;
+    let candidate, index, action;
     if (historyItem && typeof historyItem === 'object' && historyItem.candidate) {
-      // Новый формат: { candidate, index }
+      // Новый формат: { candidate, index, action? }
       candidate = historyItem.candidate;
       index = historyItem.index !== undefined ? historyItem.index : window.currentIndex;
+      action = historyItem.action; // 'like' или 'dislike'
     } else {
       // Старый формат: просто кандидат
       candidate = historyItem;
       index = window.currentIndex;
+      action = null; // Неизвестно, какое действие было
     }
     
-    console.log('🔄 [showPreviousCandidate] Восстанавливаем кандидата:', candidate.id || candidate.userId, 'на индекс:', index);
+    console.log('🔄 [showPreviousCandidate] Восстанавливаем кандидата:', candidate.id || candidate.userId, 'на индекс:', index, 'действие:', action);
+    
+    // КРИТИЧНО: Отменяем действие (лайк или дизлайк) на бэкенде
+    const candidateId = String(candidate.id || candidate.userId || '');
+    if (action === 'like') {
+      console.log('🔄 [showPreviousCandidate] Отменяем лайк для кандидата:', candidateId);
+      try {
+        const { removeLike } = await import('./api.js');
+        await removeLike(window.currentUser.userId, candidateId);
+        // Удаляем из локального массива likes
+        if (window.currentUser.likes && Array.isArray(window.currentUser.likes)) {
+          window.currentUser.likes = window.currentUser.likes.filter(id => String(id) !== String(candidateId));
+        }
+        console.log('🔄 [showPreviousCandidate] Лайк отменен');
+      } catch (err) {
+        console.error('❌ [showPreviousCandidate] Ошибка отмены лайка:', err);
+      }
+    } else if (action === 'dislike') {
+      console.log('🔄 [showPreviousCandidate] Отменяем дизлайк для кандидата:', candidateId);
+      try {
+        const { removeDislike } = await import('./api.js');
+        await removeDislike(window.currentUser.userId, candidateId);
+        // Удаляем из локального массива dislikes
+        if (window.currentUser.dislikes && Array.isArray(window.currentUser.dislikes)) {
+          window.currentUser.dislikes = window.currentUser.dislikes.filter(id => String(id) !== String(candidateId));
+        }
+        console.log('🔄 [showPreviousCandidate] Дизлайк отменен');
+      } catch (err) {
+        console.error('❌ [showPreviousCandidate] Ошибка отмены дизлайка:', err);
+      }
+    }
+    
+    // Обновляем данные пользователя после отмены действия
+    await refreshCurrentUser();
     
     // Вставляем кандидата обратно в массив
     window.candidates.splice(index, 0, candidate);
@@ -66,7 +101,6 @@ export function showPreviousCandidate() {
     }
     
     // Сохраняем информацию о плашке перед fillCard
-    const candidateId = String(candidate.id || candidate.userId || '');
     const shouldShowBadge = window.likesReceivedList && window.likesReceivedList.has(candidateId);
     
     // Заполняем карточку
@@ -617,7 +651,9 @@ export function moveToNextCandidate(direction = 'right') {
   if (!window._isBackAction && !window.inMutualMatch) {
     const currentCandidate = window.candidates[window.currentIndex];
     if (currentCandidate) {
-      window.swipeHistory.push({ candidate: currentCandidate, index: window.currentIndex });
+      // Определяем тип действия по направлению свайпа
+      const action = direction === 'right' ? 'like' : 'dislike';
+      window.swipeHistory.push({ candidate: currentCandidate, index: window.currentIndex, action });
       window.candidates.splice(window.currentIndex, 1);
       if (window.currentIndex >= window.candidates.length) {
         window.currentIndex = 0;
@@ -1286,8 +1322,8 @@ export async function doLike() {
                 window.singleCard.style.transition = "transform 0.5s ease";
                 window.singleCard.style.transform = `translate(1000px, 0) rotate(45deg)`;
                 setTimeout(() => {
-                    // Сохраняем кандидата в истории в правильном формате
-                    window.swipeHistory.push({ candidate: window.candidates[idx], index: idx });
+                    // Сохраняем кандидата в истории в правильном формате с типом действия
+                    window.swipeHistory.push({ candidate: window.candidates[idx], index: idx, action: 'like' });
                     // УБИРАЕМ удаление кандидата отсюда - оно будет в moveToNextCandidate
                     // window.candidates.splice(idx, 1);
                     window.moveToNextCandidate && window.moveToNextCandidate('right');
@@ -1357,6 +1393,9 @@ export async function doDislike() {
         
         // Обновляем данные пользователя после дизлайка
         await refreshCurrentUser();
+        
+        // Сохраняем кандидата в истории с типом действия
+        window.swipeHistory.push({ candidate: window.candidates[idx], index: idx, action: 'dislike' });
         
         window.moveToNextCandidate && window.moveToNextCandidate('left');
     } catch (err) {

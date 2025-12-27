@@ -91,6 +91,10 @@ export const sendLike = (fromUser, toUser) => request('/like', { method: 'POST',
 export const sendDislike = (fromUser, toUser) => request('/dislike', { method: 'POST', body: JSON.stringify({ fromUser, toUser }) });
 export const sendSuperLike = (senderId, receiverId) => request('/superlike', { method: 'POST', body: JSON.stringify({ senderId, receiverId }) });
 
+// Remove like/dislike
+export const removeLike = (fromUser, toUser) => request('/like', { method: 'DELETE', body: JSON.stringify({ fromUser, toUser }) });
+export const removeDislike = (fromUser, toUser) => request('/dislike', { method: 'DELETE', body: JSON.stringify({ fromUser, toUser }) });
+
 // Matches
 export const getMatches = (userId) => {
   if (!userId) throw new Error("userId is required for getMatches");
