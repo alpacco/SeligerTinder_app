@@ -532,22 +532,80 @@ export async function showCandidateProfile(match) {
   }
 
   // 3. ИНТЕРАКТИВНОСТЬ: ПЕРЕКЛЮЧЕНИЕ ФОТО
+  // КРИТИЧНО: Используем данные из window.viewingCandidate, чтобы всегда использовать актуальные данные
+  // Также сохраняем индекс фото в data-атрибуте элемента, чтобы избежать конфликтов
   const photosArr = match.photos || [];
-  let candPhotoIndex = 0;
+  
+  // КРИТИЧНО: Удаляем старый обработчик, если он был
+  if (pic) {
+    pic.onclick = null;
+    // Удаляем старый обработчик через клонирование
+    const newPic = pic.cloneNode(true);
+    pic.parentNode.replaceChild(newPic, pic);
+    pic = newPic;
+  }
+  
+  // КРИТИЧНО: Инициализируем индекс фото из data-атрибута или 0
+  let candPhotoIndex = parseInt(pic?.dataset?.photoIndex || '0', 10);
+  if (isNaN(candPhotoIndex) || candPhotoIndex < 0 || candPhotoIndex >= photosArr.length) {
+    candPhotoIndex = 0;
+  }
+  
+  // КРИТИЧНО: Сохраняем ID кандидата в data-атрибуте для проверки
+  if (pic) {
+    pic.dataset.candidateId = candidateId;
+    pic.dataset.photoIndex = candPhotoIndex;
+  }
+  
   if (photosArr.length > 1) {
     if (pic) pic.style.cursor = 'pointer';
     // Используем customRenderPaginator из swipe.js для корректной работы
     if (paginatorEl) {
-      customRenderPaginator(paginatorEl, photosArr.length, 0);
+      customRenderPaginator(paginatorEl, photosArr.length, candPhotoIndex);
     }
-    if (pic) pic.onclick = () => {
-      candPhotoIndex = (candPhotoIndex + 1) % photosArr.length;
-      pic.style.backgroundImage = `url('${photosArr[candPhotoIndex]}?cb=${Date.now()}')`;
-      // Обновляем пагинатор при переключении фото
-      if (paginatorEl) {
-        customRenderPaginator(paginatorEl, photosArr.length, candPhotoIndex);
-      }
-    };
+    if (pic) {
+      pic.onclick = () => {
+        // КРИТИЧНО: Проверяем, что мы все еще смотрим на того же кандидата
+        const currentCandidateId = String(window.viewingCandidate?.id || window.viewingCandidate?.userId || '');
+        if (pic.dataset.candidateId !== currentCandidateId) {
+          console.warn('[match.js] ⚠️ Кандидат изменился, обновляем данные');
+          // Обновляем данные из window.viewingCandidate
+          const currentMatch = window.viewingCandidate;
+          if (currentMatch && currentMatch.photos && currentMatch.photos.length > 0) {
+            pic.dataset.candidateId = currentCandidateId;
+            pic.dataset.photoIndex = '0';
+            candPhotoIndex = 0;
+            pic.style.backgroundImage = `url('${currentMatch.photos[0]}?cb=${Date.now()}')`;
+            if (paginatorEl) {
+              customRenderPaginator(paginatorEl, currentMatch.photos.length, 0);
+            }
+            return;
+          }
+        }
+        
+        // КРИТИЧНО: Получаем актуальные фото из window.viewingCandidate
+        const currentMatch = window.viewingCandidate;
+        const currentPhotos = currentMatch?.photos || photosArr;
+        
+        // Обновляем индекс
+        candPhotoIndex = (parseInt(pic.dataset.photoIndex || '0', 10) + 1) % currentPhotos.length;
+        pic.dataset.photoIndex = candPhotoIndex;
+        
+        // Обновляем фото
+        pic.style.backgroundImage = `url('${currentPhotos[candPhotoIndex]}?cb=${Date.now()}')`;
+        
+        // Обновляем пагинатор при переключении фото
+        if (paginatorEl) {
+          customRenderPaginator(paginatorEl, currentPhotos.length, candPhotoIndex);
+        }
+      };
+    }
+  } else {
+    // Если фото одно, сбрасываем индекс
+    if (pic) {
+      pic.dataset.photoIndex = '0';
+      pic.onclick = null;
+    }
   }
 
   // 4. ПОКАЗ ЭКРАНА
