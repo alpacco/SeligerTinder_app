@@ -1014,7 +1014,8 @@ async function renderMatchesOld() {
       // Открыть детальную карточку кандидата по клику на аватар+имя
       div.querySelector('.match-user').addEventListener('click', () => {
         viewingCandidate = m;
-        showScreen("screen-profile");
+        // Используем правильную версию из match.js
+        window.showCandidateProfile && window.showCandidateProfile(m);
       });
     });
 

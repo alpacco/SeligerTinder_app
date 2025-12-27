@@ -160,6 +160,7 @@ export async function showCandidateProfile(match) {
   console.log('[match.js] match объект:', match);
   console.log('[match.js] match.id:', match?.id);
   console.log('[match.js] match.userId:', match?.userId);
+  // ВАЖНО: Устанавливаем viewingCandidate ДО любых других операций, чтобы renderProLikesStats не удалял header-sub-row
   window.viewingCandidate = match; // Устанавливаем состояние: сейчас смотрим кандидата
   // 1. ЗАГРУЗКА ДАННЫХ
   try {
@@ -356,11 +357,19 @@ export async function showCandidateProfile(match) {
           })
           .catch((err) => { 
             console.error('[match.js] Ошибка при загрузке last login:', err);
-            el.textContent = '—'; 
+            const currentEl = document.getElementById('candidate-last-login-element');
+            if (currentEl) {
+              currentEl.textContent = '—';
+            } else {
+              console.error('[match.js] ❌ Элемент удален до обработки ошибки!');
+            }
           });
         } else {
           console.warn('[match.js] userIdForLastLogin отсутствует, match:', match);
-          el.textContent = '—';
+          const currentEl = document.getElementById('candidate-last-login-element');
+          if (currentEl) {
+            currentEl.textContent = '—';
+          }
         }
       } else {
         console.warn('[match.js] header-sub-row не найден в header');

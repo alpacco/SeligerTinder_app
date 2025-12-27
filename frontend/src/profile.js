@@ -822,8 +822,9 @@ export function renderProfileFooter(profileData, container) {
   const footer = document.createElement('div');
   footer.className = 'profile-footer';
 
-  // Пример: если это мэтч с username
-  if ((profileData.userId || profileData.id || '').startsWith('VALID_') && profileData.username && profileData.username.trim()) {
+  // Показываем "Написать" если есть username, иначе "Помахать"
+  // Проверяем username напрямую, без проверки на VALID_
+  if (profileData.username && profileData.username.trim()) {
     footer.innerHTML = `
       <button id="candidate-write-btn" class="profile-button">Написать</button>
     `;
