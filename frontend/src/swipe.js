@@ -1071,6 +1071,11 @@ export async function moveToNextCandidate(direction = 'right') {
       window.currentIndex = (window.currentIndex + 1) % window.candidates.length;
     } else {
       window.currentIndex = 0;
+      // КРИТИЧНО: Если кандидатов нет, показываем экран "Пригласить"
+      if (window.showCandidate) {
+        await window.showCandidate();
+        return; // Выходим, так как showCandidate уже показал экран приглашения
+      }
     }
     
     // ВСЕГДА сбрасываем кнопки к состоянию по умолчанию ПЕРЕД показом нового кандидата
