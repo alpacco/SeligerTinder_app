@@ -120,7 +120,20 @@ function renderProLikesStats(currentUser) {
   }
   
   // Показываем статистику только для активных PRO пользователей
-  const made = currentUser.likes.length;
+  // Убеждаемся, что likes - это массив
+  let likesArray = currentUser.likes;
+  if (typeof likesArray === 'string') {
+    try {
+      likesArray = JSON.parse(likesArray);
+    } catch (e) {
+      console.warn('Ошибка парсинга likes в renderProLikesStats:', e);
+      likesArray = [];
+    }
+  }
+  if (!Array.isArray(likesArray)) {
+    likesArray = [];
+  }
+  const made = likesArray.length;
   subRow.innerHTML = `
     <div class="profile-likes-stats">
       <span class="likes-made-line">
@@ -136,7 +149,15 @@ function renderProLikesStats(currentUser) {
   fetchLikesReceived(currentUser.userId)
     .then(js => {
       if (!js) return;
-      if (js.success) subRow.querySelector(".likes-rec-count").textContent = js.count;
+      if (js.success) {
+        const countEl = subRow.querySelector(".likes-rec-count");
+        if (countEl) countEl.textContent = js.count || 0;
+      }
+    })
+    .catch(err => {
+      console.error('Ошибка загрузки полученных лайков:', err);
+      const countEl = subRow.querySelector(".likes-rec-count");
+      if (countEl) countEl.textContent = '0';
     });
 }
 
@@ -164,7 +185,20 @@ function renderProSwipeStats(currentUser) {
   }
   
   // Показываем статистику только для активных PRO пользователей
-  const made = currentUser.likes.length;
+  // Убеждаемся, что likes - это массив
+  let likesArray = currentUser.likes;
+  if (typeof likesArray === 'string') {
+    try {
+      likesArray = JSON.parse(likesArray);
+    } catch (e) {
+      console.warn('Ошибка парсинга likes в renderProSwipeStats:', e);
+      likesArray = [];
+    }
+  }
+  if (!Array.isArray(likesArray)) {
+    likesArray = [];
+  }
+  const made = likesArray.length;
   subRow.innerHTML = `
     <div class="profile-likes-stats">
       <span class="likes-made-line">
@@ -180,7 +214,15 @@ function renderProSwipeStats(currentUser) {
   fetchLikesReceived(currentUser.userId)
     .then(js => {
       if (!js) return;
-      if (js.success) subRow.querySelector(".likes-rec-count").textContent = js.count;
+      if (js.success) {
+        const countEl = subRow.querySelector(".likes-rec-count");
+        if (countEl) countEl.textContent = js.count || 0;
+      }
+    })
+    .catch(err => {
+      console.error('Ошибка загрузки полученных лайков:', err);
+      const countEl = subRow.querySelector(".likes-rec-count");
+      if (countEl) countEl.textContent = '0';
     });
 }
 
