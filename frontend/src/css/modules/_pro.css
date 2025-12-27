@@ -231,9 +231,7 @@ body.is-pro #matches-count {
   min-width: 20px;
   height: 20px;
   padding: 0 4px;
-  color: var(--color-white);
   font-size: var(--font-size-sm);
-  color: var(--color-gold_p);
   line-height: 20px;
   text-align: center;
   border-radius: var(--radius-md);
@@ -242,12 +240,14 @@ body.is-pro #matches-count {
 
 body.is-pro #superlike-count {
   background: var(--color-black_p);
+  color: var(--color-gold_p);
   top: -3px;
   right: -3px;
 }
 
 body.is-pro #matches-count {
   background: var(--color-red);
+  color: var(--color-white);
   top: -6px;
   right: -6px;
 }
