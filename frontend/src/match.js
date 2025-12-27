@@ -180,9 +180,15 @@ export async function showCandidateProfile(match) {
   const candidateId = String(match?.id || match?.userId || '');
   
   // Предотвращаем множественные вызовы для одного и того же кандидата
+  // НО только если это действительно тот же кандидат И функция еще выполняется
   if (isShowingCandidateProfile && lastShownCandidateId === candidateId) {
     console.log('[match.js] ⚠️ showCandidateProfile уже выполняется для этого кандидата, пропускаем');
     return;
+  }
+  
+  // Если это другой кандидат, сбрасываем флаг и продолжаем
+  if (lastShownCandidateId !== candidateId) {
+    isShowingCandidateProfile = false;
   }
   
   isShowingCandidateProfile = true;
@@ -194,6 +200,12 @@ export async function showCandidateProfile(match) {
   console.log('[match.js] match.userId:', match?.userId);
   // ВАЖНО: Устанавливаем viewingCandidate ДО любых других операций, чтобы renderProLikesStats не удалял header-sub-row
   window.viewingCandidate = match; // Устанавливаем состояние: сейчас смотрим кандидата
+  
+  // Сбрасываем флаг сразу после установки viewingCandidate, чтобы не блокировать повторные клики
+  // Флаг нужен только для предотвращения одновременных вызовов, а не для блокировки всех последующих
+  setTimeout(() => {
+    isShowingCandidateProfile = false;
+  }, 100); // Уменьшаем время до 100мс - достаточно для предотвращения спама, но не блокирует нормальные клики
   // 1. ЗАГРУЗКА ДАННЫХ
   try {
     const url = `${window.API_URL}/user?userId=${match.id}`;
@@ -543,12 +555,9 @@ export async function showCandidateProfile(match) {
   window.viewingCandidate = match;
   console.log('[match.js] showCandidateProfile: window.viewingCandidate установлен перед showScreen:', window.viewingCandidate);
   
-  // Сбрасываем флаг после небольшой задержки, чтобы предотвратить повторные вызовы
-  setTimeout(() => {
-    isShowingCandidateProfile = false;
-  }, 1000);
-  
   window.showScreen && window.showScreen('screen-profile');
+  
+  // Сбрасываем флаг сразу после показа экрана (флаг уже сброшен выше через 100мс)
 
   // 5. ИНТЕРАКТИВНОСТЬ: КНОПКИ
   const editBtn = document.getElementById("edit-profile-button");
