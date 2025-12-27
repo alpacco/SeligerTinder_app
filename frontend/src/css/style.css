@@ -822,6 +822,7 @@ flex: 1;
     padding: 0;
     margin-top: 0px;
     overflow: visible; /* Убираем любой overflow */
+    min-width: 0; /* Позволяет flex-элементам сжиматься */
 }
 .match-card .match-name {
   margin-right: auto;
