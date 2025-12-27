@@ -785,36 +785,43 @@ export async function showCandidate() {
     return;
   }
   if (!window.candidates || window.candidates.length === 0 || window.currentIndex >= window.candidates.length) {
-    const newCard = singleCard.cloneNode(false); // без детей и событий
-    singleCard.parentNode.replaceChild(newCard, singleCard);
-
-    newCard.style.backgroundImage = "none";
-    newCard.style.backgroundColor = "#fff";
+    console.log('🔄 [showCandidate] Нет кандидатов, показываем экран "Пригласить"');
+    // КРИТИЧНО: Очищаем карточку полностью и показываем экран приглашения
+    singleCard.style.backgroundImage = "none";
+    singleCard.style.backgroundColor = "#fff";
+    singleCard.style.boxShadow = "none";
     // Если needPhoto=1, показываем "Загрузите фото", иначе "Пригласить"
     const buttonText = window.currentUser && window.currentUser.needPhoto === 1 ? "Загрузите фото" : "Пригласить";
     const buttonId = window.currentUser && window.currentUser.needPhoto === 1 ? "add-photo-swipe-btn" : "invite-button";
-    newCard.innerHTML = `
+    singleCard.innerHTML = `
       <div class="no-users invite-wrapper">
         <h3>Нет новых пользователей</h3>
         <button id="${buttonId}" class="invite-button">${buttonText}</button>
       </div>
     `;
-    newCard.style.boxShadow = "none";
-    newCard.className = "card";
+    singleCard.className = "app-card";
     // Скрываем кнопки лайк/дизлайк, PRO-кнопки управляются отдельно
     document.querySelectorAll(".like_d, .dislike_d").forEach(b => b.style.display = "none");
-    const btn = newCard.querySelector(`#${buttonId}`);
+    const btn = singleCard.querySelector(`#${buttonId}`);
     if (btn) {
+      // Удаляем старые обработчики через клонирование
+      const newBtn = btn.cloneNode(true);
+      btn.parentNode.replaceChild(newBtn, btn);
       if (window.currentUser && window.currentUser.needPhoto === 1) {
         // Если needPhoto=1, открываем модалку для загрузки фото
-        btn.addEventListener("click", function() {
-          if (window.handlePhotoAddition) {
-            window.handlePhotoAddition.call(btn);
+        newBtn.addEventListener("click", () => {
+          const input = document.getElementById("photo-upload-input");
+          if (input) {
+            input.click();
           }
         });
       } else {
         // Иначе - приглашение
-        btn.addEventListener("click", window.shareInvite);
+        newBtn.addEventListener("click", () => {
+          if (window.shareInvite) {
+            window.shareInvite();
+          }
+        });
       }
     }
     return;
