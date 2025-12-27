@@ -2217,6 +2217,7 @@ window.loadCandidates = loadCandidates;
 window.initSwipeScreen = initSwipeScreen;
 window.updateSwipeScreen = updateSwipeScreen;
 window.showPreviousCandidate = showPreviousCandidate;
+window.showNextCandidate = showNextCandidate;
 window.customHideBadges = customHideBadges;
 window.customRenderPaginator = customRenderPaginator;
 window.cyclePhoto = cyclePhoto;
