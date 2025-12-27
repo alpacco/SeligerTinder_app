@@ -543,11 +543,17 @@ async def get_last_login(userId: str):
         row = await db_get("SELECT lastLogin FROM users WHERE userId = ?", [userId])
         if not row:
             raise HTTPException(status_code=404, detail="User not found")
-        return {"success": True, "lastLogin": row.get("lastLogin")}
+        last_login = row.get("lastLogin")
+        # Если lastLogin NULL или пустой, возвращаем None
+        if not last_login or last_login == 'null' or last_login == '':
+            return {"success": True, "lastLogin": None}
+        return {"success": True, "lastLogin": last_login}
     except HTTPException:
         raise
     except Exception as e:
         print(f"[GET /api/last-login/{userId}] Ошибка: {e}")
+        import traceback
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
 
 
