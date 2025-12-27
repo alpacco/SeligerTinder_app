@@ -147,6 +147,11 @@ frontend/node_modules/
 frontend/dist/
 frontend/.vite/
 
+# User uploaded images (gifts)
+frontend/public/img/gifts/*.jpg
+frontend/public/img/gifts/*.jpeg
+frontend/public/img/gifts/*.png
+
 # Old code backup (exclude from deployment)
 old/
 
