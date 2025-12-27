@@ -178,7 +178,21 @@ export async function showCandidateProfile(match) {
       const d = json.data;
       match.bio = d.bio || "";
       match.age = d.age || null;
-      match.photos = [d.photo1, d.photo2, d.photo3].filter(p => p);
+      // Нормализуем пути к фото так же, как в card.js
+      const rawPhotos = [d.photo1, d.photo2, d.photo3].filter(p => p);
+      match.photos = rawPhotos.map(rawPhoto => {
+        if (rawPhoto.startsWith('http') || rawPhoto.startsWith('data:')) {
+          return rawPhoto;
+        } else if (rawPhoto.startsWith('/data/img/')) {
+          return rawPhoto;
+        } else if (rawPhoto === '/img/photo.svg') {
+          return rawPhoto;
+        } else {
+          // Если это только имя файла, формируем полный путь
+          const filename = rawPhoto.split('/').pop();
+          return `/data/img/${match.id || match.userId}/${filename}`;
+        }
+      });
       match.badge = d.badge || "";
     }
   } catch (err) {
@@ -225,9 +239,13 @@ export async function showCandidateProfile(match) {
     // Рендерим фото кандидата вручную, без fillCard чтобы избежать конфликта обработчиков
     const photosArr = match.photos || [];
     if (photosArr.length > 0) {
+      // Используем уже нормализованные пути из match.photos
       const photoUrl = photosArr[0];
       const finalUrl = photoUrl.startsWith('data:') ? photoUrl : `${photoUrl}?cb=${Date.now()}`;
       pic.style.backgroundImage = `url('${finalUrl}')`;
+      console.log('[match.js] Установлено фоновое изображение:', finalUrl);
+    } else {
+      console.warn('[match.js] Нет фото для кандидата, match.photos:', match.photos);
     }
     
     // Создаем контейнер для целей, если его нет
@@ -305,6 +323,8 @@ export async function showCandidateProfile(match) {
         el.style.padding = '5px 0';
         el.style.opacity = '1';
         el.style.visibility = 'visible';
+        // Сохраняем ссылку на элемент в замыкании для надежного обновления
+        let lastLoginElementRef = el;
         el.textContent = 'Загрузка...';
         subRow.appendChild(el);
         console.log('[match.js] ✅ Элемент last login создан и добавлен в subRow');
@@ -312,30 +332,36 @@ export async function showCandidateProfile(match) {
         console.log('[match.js] subRow.children.length:', subRow.children.length);
         console.log('[match.js] Элемент в DOM:', document.getElementById('candidate-last-login-element'));
         console.log('[match.js] window.viewingCandidate установлен:', !!window.viewingCandidate);
-        // Проверяем, что элемент действительно виден через разные интервалы
-        [50, 100, 200, 500, 1000].forEach(delay => {
-          setTimeout(() => {
-            const checkEl = document.getElementById('candidate-last-login-element');
-            if (checkEl) {
-              const styles = window.getComputedStyle(checkEl);
-              const parent = checkEl.parentElement;
-              console.log(`[match.js] Проверка элемента через ${delay}ms:`, {
-                display: styles.display,
-                visibility: styles.visibility,
-                opacity: styles.opacity,
-                color: styles.color,
-                textContent: checkEl.textContent,
-                parent: parent ? parent.className : 'нет родителя',
-                parentInnerHTML: parent ? parent.innerHTML.substring(0, 100) : 'нет родителя',
-                windowViewingCandidate: !!window.viewingCandidate
-              });
+        
+        // Функция для безопасного обновления текста элемента
+        const updateLastLoginText = (text) => {
+          // Проверяем элемент через ID и через ссылку
+          const byId = document.getElementById('candidate-last-login-element');
+          const byRef = lastLoginElementRef;
+          const targetEl = byId || byRef;
+          
+          if (targetEl && targetEl.parentElement) {
+            // Проверяем, что элемент все еще в DOM
+            if (document.body.contains(targetEl)) {
+              targetEl.textContent = text;
+              console.log('[match.js] ✅ Текст обновлен:', text);
+              return true;
             } else {
-              console.error(`[match.js] ❌ Элемент не найден через ${delay}ms!`);
-              console.error('[match.js] subRow.innerHTML:', subRow.innerHTML);
-              console.error('[match.js] subRow.children:', Array.from(subRow.children).map(c => c.id || c.className));
+              console.warn('[match.js] ⚠️ Элемент не в DOM, но ссылка сохранена');
+              // Пытаемся найти элемент заново
+              const found = document.getElementById('candidate-last-login-element');
+              if (found) {
+                found.textContent = text;
+                lastLoginElementRef = found; // Обновляем ссылку
+                console.log('[match.js] ✅ Элемент найден заново, текст обновлен:', text);
+                return true;
+              }
             }
-          }, delay);
-        });
+          }
+          console.error('[match.js] ❌ Не удалось обновить текст, элемент не найден');
+          return false;
+        };
+        
         if (userIdForLastLogin) {
           console.log('[match.js] Загружаем last login для userId:', userIdForLastLogin, 'URL:', `${window.API_URL}/last-login/${userIdForLastLogin}`);
           fetch(`${window.API_URL}/last-login/${userIdForLastLogin}`)
@@ -349,13 +375,6 @@ export async function showCandidateProfile(match) {
            })
            .then(js => {
              console.log('[match.js] Получен ответ last login:', js);
-             // Проверяем, что элемент все еще существует перед обновлением
-             const currentEl = document.getElementById('candidate-last-login-element');
-             if (!currentEl) {
-               console.error('[match.js] ❌ Элемент удален до обновления текста!');
-               return;
-             }
-             console.log('[match.js] Элемент найден перед обновлением, textContent:', currentEl.textContent);
              const lastLoginTime = js.lastLogin;
             if (lastLoginTime) {
               console.log('[match.js] lastLoginTime найден:', lastLoginTime);
@@ -366,34 +385,27 @@ export async function showCandidateProfile(match) {
               if      (diffH < 24)    timeText = 'сегодня';
               else if (diffH < 48)    timeText = 'вчера';
               else if (diffH < 24*7)  timeText = `${Math.floor(diffH/24)} дня назад`;
-              else                    timeText = 'неделю назад';
+              else if (diffH < 24*30) timeText = `${Math.floor(diffH/24)} дней назад`;
+              else                    timeText = 'давно';
               let verb;
               if (window.currentUser.gender === 'male') verb = 'Была';
               else if (window.currentUser.gender === 'female') verb = 'Был';
               else verb = ((match.gender || window.viewingCandidate?.gender) === 'female' ? 'Была' : 'Был');
-              currentEl.textContent = `${verb} ${timeText}`;
-              console.log('[match.js] Текст установлен:', currentEl.textContent);
+              const finalText = `${verb} ${timeText}`;
+              updateLastLoginText(finalText);
+              console.log('[match.js] Текст установлен:', finalText);
             } else {
               console.log('[match.js] lastLoginTime отсутствует в ответе (null или undefined), показываем "—"');
-              currentEl.textContent = '—';
-              console.log('[match.js] Текст "—" установлен, элемент:', currentEl);
+              updateLastLoginText('—');
             }
           })
           .catch((err) => { 
             console.error('[match.js] Ошибка при загрузке last login:', err);
-            const currentEl = document.getElementById('candidate-last-login-element');
-            if (currentEl) {
-              currentEl.textContent = '—';
-            } else {
-              console.error('[match.js] ❌ Элемент удален до обработки ошибки!');
-            }
+            updateLastLoginText('—');
           });
         } else {
           console.warn('[match.js] userIdForLastLogin отсутствует, match:', match);
-          const currentEl = document.getElementById('candidate-last-login-element');
-          if (currentEl) {
-            currentEl.textContent = '—';
-          }
+          updateLastLoginText('—');
         }
       } else {
         console.warn('[match.js] header-sub-row не найден в header');
