@@ -710,6 +710,11 @@ flex: 1;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
+  display: none; /* Скрыто по умолчанию, показывается JS */
+  opacity: 0;
+  z-index: 1000;
+  font-size: 64px;
+  pointer-events: none;
 }
 .match-animation {
   animation: heartPulse 1s ease-in-out;
@@ -2594,6 +2599,11 @@ flex: 1;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
+  display: none; /* Скрыто по умолчанию, показывается JS */
+  opacity: 0;
+  z-index: 1000;
+  font-size: 64px;
+  pointer-events: none;
 }
 .match-animation {
   animation: heartPulse 1s ease-in-out;

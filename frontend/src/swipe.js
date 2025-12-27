@@ -1,6 +1,6 @@
 // Модуль swipe.js: ВСЯ ЛОГИКА СВАЙПОВ, анимаций, обработчиков свайпов, кнопок и спец.событий
 // Версия модуля для отладки кэша
-const SWIPE_MODULE_VERSION = '2025-01-27-match-badge-animation-fix-v2';
+const SWIPE_MODULE_VERSION = '2025-01-27-match-badge-animation-fix-v3';
 console.log('🔄 [CACHE] swipe.js загружен, версия:', SWIPE_MODULE_VERSION);
 console.log('🔄 [CACHE] swipe.js загружен, timestamp:', new Date().toISOString());
 // Экспортируемые функции:
@@ -1399,7 +1399,7 @@ export function updateSwipeScreen() {
 }
 
 // Глобальная переменная для хранения списка пользователей, которые поставили лайк
-window.likesReceivedList = null;
+window.likesReceivedList = new Set();
 
 /**
  * Загружает список пользователей, которые поставили лайк текущему пользователю
@@ -1568,6 +1568,7 @@ export async function loadCandidates() {
 }
 
 export async function initSwipeScreen() {
+  console.log('[swipe.js] 🔵 ========== initSwipeScreen ВЫЗВАНА ==========');
   showSwipeSkeleton();
   // setTimeout(() => { hideSwipeSkeleton(); }, 2000); // УБРАНО: отладочный таймаут
   // Обновляем UI (аватар, имя, бейдж)
@@ -1576,10 +1577,13 @@ export async function initSwipeScreen() {
   
   // Загружаем список полученных лайков для PRO пользователей
   const now = Date.now();
+  console.log('[swipe.js] 🔵 initSwipeScreen: проверка PRO статуса');
+  console.log('[swipe.js] 🔵 initSwipeScreen: window.currentUser =', window.currentUser);
   const isPro = window.currentUser && 
     (window.currentUser.is_pro === true || window.currentUser.is_pro === 'true' || window.currentUser.is_pro === 1) &&
     window.currentUser.pro_end && 
     new Date(window.currentUser.pro_end).getTime() > now;
+  console.log('[swipe.js] 🔵 initSwipeScreen: isPro =', isPro);
   if (isPro) {
     console.log('[swipe.js] 🔵 initSwipeScreen: PRO активен, загружаем likesReceived');
     await loadLikesReceived();
@@ -1605,6 +1609,14 @@ export async function initSwipeScreen() {
 
   // Загружаем пользователя и кандидатов
   await window.loadCandidates();
+  
+  // ПОВТОРНО загружаем likesReceived после загрузки кандидатов (на случай если данные изменились)
+  if (isPro) {
+    console.log('[swipe.js] 🔵 initSwipeScreen: повторная загрузка likesReceived после loadCandidates');
+    await loadLikesReceived();
+    console.log('[swipe.js] ✅ initSwipeScreen: likesReceived перезагружен, список:', Array.from(window.likesReceivedList || []));
+  }
+  
   window.setupSwipeControls && window.setupSwipeControls();
   
   // После загрузки кандидатов и лайков показываем первого кандидата с бейджем

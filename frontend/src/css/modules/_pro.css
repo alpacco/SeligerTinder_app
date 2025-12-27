@@ -145,8 +145,11 @@ body.is-pro .app-card {
 body.is-pro .like-icon .st0,
 body.is-pro .like_d svg .st0,
 body.is-pro .like_d svg path,
-body.is-pro .like_d svg .st0 {
+body.is-pro .like_d svg .st0,
+body.is-pro .like_d .like-icon .st0,
+body.is-pro .like_d .like-icon path {
   fill: var(--color-red) !important;
+  stroke: var(--color-red) !important;
 }
 
 body.is-pro .back-icon .st0 {
