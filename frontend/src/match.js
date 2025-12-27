@@ -228,6 +228,14 @@ export async function showCandidateProfile(match) {
     window.currentUser.pro_end && 
     new Date(window.currentUser.pro_end).getTime() > now;
   
+  console.log('[match.js] Проверка PRO для last login:', {
+    isProActive,
+    is_pro: window.currentUser?.is_pro,
+    pro_end: window.currentUser?.pro_end,
+    now: new Date(now).toISOString(),
+    pro_end_time: window.currentUser?.pro_end ? new Date(window.currentUser.pro_end).toISOString() : null
+  });
+  
   if (isProActive) {
     console.log('[match.js] PRO активен, показываем last login');
     const headerSelector = '#screen-profile .profile-header';
