@@ -14,7 +14,7 @@
 
 // Версия приложения для обхода кэша Telegram
 // ВАЖНО: версия должна быть СТАТИЧЕСКОЙ, иначе будет бесконечная перезагрузка!
-const APP_VERSION = '2025-01-27-superlikes-lastlogin-fix-v4';
+const APP_VERSION = '2025-01-27-superlikes-lastlogin-fix-v6';
 console.log('🔄 [CACHE] main.js загружен, версия:', APP_VERSION);
 
 // Импортируем CSS (Vite обработает и скомпилирует)
@@ -779,9 +779,11 @@ if (profileEditBackBtn) {
 function showScreen(screenId) {
   // If we're showing a candidate's profile, skip default profile load
   if (screenId === "screen-profile" && viewingCandidate) {
+    console.log('[main.js] showScreen: показываем профиль кандидата, viewingCandidate:', viewingCandidate);
     document.querySelectorAll(".screen").forEach(scr => scr.style.display = "none");
     document.getElementById("screen-profile").style.display = "block";
-    window.showCandidateProfile && window.showCandidateProfile(viewingCandidate); // Используем версию из match.js
+    // Используем импортированную функцию из match.js
+    showCandidateProfileFromMatch(viewingCandidate);
     return;
   }
   // 1. Скрываем все
