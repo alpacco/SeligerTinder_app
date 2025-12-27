@@ -14,7 +14,7 @@
 
 // Версия приложения для обхода кэша Telegram
 // ВАЖНО: версия должна быть СТАТИЧЕСКОЙ, иначе будет бесконечная перезагрузка!
-const APP_VERSION = '2025-01-27-write-btn-color-fix-v9';
+const APP_VERSION = '2025-01-27-back-btn-fix-v10';
 console.log('🔄 [CACHE] main.js загружен, версия:', APP_VERSION);
 
 // Импортируем CSS (Vite обработает и скомпилирует)
@@ -483,10 +483,12 @@ if (matchesBackBtn) {
 const profileBackBtn = document.getElementById("profile-back-button");
 if (profileBackBtn) {
   profileBackBtn.addEventListener("click", () => {
-    if (viewingCandidate) {
-      viewingCandidate = null;
+    // Используем window.viewingCandidate вместо локальной переменной
+    if (window.viewingCandidate) {
+      console.log("▶ Back из Profile кандидата -> переход на screen-matches");
+      window.viewingCandidate = null;
       showScreen("screen-matches");
-      } else {
+    } else {
       console.log("▶ Back из Profile -> переход на screen-swipe");
       showScreen("screen-swipe");
     }
