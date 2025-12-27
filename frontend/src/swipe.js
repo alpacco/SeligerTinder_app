@@ -49,9 +49,22 @@ export async function showPreviousCandidate() {
   }
   
   // Переходим назад в истории
-  // КРИТИЧНО: Проверяем, что есть элементы в истории и мы не на первом элементе
-  if (window.swipeHistory.length > 0 && window.swipeHistoryIndex > 0) {
-    window.swipeHistoryIndex--;
+  // КРИТИЧНО: Проверяем, что есть элементы в истории
+  // Если мы не в истории (swipeHistoryIndex === -1), переходим к последнему элементу истории
+  // Если мы в истории (swipeHistoryIndex > 0), переходим к предыдущему элементу
+  if (window.swipeHistory.length > 0) {
+    // Если мы не в истории, переходим к последнему элементу
+    if (window.swipeHistoryIndex === -1) {
+      window.swipeHistoryIndex = window.swipeHistory.length - 1;
+    } else if (window.swipeHistoryIndex > 0) {
+      // Если мы в истории и не на первом элементе, переходим к предыдущему
+      window.swipeHistoryIndex--;
+    } else {
+      // Если мы на первом элементе истории (swipeHistoryIndex === 0), нельзя идти назад
+      console.warn('🔄 [showPreviousCandidate] Уже на первом элементе истории, нельзя идти назад');
+      return;
+    }
+    
     window._isBackAction = true;
     const historyItem = window.swipeHistory[window.swipeHistoryIndex];
     console.log('🔄 [showPreviousCandidate] Извлекаем из истории по индексу', window.swipeHistoryIndex, ':', historyItem);
