@@ -141,7 +141,11 @@ body.is-pro .app-card {
   border-radius: 30px !important;
 }
 
-body.is-pro .like-icon .st0 {
+/* Переопределяем белый цвет для лайка в PRO режиме */
+body.is-pro .like-icon .st0,
+body.is-pro .like_d svg .st0,
+body.is-pro .like_d svg path,
+body.is-pro .like_d svg .st0 {
   fill: var(--color-red) !important;
 }
 
@@ -149,11 +153,15 @@ body.is-pro .back-icon .st0 {
   fill: var(--color-white) !important;
 }
 
-body.is-pro .dislike-icon .st0 {
+body.is-pro .dislike-icon .st0,
+body.is-pro .dislike_d svg .st0,
+body.is-pro .dislike_d svg path {
   fill: var(--color-gray) !important;
 }
 
-body.is-pro .superlike-icon .st0 {
+body.is-pro .superlike-icon .st0,
+body.is-pro .superlike_d svg .st0,
+body.is-pro .superlike_d svg path {
   fill: var(--color-gold_p) !important;
 }
 

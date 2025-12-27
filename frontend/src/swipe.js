@@ -1,6 +1,6 @@
 // Модуль swipe.js: ВСЯ ЛОГИКА СВАЙПОВ, анимаций, обработчиков свайпов, кнопок и спец.событий
 // Версия модуля для отладки кэша
-const SWIPE_MODULE_VERSION = '2025-01-27-match-click-fix-v1';
+const SWIPE_MODULE_VERSION = '2025-01-27-match-badge-animation-fix-v2';
 console.log('🔄 [CACHE] swipe.js загружен, версия:', SWIPE_MODULE_VERSION);
 console.log('🔄 [CACHE] swipe.js загружен, timestamp:', new Date().toISOString());
 // Экспортируемые функции:
@@ -367,10 +367,18 @@ export function showCandidate() {
   }
   // Обычная карточка
   const currentCandidate = window.candidates[window.currentIndex];
+  if (!currentCandidate) {
+    console.warn('[swipe.js] ⚠️ showCandidate: нет кандидата по индексу', window.currentIndex);
+    return;
+  }
   fillCard(singleCard, { ...currentCandidate });
   
   // Показываем плашку "Мэтч 💯" для PRO пользователей, если кандидат поставил лайк
-  showMatchBadgeIfLiked(singleCard, currentCandidate);
+  // Вызываем с небольшой задержкой, чтобы убедиться, что карточка отрендерена
+  // И что likesReceivedList загружен
+  setTimeout(() => {
+    showMatchBadgeIfLiked(singleCard, currentCandidate);
+  }, 200);
   
   singleCard.classList.remove("show-match", "returning");
   // Добавляю анимацию появления
@@ -675,36 +683,39 @@ export function onMutualLike() {
     // Обновляем карточку с данными текущего кандидата (чтобы убедиться, что данные актуальны)
     fillCard(window.singleCard, currentCandidate);
 
-    // Анимация сердца
-    const matchBadge = window.singleCard.querySelector(".badge-match");
+    // Создаем элемент .badge-match, если его нет (для анимации мэтча)
+    let matchBadge = window.singleCard.querySelector(".badge-match");
+    if (!matchBadge) {
+      matchBadge = document.createElement('div');
+      matchBadge.className = 'badge-match';
+      matchBadge.style.position = 'absolute';
+      matchBadge.style.top = '50%';
+      matchBadge.style.left = '50%';
+      matchBadge.style.transform = 'translate(-50%, -50%)';
+      matchBadge.style.zIndex = '1000';
+      matchBadge.style.fontSize = '64px';
+      matchBadge.style.pointerEvents = 'none';
+      window.singleCard.appendChild(matchBadge);
+      console.log('[swipe.js] ✅ Создан элемент .badge-match для анимации');
+    }
     if (matchBadge) {
       console.log('🎬 [onMutualLike] Показываем эмодзи ❤️‍🔥 с анимацией');
       matchBadge.innerHTML = "❤️‍🔥";
       matchBadge.style.opacity = "1";
-      matchBadge.style.transform = "";
+      matchBadge.style.display = "block";
+      matchBadge.style.visibility = "visible";
+      matchBadge.style.transform = "translate(-50%, -50%) scale(1)";
       // Принудительно перерисовываем для запуска анимации
       matchBadge.offsetWidth; // trigger reflow
       matchBadge.classList.add("match-animation");
+      console.log('🎬 [onMutualLike] Класс match-animation добавлен, элемент:', matchBadge);
       matchBadge.addEventListener("animationend", () => {
         console.log('🎬 [onMutualLike] Анимация эмодзи завершена');
         matchBadge.classList.remove("match-animation");
         matchBadge.style.opacity = "0";
       }, { once: true });
     } else {
-      console.warn('[swipe.js] Элемент .badge-match не найден! Создаем его...');
-      // Создаем элемент, если его нет
-      const newBadge = document.createElement('div');
-      newBadge.className = 'badge-match';
-      newBadge.style.opacity = '1';
-      newBadge.innerHTML = "❤️‍🔥";
-      window.singleCard.appendChild(newBadge);
-      newBadge.offsetWidth; // trigger reflow
-      newBadge.classList.add("match-animation");
-      newBadge.addEventListener("animationend", () => {
-        console.log('🎬 [onMutualLike] Анимация эмодзи завершена (созданный элемент)');
-        newBadge.classList.remove("match-animation");
-        newBadge.style.opacity = "0";
-      }, { once: true });
+      console.error('[swipe.js] ❌ [onMutualLike] Элемент .badge-match не найден после создания!');
     }
     if ("vibrate" in navigator) {
       console.log('📳 [onMutualLike] Вибрация');
@@ -1394,21 +1405,27 @@ window.likesReceivedList = null;
  * Загружает список пользователей, которые поставили лайк текущему пользователю
  */
 async function loadLikesReceived() {
-  if (!window.currentUser?.userId) return;
+  if (!window.currentUser?.userId) {
+    console.log('[swipe.js] ⚠️ loadLikesReceived: нет userId');
+    return;
+  }
   
   try {
+    console.log('[swipe.js] 🔵 Загружаем полученные лайки для userId:', window.currentUser.userId);
     const response = await fetchLikesReceived(window.currentUser.userId);
-    console.log('[swipe.js] Ответ API для полученных лайков:', response);
+    console.log('[swipe.js] ✅ Ответ API для полученных лайков:', response);
     if (response && response.success) {
       // API возвращает массив пользователей в response.users
-      const users = response.users || [];
+      const users = response.users || response.data || [];
       window.likesReceivedList = new Set(users.map(String));
-      console.log('[swipe.js] Загружен список полученных лайков:', window.likesReceivedList);
+      console.log('[swipe.js] ✅ Загружен список полученных лайков:', Array.from(window.likesReceivedList));
+      console.log('[swipe.js] ✅ Количество полученных лайков:', window.likesReceivedList.size);
     } else {
+      console.warn('[swipe.js] ⚠️ API вернул success=false или пустой ответ');
       window.likesReceivedList = new Set();
     }
   } catch (err) {
-    console.error('[swipe.js] Ошибка загрузки полученных лайков:', err);
+    console.error('[swipe.js] ❌ Ошибка загрузки полученных лайков:', err);
     window.likesReceivedList = new Set();
   }
 }
@@ -1417,7 +1434,11 @@ async function loadLikesReceived() {
  * Показывает плашку "Мэтч 💯" в правом верхнем углу карточки, если кандидат поставил лайк и пользователь PRO
  */
 function showMatchBadgeIfLiked(cardEl, candidate) {
-  if (!cardEl || !candidate) return;
+  console.log('[swipe.js] 🔵 ========== showMatchBadgeIfLiked ВЫЗВАНА ==========');
+  if (!cardEl || !candidate) {
+    console.log('[swipe.js] ⚠️ showMatchBadgeIfLiked: нет cardEl или candidate', { cardEl: !!cardEl, candidate: !!candidate });
+    return;
+  }
   
   // Проверяем, является ли пользователь PRO
   const now = Date.now();
@@ -1426,29 +1447,55 @@ function showMatchBadgeIfLiked(cardEl, candidate) {
     window.currentUser.pro_end && 
     new Date(window.currentUser.pro_end).getTime() > now;
   
+  console.log('[swipe.js] 🔵 showMatchBadgeIfLiked: isPro =', isPro);
+  console.log('[swipe.js] 🔵 showMatchBadgeIfLiked: currentUser.is_pro =', window.currentUser?.is_pro);
+  console.log('[swipe.js] 🔵 showMatchBadgeIfLiked: currentUser.pro_end =', window.currentUser?.pro_end);
+  
   if (!isPro) {
     // Удаляем плашку, если она есть, но пользователь не PRO
     const existingBadge = cardEl.querySelector('.match-badge-pro');
     if (existingBadge) existingBadge.remove();
+    console.log('[swipe.js] ⚠️ showMatchBadgeIfLiked: пользователь не PRO, удаляем плашку');
     return;
   }
   
   // Проверяем, поставил ли кандидат лайк
-  const candidateId = String(candidate.id || candidate.userId);
-  const hasLiked = window.likesReceivedList && window.likesReceivedList.has(candidateId);
+  const candidateId = String(candidate.id || candidate.userId || '');
+  console.log('[swipe.js] 🔵 showMatchBadgeIfLiked: candidateId =', candidateId);
+  console.log('[swipe.js] 🔵 showMatchBadgeIfLiked: candidate =', candidate);
+  console.log('[swipe.js] 🔵 showMatchBadgeIfLiked: likesReceivedList =', window.likesReceivedList);
+  console.log('[swipe.js] 🔵 showMatchBadgeIfLiked: likesReceivedList type =', typeof window.likesReceivedList);
+  console.log('[swipe.js] 🔵 showMatchBadgeIfLiked: likesReceivedList size =', window.likesReceivedList?.size);
+  
+  if (!window.likesReceivedList) {
+    console.warn('[swipe.js] ⚠️ showMatchBadgeIfLiked: likesReceivedList не загружен, инициализируем пустым Set');
+    window.likesReceivedList = new Set();
+  }
+  
+  const hasLiked = window.likesReceivedList.has(candidateId);
+  console.log('[swipe.js] 🔵 showMatchBadgeIfLiked: hasLiked =', hasLiked, 'для candidateId', candidateId);
+  console.log('[swipe.js] 🔵 showMatchBadgeIfLiked: проверка Set.has:', window.likesReceivedList.has(candidateId));
   
   // Удаляем старую плашку, если она есть
   const existingBadge = cardEl.querySelector('.match-badge-pro');
-  if (existingBadge) existingBadge.remove();
+  if (existingBadge) {
+    console.log('[swipe.js] 🔵 showMatchBadgeIfLiked: удаляем существующую плашку');
+    existingBadge.remove();
+  }
   
   if (hasLiked) {
     // Создаем плашку "Мэтч 💯"
     const badge = document.createElement('div');
     badge.className = 'match-badge-pro';
     badge.textContent = 'Мэтч 💯';
+    badge.style.display = 'flex';
     cardEl.appendChild(badge);
-    console.log('[swipe.js] Плашка "Мэтч 💯" добавлена для кандидата:', candidateId);
+    console.log('[swipe.js] ✅ Плашка "Мэтч 💯" добавлена для кандидата:', candidateId);
+    console.log('[swipe.js] ✅ Плашка добавлена в DOM, элемент:', badge);
+  } else {
+    console.log('[swipe.js] ℹ️ showMatchBadgeIfLiked: кандидат', candidateId, 'не лайкнул, плашка не показывается');
   }
+  console.log('[swipe.js] 🔵 ========== showMatchBadgeIfLiked ЗАВЕРШЕНА ==========');
 }
 
 // --- ДОБАВИТЬ: функция для обновления пользователя после изменений ---
@@ -1534,7 +1581,11 @@ export async function initSwipeScreen() {
     window.currentUser.pro_end && 
     new Date(window.currentUser.pro_end).getTime() > now;
   if (isPro) {
+    console.log('[swipe.js] 🔵 initSwipeScreen: PRO активен, загружаем likesReceived');
     await loadLikesReceived();
+    console.log('[swipe.js] ✅ initSwipeScreen: likesReceived загружен, список:', Array.from(window.likesReceivedList || []));
+  } else {
+    console.log('[swipe.js] ⚠️ initSwipeScreen: пользователь не PRO, пропускаем загрузку likesReceived');
   }
 
   // Навешиваем переход на профиль по клику на аватар
@@ -1555,6 +1606,11 @@ export async function initSwipeScreen() {
   // Загружаем пользователя и кандидатов
   await window.loadCandidates();
   window.setupSwipeControls && window.setupSwipeControls();
+  
+  // После загрузки кандидатов и лайков показываем первого кандидата с бейджем
+  if (window.candidates && window.candidates.length > 0) {
+    window.showCandidate && window.showCandidate();
+  }
   // Проверяем PRO статус с учетом срока действия (как в pro.js)
   // Используем переменные now и isPro, объявленные выше (строки 1531-1535)
   if (isPro) {
