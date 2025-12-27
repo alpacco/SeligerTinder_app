@@ -250,17 +250,27 @@ export async function showCandidateProfile(match) {
       if (subRow) {
         // Удаляем старую статистику лайков, если она есть (чтобы не конфликтовала с last login)
         const oldStats = subRow.querySelector('.profile-likes-stats');
-        if (oldStats) oldStats.remove();
+        if (oldStats) {
+          console.log('[match.js] Удаляем старую статистику лайков');
+          oldStats.remove();
+        }
         
         const old = subRow.querySelector('.candidate-last-login');
-        if (old) old.remove();
+        if (old) {
+          console.log('[match.js] Удаляем старый элемент last login');
+          old.remove();
+        }
         const el = document.createElement('div');
         el.className = 'candidate-last-login';
         el.style.textAlign = 'center';
         el.style.color = 'var(--color-white)';
         el.style.fontSize = 'var(--font-size-sm)';
+        el.style.display = 'block';
+        el.style.width = '100%';
+        el.style.marginTop = '5px';
         el.textContent = 'Загрузка...';
         subRow.appendChild(el);
+        console.log('[match.js] Элемент last login создан и добавлен в subRow, subRow.innerHTML:', subRow.innerHTML.substring(0, 200));
         console.log('[match.js] Элемент создан и добавлен в DOM');
         if (userIdForLastLogin) {
           console.log('[match.js] Загружаем last login для userId:', userIdForLastLogin, 'URL:', `${window.API_URL}/last-login/${userIdForLastLogin}`);
