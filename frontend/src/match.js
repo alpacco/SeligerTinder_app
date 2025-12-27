@@ -157,7 +157,10 @@ export async function renderMatches() {
  * @param {Object} match - объект мэтча
  */
 export async function showCandidateProfile(match) {
-  console.log('[match.js] showCandidateProfile called for:', match);
+  console.log('[match.js] ========== showCandidateProfile ВЫЗВАН ==========');
+  console.log('[match.js] match объект:', match);
+  console.log('[match.js] match.id:', match?.id);
+  console.log('[match.js] match.userId:', match?.userId);
   window.viewingCandidate = match; // Устанавливаем состояние: сейчас смотрим кандидата
   // 1. ЗАГРУЗКА ДАННЫХ
   try {
@@ -194,12 +197,8 @@ export async function showCandidateProfile(match) {
   }
 
   // Удаляем блок статистики лайков, если он есть (чтобы не было на чужих профилях)
-  // ВАЖНО: Удаляем только если мы смотрим профиль кандидата (не свой профиль)
   const oldStats = document.querySelector('#screen-profile .profile-likes-stats');
-  if (oldStats && window.viewingCandidate) {
-    console.log('[match.js] Удаляем статистику лайков для профиля кандидата');
-    oldStats.remove();
-  }
+  if (oldStats) oldStats.remove();
 
   // Сброс и рендер
   if (pic) {
@@ -226,6 +225,7 @@ export async function showCandidateProfile(match) {
   if (paginatorEl) paginatorEl.innerHTML = '';
   if (headerTitle) headerTitle.textContent = 'Ваш Match';
   // ПОКАЗ LAST LOGIN для PRO-пользователей (с учетом срока действия)
+  console.log('[match.js] ========== НАЧАЛО ПРОВЕРКИ LAST LOGIN ==========');
   const now = Date.now();
   const isProActive = window.currentUser && 
     (window.currentUser.is_pro === true || window.currentUser.is_pro === 'true' || window.currentUser.is_pro === 1) &&
@@ -237,17 +237,19 @@ export async function showCandidateProfile(match) {
     is_pro: window.currentUser?.is_pro,
     pro_end: window.currentUser?.pro_end,
     now: new Date(now).toISOString(),
-    pro_end_time: window.currentUser?.pro_end ? new Date(window.currentUser.pro_end).toISOString() : null
+    pro_end_time: window.currentUser?.pro_end ? new Date(window.currentUser.pro_end).toISOString() : null,
+    currentUser: window.currentUser
   });
   
   if (isProActive) {
-    console.log('[match.js] PRO активен, показываем last login');
+    console.log('[match.js] ✅ PRO активен, показываем last login');
     const headerSelector = '#screen-profile .profile-header';
     // Используем match.id или match.userId, так как match передается напрямую
     const userIdForLastLogin = match.id || match.userId || window.viewingCandidate?.id || window.viewingCandidate?.userId;
-    console.log('[match.js] Показываем last login для userId:', userIdForLastLogin, 'match:', match);
+    console.log('[match.js] userIdForLastLogin:', userIdForLastLogin);
+    console.log('[match.js] match объект для last login:', match);
     const header = document.querySelector(headerSelector);
-    console.log('[match.js] header найден:', !!header);
+    console.log('[match.js] header найден:', !!header, 'selector:', headerSelector);
     if (header) {
       const subRow = header.querySelector('.header-sub-row');
       console.log('[match.js] subRow найден:', !!subRow);
