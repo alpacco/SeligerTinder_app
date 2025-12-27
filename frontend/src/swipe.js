@@ -428,13 +428,39 @@ export function showCandidate() {
     (window.currentUser.is_pro === true || window.currentUser.is_pro === 'true' || window.currentUser.is_pro === 1) &&
     window.currentUser.pro_end && 
     new Date(window.currentUser.pro_end).getTime() > now;
+  
+  console.log('[showCandidate] PRO статус:', {
+    isPro,
+    is_pro: window.currentUser?.is_pro,
+    pro_end: window.currentUser?.pro_end,
+    needPhoto: window.currentUser?.needPhoto,
+    now: new Date(now).toISOString(),
+    pro_end_time: window.currentUser?.pro_end ? new Date(window.currentUser.pro_end).toISOString() : null
+  });
+  
   if (isPro && !window.currentUser.needPhoto) {
     // Показываем PRO-кнопки для активных PRO пользователей
-    document.querySelectorAll(".back-cnd-btn, .superlike_d").forEach(b => {
+    const backBtns = document.querySelectorAll(".back-cnd-btn");
+    const superBtns = document.querySelectorAll(".superlike_d");
+    console.log('[showCandidate] Найдено PRO-кнопок:', { backBtns: backBtns.length, superBtns: superBtns.length });
+    backBtns.forEach(b => {
       if (b) {
         b.style.display = "flex";
+        console.log('[showCandidate] Показываем кнопку Back');
       }
     });
+    superBtns.forEach(b => {
+      if (b) {
+        b.style.display = "flex";
+        console.log('[showCandidate] Показываем кнопку SuperLike');
+      }
+    });
+    
+    // Если кнопок нет, вызываем setupSwipeControls для их создания
+    if (backBtns.length === 0 || superBtns.length === 0) {
+      console.log('[showCandidate] PRO-кнопки не найдены, вызываем setupSwipeControls');
+      window.setupSwipeControls && window.setupSwipeControls();
+    }
   } else {
     // Скрываем PRO-кнопки для обычных пользователей или с истекшим сроком
     document.querySelectorAll(".back-cnd-btn, .superlike_d").forEach(b => {
