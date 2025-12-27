@@ -778,12 +778,13 @@ if (profileEditBackBtn) {
  // Универсальная функция переключения экранов
 function showScreen(screenId) {
   // If we're showing a candidate's profile, skip default profile load
-  if (screenId === "screen-profile" && viewingCandidate) {
-    console.log('[main.js] showScreen: показываем профиль кандидата, viewingCandidate:', viewingCandidate);
+  // ВАЖНО: Используем window.viewingCandidate, а не локальную переменную viewingCandidate
+  if (screenId === "screen-profile" && window.viewingCandidate) {
+    console.log('[main.js] showScreen: показываем профиль кандидата, window.viewingCandidate:', window.viewingCandidate);
     document.querySelectorAll(".screen").forEach(scr => scr.style.display = "none");
     document.getElementById("screen-profile").style.display = "block";
     // Используем импортированную функцию из match.js
-    showCandidateProfileFromMatch(viewingCandidate);
+    showCandidateProfileFromMatch(window.viewingCandidate);
     return;
   }
   // 1. Скрываем все
@@ -847,9 +848,10 @@ function showScreen(screenId) {
   }
 
   if (screenId === "screen-profile") {
-    // Если это профиль кандидата (viewingCandidate), показываем его профиль
-    if (viewingCandidate) {
-      window.showCandidateProfile && window.showCandidateProfile(viewingCandidate); // Используем версию из match.js
+    // Если это профиль кандидата (window.viewingCandidate), показываем его профиль
+    if (window.viewingCandidate) {
+      console.log('[main.js] showScreen: показываем профиль кандидата через window.viewingCandidate:', window.viewingCandidate);
+      showCandidateProfileFromMatch(window.viewingCandidate); // Используем импортированную функцию из match.js
       return;
     }
     
