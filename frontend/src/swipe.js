@@ -492,16 +492,21 @@ export function setupSwipeControls() {
     // 2. И мы либо не в истории (swipeHistoryIndex === -1), либо не на первом элементе (swipeHistoryIndex > 0)
     const canGoBack = window.swipeHistory.length > 0 && (window.swipeHistoryIndex === -1 || window.swipeHistoryIndex > 0);
     
-    // Обновляем видимость кнопки "Назад" - показываем только если можно перейти назад
+    // КРИТИЧНО: Для PRO пользователей кнопка "Назад" должна быть ВСЕГДА видна
+    // Но активна (кликабельна) только когда можно перейти назад
     if (backBtn) {
+      // Всегда показываем кнопку для PRO пользователей
+      backBtn.style.display = "flex";
       if (canGoBack) {
-        backBtn.style.display = "flex";
         backBtn.style.pointerEvents = "auto";
         backBtn.style.opacity = "1";
-        console.log('🔄 [setupSwipeControls] Кнопка "Назад" видна, canGoBack:', canGoBack, 'swipeHistory.length:', window.swipeHistory.length, 'swipeHistoryIndex:', window.swipeHistoryIndex);
+        backBtn.disabled = false;
+        console.log('🔄 [setupSwipeControls] Кнопка "Назад" активна, canGoBack:', canGoBack, 'swipeHistory.length:', window.swipeHistory.length, 'swipeHistoryIndex:', window.swipeHistoryIndex);
       } else {
-        backBtn.style.display = "none";
-        console.log('🔄 [setupSwipeControls] Кнопка "Назад" скрыта, canGoBack:', canGoBack);
+        backBtn.style.pointerEvents = "none";
+        backBtn.style.opacity = "0.5";
+        backBtn.disabled = true;
+        console.log('🔄 [setupSwipeControls] Кнопка "Назад" неактивна, canGoBack:', canGoBack);
       }
     }
     
