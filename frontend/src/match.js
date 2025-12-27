@@ -229,13 +229,16 @@ export async function showCandidateProfile(match) {
     new Date(window.currentUser.pro_end).getTime() > now;
   
   if (isProActive) {
+    console.log('[match.js] PRO активен, показываем last login');
     const headerSelector = '#screen-profile .profile-header';
     // Используем match.id или match.userId, так как match передается напрямую
     const userIdForLastLogin = match.id || match.userId || window.viewingCandidate?.id || window.viewingCandidate?.userId;
     console.log('[match.js] Показываем last login для userId:', userIdForLastLogin, 'match:', match);
     const header = document.querySelector(headerSelector);
+    console.log('[match.js] header найден:', !!header);
     if (header) {
       const subRow = header.querySelector('.header-sub-row');
+      console.log('[match.js] subRow найден:', !!subRow);
       if (subRow) {
         // Удаляем старую статистику лайков, если она есть (чтобы не конфликтовала с last login)
         const oldStats = subRow.querySelector('.profile-likes-stats');
@@ -246,12 +249,16 @@ export async function showCandidateProfile(match) {
         const el = document.createElement('div');
         el.className = 'candidate-last-login';
         el.style.textAlign = 'center';
+        el.style.color = 'var(--color-white)';
+        el.style.fontSize = 'var(--font-size-sm)';
         el.textContent = 'Загрузка...';
         subRow.appendChild(el);
+        console.log('[match.js] Элемент создан и добавлен в DOM');
         if (userIdForLastLogin) {
-          console.log('[match.js] Загружаем last login для userId:', userIdForLastLogin);
+          console.log('[match.js] Загружаем last login для userId:', userIdForLastLogin, 'URL:', `${window.API_URL}/last-login/${userIdForLastLogin}`);
           fetch(`${window.API_URL}/last-login/${userIdForLastLogin}`)
            .then(r => {
+             console.log('[match.js] Ответ от API:', r.status, r.ok);
              if (!r.ok) {
                console.error('[match.js] Ошибка загрузки last login:', r.status);
                throw new Error(`Status ${r.status}`);
@@ -275,8 +282,9 @@ export async function showCandidateProfile(match) {
               else if (window.currentUser.gender === 'female') verb = 'Был';
               else verb = ((match.gender || window.viewingCandidate?.gender) === 'female' ? 'Была' : 'Был');
               el.textContent = `${verb} ${timeText}`;
+              console.log('[match.js] Текст установлен:', el.textContent);
             } else {
-              console.log('[match.js] lastLoginTime отсутствует');
+              console.log('[match.js] lastLoginTime отсутствует в ответе');
               el.textContent = '—';
             }
           })
@@ -285,17 +293,22 @@ export async function showCandidateProfile(match) {
             el.textContent = '—'; 
           });
         } else {
-          console.warn('[match.js] userIdForLastLogin отсутствует');
+          console.warn('[match.js] userIdForLastLogin отсутствует, match:', match);
           el.textContent = '—';
         }
       } else {
-        console.warn('[match.js] header-sub-row не найден');
+        console.warn('[match.js] header-sub-row не найден в header');
       }
     } else {
-      console.warn('[match.js] header не найден');
+      console.warn('[match.js] header не найден, selector:', headerSelector);
     }
   } else {
-    console.log('[match.js] Пользователь не PRO или срок истек, не показываем last login');
+    console.log('[match.js] Пользователь не PRO или срок истек, не показываем last login', {
+      is_pro: window.currentUser?.is_pro,
+      pro_end: window.currentUser?.pro_end,
+      now: new Date(now).toISOString(),
+      pro_end_time: window.currentUser?.pro_end ? new Date(window.currentUser.pro_end).toISOString() : null
+    });
   }
   if (nameEl) nameEl.textContent = match.name;
   if (ageEl) {
