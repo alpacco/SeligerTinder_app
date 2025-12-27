@@ -836,25 +836,6 @@ function showScreen(screenId) {
           });
         }
       }
-      
-      // КРИТИЧНО: Если initSwipeScreen не был вызван выше, вызываем его здесь
-      // initSwipeScreen загрузит кандидатов, likesReceived для PRO и покажет первого кандидата
-      if (!window.initSwipeScreen) {
-        console.warn('[main.js] ⚠️ window.initSwipeScreen не найден, используем старую логику');
-        // Потом подгружаем актуального пользователя и кандидатов
-        loadUserData()
-          .then(() => {
-            if (currentUser.needPhoto === 1) {
-            candidates = [];
-              window.candidates = candidates;
-              window.showCandidate && window.showCandidate();
-              updateMatchesCount();
-            } else {
-              loadCandidates();
-          }
-        })
-        .catch(err => console.error("Ошибка загрузки пользователя на свайпе:", err));
-    }
 
   if (screenId === "screen-matches") {
     updateMatchesCount();

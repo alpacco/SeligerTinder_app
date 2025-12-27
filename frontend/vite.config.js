@@ -70,6 +70,9 @@ export default defineConfig({
         const indexHtmlPath = resolve(__dirname, 'index.html');
         const publicIndexHtmlPath = resolve(__dirname, '../public/index.html');
         try {
+          // Создаем директорию public, если её нет
+          const publicDir = resolve(__dirname, '../public');
+          mkdirSync(publicDir, { recursive: true });
           copyFileSync(indexHtmlPath, publicIndexHtmlPath);
           console.log('✅ Copied index.html to public/');
         } catch (error) {
