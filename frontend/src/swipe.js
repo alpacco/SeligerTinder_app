@@ -654,12 +654,12 @@ export function moveToNextCandidate(direction = 'right') {
     // КРИТИЧНО: Переустанавливаем обработчики ПОСЛЕ showCandidate, чтобы они не перезаписывались
     // Это гарантирует, что обработчики из attachLikeHandler будут установлены последними
     setTimeout(() => {
+      window.setupSwipeHandlers && window.setupSwipeHandlers();
+      window.setupSwipeControls && window.setupSwipeControls();
+      // ВАЖНО: attachLikeHandler должен вызываться ПОСЛЕ setupSwipeControls, чтобы обработчик не перезаписывался
       window.attachLikeHandler && window.attachLikeHandler();
       window.attachDislikeHandler && window.attachDislikeHandler();
     }, 100);
-    window.setupSwipeHandlers && window.setupSwipeHandlers();
-    window.setupSwipeControls && window.setupSwipeControls();
-    window.showCandidate && window.showCandidate();
   });
 }
 
