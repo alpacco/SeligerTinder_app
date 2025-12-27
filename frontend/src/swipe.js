@@ -698,8 +698,8 @@ export function showCandidate() {
   // Показываем плашку "Мэтч 💯" для PRO пользователей, если кандидат поставил лайк
   // Вызываем с задержкой, чтобы убедиться, что карточка отрендерена
   // И что likesReceivedList загружен
-  setTimeout(() => {
-    showMatchBadgeIfLiked(singleCard, currentCandidate);
+  setTimeout(async () => {
+    await showMatchBadgeIfLiked(singleCard, currentCandidate);
   }, 250);
   
   singleCard.classList.remove("show-match", "returning");
@@ -1069,9 +1069,12 @@ export function onMutualLike() {
     }
     
     // Показываем плашку "Мэтч 💯" для PRO пользователей
-    setTimeout(() => {
-      window.showMatchBadgeIfLiked && window.showMatchBadgeIfLiked(window.singleCard, currentCandidate);
-    }, 100);
+    // Вызываем с задержкой, чтобы убедиться, что likesReceivedList загружен и карточка отрендерена
+    setTimeout(async () => {
+      if (window.showMatchBadgeIfLiked) {
+        await window.showMatchBadgeIfLiked(window.singleCard, currentCandidate);
+      }
+    }, 250);
 
     // Находим или создаем элемент .badge-match для анимации мэтча
     // Элемент уже есть в HTML (index.html строка 273), но может быть скрыт
@@ -1890,7 +1893,7 @@ async function loadLikesReceived() {
 /**
  * Показывает плашку "Мэтч 💯" в правом верхнем углу карточки, если кандидат поставил лайк и пользователь PRO
  */
-function showMatchBadgeIfLiked(cardEl, candidate) {
+async function showMatchBadgeIfLiked(cardEl, candidate) {
   console.log('[swipe.js] 🔵 ========== showMatchBadgeIfLiked ВЫЗВАНА ==========');
   if (!cardEl || !candidate) {
     console.log('[swipe.js] ⚠️ showMatchBadgeIfLiked: нет cardEl или candidate', { cardEl: !!cardEl, candidate: !!candidate });
@@ -1924,9 +1927,23 @@ function showMatchBadgeIfLiked(cardEl, candidate) {
   console.log('[swipe.js] 🔵 showMatchBadgeIfLiked: likesReceivedList type =', typeof window.likesReceivedList);
   console.log('[swipe.js] 🔵 showMatchBadgeIfLiked: likesReceivedList size =', window.likesReceivedList?.size);
   
-  if (!window.likesReceivedList) {
-    console.warn('[swipe.js] ⚠️ showMatchBadgeIfLiked: likesReceivedList не загружен, инициализируем пустым Set');
-    window.likesReceivedList = new Set();
+  if (!window.likesReceivedList || window.likesReceivedList.size === 0) {
+    console.warn('[swipe.js] ⚠️ showMatchBadgeIfLiked: likesReceivedList не загружен, пытаемся загрузить');
+    // Пытаемся загрузить, если еще не загружен
+    const now = Date.now();
+    const isProUser = window.currentUser && 
+      (window.currentUser.is_pro === true || window.currentUser.is_pro === 'true' || window.currentUser.is_pro === 1) &&
+      window.currentUser.pro_end && 
+      new Date(window.currentUser.pro_end).getTime() > now;
+    
+    if (isProUser && window.currentUser?.userId) {
+      console.log('[swipe.js] 🔵 showMatchBadgeIfLiked: Загружаем likesReceivedList');
+      await loadLikesReceived();
+    } else {
+      if (!window.likesReceivedList) {
+        window.likesReceivedList = new Set();
+      }
+    }
   }
   
   const hasLiked = window.likesReceivedList.has(candidateId);
