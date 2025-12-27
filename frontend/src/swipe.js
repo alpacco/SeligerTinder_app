@@ -727,8 +727,24 @@ export function onMutualLike() {
     window.currentIndex = savedIndex;
     console.log('🔄 [onMutualLike] Восстановлен индекс:', window.currentIndex);
     
+    // КРИТИЧНО: Сохраняем плашку перед fillCard
+    const candidateId = String(currentCandidate.id || currentCandidate.userId || '');
+    const existingBadge = window.singleCard.querySelector('.match-badge-pro');
+    const shouldShowBadge = existingBadge && window.likesReceivedList && 
+      window.likesReceivedList.has(candidateId);
+    
     // Обновляем карточку с данными текущего кандидата (чтобы убедиться, что данные актуальны)
     fillCard(window.singleCard, currentCandidate);
+    
+    // КРИТИЧНО: Восстанавливаем плашку после fillCard, если она была
+    if (shouldShowBadge && window.likesReceivedList && window.likesReceivedList.has(candidateId)) {
+      const newBadge = document.createElement('div');
+      newBadge.className = 'match-badge-pro';
+      newBadge.textContent = 'Мэтч 💯';
+      newBadge.style.cssText = 'position: absolute !important; top: 20px !important; right: 20px !important; background-color: #9f722f !important; color: #ffffff !important; padding: 8px 16px !important; border-radius: 20px !important; font-size: 14px !important; font-weight: bold !important; z-index: 10000 !important; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important; display: flex !important; align-items: center !important; justify-content: center !important; visibility: visible !important; opacity: 1 !important; pointer-events: none !important;';
+      window.singleCard.appendChild(newBadge);
+      console.log('[swipe.js] ✅ Плашка восстановлена после fillCard в onMutualLike для кандидата:', candidateId);
+    }
     
     // Показываем плашку "Мэтч 💯" для PRO пользователей
     setTimeout(() => {
