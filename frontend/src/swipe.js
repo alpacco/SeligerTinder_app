@@ -1636,7 +1636,7 @@ function showMatchBadgeIfLiked(cardEl, candidate) {
     badge.className = 'match-badge-pro';
     badge.textContent = 'Мэтч 💯';
     // Используем конкретные значения вместо CSS переменных для гарантированной видимости
-    badge.style.cssText = 'position: absolute !important; top: 20px !important; right: 20px !important; background-color: #9f722f !important; color: #ffffff !important; padding: 8px 16px !important; border-radius: 20px !important; font-size: 14px !important; font-weight: bold !important; z-index: 10000 !important; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important; display: flex !important; align-items: center !important; justify-content: center !important; visibility: visible !important; opacity: 1 !important; pointer-events: none !important;';
+    badge.style.cssText = 'position: absolute !important; top: 20px !important; right: 20px !important; background-color: #9f722f !important; color: #ffffff !important; padding: 8px 16px !important; border-radius: 20px !important; font-size: 14px !important; font-weight: bold !important; z-index: 10000 !important; box-shadow: none !important; display: flex !important; align-items: center !important; justify-content: center !important; visibility: visible !important; opacity: 0.9 !important; pointer-events: none !important;';
     cardEl.appendChild(badge);
     console.log('[swipe.js] ✅ Плашка "Мэтч 💯" добавлена для кандидата:', candidateId);
     console.log('[swipe.js] ✅ Плашка добавлена в DOM, элемент:', badge);
