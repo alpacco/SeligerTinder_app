@@ -1286,7 +1286,8 @@ export async function doLike() {
                 window.singleCard.style.transition = "transform 0.5s ease";
                 window.singleCard.style.transform = `translate(1000px, 0) rotate(45deg)`;
                 setTimeout(() => {
-                    window.swipeHistory.push(window.candidates[idx]);
+                    // Сохраняем кандидата в истории в правильном формате
+                    window.swipeHistory.push({ candidate: window.candidates[idx], index: idx });
                     // УБИРАЕМ удаление кандидата отсюда - оно будет в moveToNextCandidate
                     // window.candidates.splice(idx, 1);
                     window.moveToNextCandidate && window.moveToNextCandidate('right');
