@@ -153,7 +153,8 @@ body.is-pro .like-icon path.st0 {
   stroke: none !important;
 }
 
-body.is-pro .back-icon .st0 {
+body.is-pro .back-icon .st0,
+body.is-pro .forward-icon .st0 {
   fill: var(--color-white) !important;
 }
 
