@@ -19,10 +19,10 @@ async def send_push(data: Dict = Body(...)):
     receiverId = data.get("receiverId")
     
     try:
-        from datetime import datetime
+        # Используем правильные имена колонок из таблицы visits: userId и visitorId
         await db_run(
-            "INSERT INTO visits (sender_id, receiver_id, createdAt) VALUES (?, ?, ?)",
-            [senderId, receiverId, datetime.now().isoformat()]
+            "INSERT INTO visits (\"userId\", \"visitorId\", timestamp) VALUES (?, ?, CURRENT_TIMESTAMP)",
+            [receiverId, senderId]  # receiverId = userId (кто получил), senderId = visitorId (кто отправил)
         )
         return {"success": True}
     except Exception as e:

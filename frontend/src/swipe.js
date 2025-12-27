@@ -692,12 +692,13 @@ export function moveToNextCandidate(direction = 'right') {
 
 export function onMutualLike() {
   console.log('🔄 [onMutualLike] ВЫЗВАН, версия:', SWIPE_MODULE_VERSION);
+  
+  // КРИТИЧНО: Сохраняем текущий индекс ДО любых изменений и вызовов других функций
+  const savedIndex = window.currentIndex;
+  console.log('🔄 [onMutualLike] Сохраняем индекс:', savedIndex, 'текущий currentIndex:', window.currentIndex);
+  
   window.updateMatchesCount && window.updateMatchesCount();
   window.inMutualMatch = true;
-  
-  // КРИТИЧНО: Сохраняем текущий индекс ДО любых изменений
-  const savedIndex = window.currentIndex;
-  console.log('🔄 [onMutualLike] Сохраняем индекс:', savedIndex);
   
   // Сохраняем текущего кандидата - НЕ удаляем из массива сразу!
   const currentCandidate = window.candidates[savedIndex];
