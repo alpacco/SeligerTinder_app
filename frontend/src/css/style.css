@@ -831,6 +831,8 @@ flex: 1;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  display: block; /* Изменено с flex на block для работы text-overflow */
+  line-height: 1.2; /* Для правильного выравнивания */
 }
 .match-info {
   display: flex;
@@ -840,8 +842,7 @@ flex: 1;
   margin-bottom: 20px;
 }
 .match-name {
-  display: flex;
-  align-items: center;
+  display: block; /* Изменено с flex на block для работы text-overflow */
   font-size: var(--font-size-lg);
   font-weight: bold;
   overflow: hidden;
@@ -849,6 +850,7 @@ flex: 1;
   white-space: nowrap;
   max-width: 100%;
   min-width: 0; /* Позволяет flex-элементу сжиматься */
+  line-height: 1.2; /* Для правильного выравнивания */
 }
 .match-actions button {
   padding-top: 6px;
@@ -864,6 +866,7 @@ flex: 1;
   flex: 1;
   min-width: 0; /* Позволяет flex-элементу сжиматься для text-overflow */
   overflow: hidden; /* Скрываем переполнение */
+  max-width: calc(100% - 150px); /* Ограничиваем ширину, оставляя место для кнопки */
 }
 .match-username {
   font-size: var(--font-size-lg);
@@ -875,6 +878,8 @@ flex: 1;
   align-items: center;
   gap: 12px;
   margin-left: auto;
+  flex-shrink: 0; /* Кнопка не сжимается */
+  min-width: fit-content; /* Минимальная ширина по содержимому */
 }
 
 /* ========== Screen 5: Profile View ========== */
