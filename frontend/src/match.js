@@ -230,7 +230,9 @@ export async function showCandidateProfile(match) {
   
   if (isProActive) {
     const headerSelector = '#screen-profile .profile-header';
-    const userIdForLastLogin = window.viewingCandidate.id || window.viewingCandidate.userId;
+    // Используем match.id или match.userId, так как match передается напрямую
+    const userIdForLastLogin = match.id || match.userId || window.viewingCandidate?.id || window.viewingCandidate?.userId;
+    console.log('[match.js] Показываем last login для userId:', userIdForLastLogin, 'match:', match);
     const header = document.querySelector(headerSelector);
     if (header) {
       const subRow = header.querySelector('.header-sub-row');
@@ -247,12 +249,17 @@ export async function showCandidateProfile(match) {
         el.textContent = 'Загрузка...';
         subRow.appendChild(el);
         if (userIdForLastLogin) {
+          console.log('[match.js] Загружаем last login для userId:', userIdForLastLogin);
           fetch(`${window.API_URL}/last-login/${userIdForLastLogin}`)
            .then(r => {
-             if (!r.ok) throw new Error(`Status ${r.status}`);
+             if (!r.ok) {
+               console.error('[match.js] Ошибка загрузки last login:', r.status);
+               throw new Error(`Status ${r.status}`);
+             }
              return r.json();
            })
            .then(js => {
+             console.log('[match.js] Получен ответ last login:', js);
              const lastLoginTime = js.lastLogin;
             if (lastLoginTime) {
               const dt = new Date(lastLoginTime);
@@ -266,18 +273,29 @@ export async function showCandidateProfile(match) {
               let verb;
               if (window.currentUser.gender === 'male') verb = 'Была';
               else if (window.currentUser.gender === 'female') verb = 'Был';
-              else verb = (window.viewingCandidate.gender === 'female' ? 'Была' : 'Был');
+              else verb = ((match.gender || window.viewingCandidate?.gender) === 'female' ? 'Была' : 'Был');
               el.textContent = `${verb} ${timeText}`;
             } else {
+              console.log('[match.js] lastLoginTime отсутствует');
               el.textContent = '—';
             }
           })
-          .catch(() => { el.textContent = '—'; });
+          .catch((err) => { 
+            console.error('[match.js] Ошибка при загрузке last login:', err);
+            el.textContent = '—'; 
+          });
         } else {
+          console.warn('[match.js] userIdForLastLogin отсутствует');
           el.textContent = '—';
         }
+      } else {
+        console.warn('[match.js] header-sub-row не найден');
       }
+    } else {
+      console.warn('[match.js] header не найден');
     }
+  } else {
+    console.log('[match.js] Пользователь не PRO или срок истек, не показываем last login');
   }
   if (nameEl) nameEl.textContent = match.name;
   if (ageEl) {
