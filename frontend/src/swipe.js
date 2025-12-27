@@ -354,12 +354,19 @@ export async function showNextCandidate() {
       
       // Обновляем видимость кнопки "Назад"
       const backBtn = document.querySelector(".back-cnd-btn");
-      const canGoBack = window.swipeHistory.length > 0 && window.swipeHistoryIndex > 0;
+      // КРИТИЧНО: canGoBack должен быть true если:
+      // 1. Есть история (swipeHistory.length > 0)
+      // 2. И мы либо не в истории (swipeHistoryIndex === -1), либо не на первом элементе (swipeHistoryIndex > 0)
+      const canGoBack = window.swipeHistory.length > 0 && (window.swipeHistoryIndex === -1 || window.swipeHistoryIndex > 0);
       if (backBtn) {
         if (canGoBack) {
           backBtn.style.display = "flex";
+          backBtn.style.pointerEvents = "auto";
+          backBtn.style.opacity = "1";
+          console.log('🔄 [showNextCandidate] Кнопка "Назад" видна, canGoBack:', canGoBack);
         } else {
           backBtn.style.display = "none";
+          console.log('🔄 [showNextCandidate] Кнопка "Назад" скрыта, canGoBack:', canGoBack);
         }
       }
       
@@ -467,6 +474,24 @@ export function setupSwipeControls() {
     // КРИТИЧНО: Обновляем видимость кнопки "Вперед" (заменяет кнопку "Лайк")
     // Проверяем, есть ли возможность перейти вперед в истории
     const canGoForward = window.swipeHistoryIndex >= 0 && window.swipeHistoryIndex < window.swipeHistory.length - 1;
+    // КРИТИЧНО: canGoBack должен быть true если:
+    // 1. Есть история (swipeHistory.length > 0)
+    // 2. И мы либо не в истории (swipeHistoryIndex === -1), либо не на первом элементе (swipeHistoryIndex > 0)
+    const canGoBack = window.swipeHistory.length > 0 && (window.swipeHistoryIndex === -1 || window.swipeHistoryIndex > 0);
+    
+    // Обновляем видимость кнопки "Назад" - показываем только если можно перейти назад
+    if (backBtn) {
+      if (canGoBack) {
+        backBtn.style.display = "flex";
+        backBtn.style.pointerEvents = "auto";
+        backBtn.style.opacity = "1";
+        console.log('🔄 [setupSwipeControls] Кнопка "Назад" видна, canGoBack:', canGoBack, 'swipeHistory.length:', window.swipeHistory.length, 'swipeHistoryIndex:', window.swipeHistoryIndex);
+      } else {
+        backBtn.style.display = "none";
+        console.log('🔄 [setupSwipeControls] Кнопка "Назад" скрыта, canGoBack:', canGoBack);
+      }
+    }
+    
     const likeBtn = cardsBtns.querySelector(".like_d");
     if (likeBtn && canGoForward && !window.inMutualMatch) {
       // Заменяем кнопку "Лайк" на кнопку "Вперед"
