@@ -814,28 +814,29 @@ function showScreen(screenId) {
     updateGenderScreen();
   }
 
-    if (screenId === "screen-swipe") {
-      // КРИТИЧНО: Вызываем initSwipeScreen для полной инициализации экрана свайпов
-      // Это загрузит кандидатов, likesReceived для PRO пользователей и покажет первого кандидата
-      if (window.initSwipeScreen) {
-        console.log('[main.js] 🔵 showScreen: вызываем initSwipeScreen для screen-swipe');
-        window.initSwipeScreen();
-      } else {
-        console.warn('[main.js] ⚠️ showScreen: window.initSwipeScreen не найден, используем fallback');
-        // Fallback: обновляем UI (аватар, имя, бейдж)
-        updateSwipeScreen();
-        updateMatchesCount();
-        
-        // Attach profile navigation to the avatar frame (как в старом коде - внутри showScreen)
-        const avatarFrame = document.querySelector("#screen-swipe .ava-frame");
-        if (avatarFrame) {
-          avatarFrame.style.cursor = "pointer";
-          avatarFrame.addEventListener("click", () => {
-            viewingCandidate = null;
-            showScreen("screen-profile");
-          });
-        }
+  if (screenId === "screen-swipe") {
+    // КРИТИЧНО: Вызываем initSwipeScreen для полной инициализации экрана свайпов
+    // Это загрузит кандидатов, likesReceived для PRO пользователей и покажет первого кандидата
+    if (window.initSwipeScreen) {
+      console.log('[main.js] 🔵 showScreen: вызываем initSwipeScreen для screen-swipe');
+      window.initSwipeScreen();
+    } else {
+      console.warn('[main.js] ⚠️ showScreen: window.initSwipeScreen не найден, используем fallback');
+      // Fallback: обновляем UI (аватар, имя, бейдж)
+      updateSwipeScreen();
+      updateMatchesCount();
+      
+      // Attach profile navigation to the avatar frame (как в старом коде - внутри showScreen)
+      const avatarFrame = document.querySelector("#screen-swipe .ava-frame");
+      if (avatarFrame) {
+        avatarFrame.style.cursor = "pointer";
+        avatarFrame.addEventListener("click", () => {
+          viewingCandidate = null;
+          showScreen("screen-profile");
+        });
       }
+    }
+  }
 
   if (screenId === "screen-matches") {
     updateMatchesCount();
