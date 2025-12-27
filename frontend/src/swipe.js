@@ -1067,7 +1067,7 @@ export async function moveToNextCandidate(direction = 'right') {
   // Всегда выставляем transition перед анимацией
   window.singleCard.style.transition = 'transform 0.5s ease';
   window.singleCard.style.transform = transformValue;
-  window.singleCard.addEventListener('transitionend', function handler() {
+  window.singleCard.addEventListener('transitionend', async function handler() {
     window.singleCard.removeEventListener('transitionend', handler);
     window.singleCard.style.transition = 'none';
     window.singleCard.style.transform = 'none';
