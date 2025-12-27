@@ -35,15 +35,69 @@ window.swipeHistory = swipeHistory;
 window.currentIndex = 0;
 
 export function showPreviousCandidate() {
+  console.log('🔄 [showPreviousCandidate] ВЫЗВАНА, swipeHistory.length:', window.swipeHistory.length);
   if (window.swipeHistory.length > 0) {
     window._isBackAction = true;
-    const { candidate, index } = window.swipeHistory.pop();
+    const historyItem = window.swipeHistory.pop();
+    console.log('🔄 [showPreviousCandidate] Извлекаем из истории:', historyItem);
+    
+    // Обрабатываем как старый формат (просто кандидат), так и новый (объект с candidate и index)
+    let candidate, index;
+    if (historyItem && typeof historyItem === 'object' && historyItem.candidate) {
+      // Новый формат: { candidate, index }
+      candidate = historyItem.candidate;
+      index = historyItem.index !== undefined ? historyItem.index : window.currentIndex;
+    } else {
+      // Старый формат: просто кандидат
+      candidate = historyItem;
+      index = window.currentIndex;
+    }
+    
+    console.log('🔄 [showPreviousCandidate] Восстанавливаем кандидата:', candidate.id || candidate.userId, 'на индекс:', index);
+    
+    // Вставляем кандидата обратно в массив
     window.candidates.splice(index, 0, candidate);
     window.currentIndex = index;
+    
     const singleCard = document.getElementById("singleCard");
-    fillCard(singleCard, window.candidates[window.currentIndex]);
+    if (!singleCard) {
+      console.error('🔄 [showPreviousCandidate] singleCard не найден!');
+      return;
+    }
+    
+    // Сохраняем информацию о плашке перед fillCard
+    const candidateId = String(candidate.id || candidate.userId || '');
+    const shouldShowBadge = window.likesReceivedList && window.likesReceivedList.has(candidateId);
+    
+    // Заполняем карточку
+    fillCard(singleCard, candidate);
+    
+    // Восстанавливаем плашку после fillCard, если нужно
+    if (shouldShowBadge) {
+      const newBadge = document.createElement('div');
+      newBadge.className = 'match-badge-pro';
+      newBadge.textContent = 'Мэтч 💯';
+      newBadge.style.cssText = 'position: absolute !important; top: 20px !important; right: 20px !important; background-color: #9f722f !important; color: #ffffff !important; padding: 8px 16px !important; border-radius: 20px !important; font-size: 14px !important; font-weight: bold !important; z-index: 10000 !important; box-shadow: none !important; display: flex !important; align-items: center !important; justify-content: center !important; visibility: visible !important; opacity: 0.9 !important; pointer-events: none !important;';
+      singleCard.appendChild(newBadge);
+      console.log('[swipe.js] ✅ Плашка восстановлена в showPreviousCandidate для кандидата:', candidateId);
+    }
+    
+    // Показываем плашку "Мэтч 💯" для PRO пользователей
+    setTimeout(() => {
+      window.showMatchBadgeIfLiked && window.showMatchBadgeIfLiked(singleCard, candidate);
+    }, 100);
+    
+    // Восстанавливаем обработчики кнопок
     window.setupSwipeControls && window.setupSwipeControls();
+    setTimeout(() => {
+      window.attachLikeHandler && window.attachLikeHandler();
+      window.attachDislikeHandler && window.attachDislikeHandler();
+    }, 50);
+    
     window.updateMatchesCount && window.updateMatchesCount();
+    console.log('🔄 [showPreviousCandidate] Кандидат восстановлен, currentIndex:', window.currentIndex);
+  } else {
+    console.warn('🔄 [showPreviousCandidate] История пуста, нечего восстанавливать');
   }
 }
 
