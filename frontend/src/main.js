@@ -841,7 +841,7 @@ function showScreen(screenId) {
 
   if (screenId === "screen-matches") {
     updateMatchesCount();
-    renderMatches();
+    window.renderMatches && window.renderMatches(); // Используем версию из match.js
   }
 
   if (screenId === "screen-profile") {
