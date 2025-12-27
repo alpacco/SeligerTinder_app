@@ -127,6 +127,7 @@ async def get_user_frontend(userId: str = Query(..., description="ID польз�
             "gender": row.get("gender", ""),
             "bio": row.get("bio", ""),
             "age": row.get("age", 0),
+            "super_likes_count": row.get("super_likes_count", 0) or row.get("superLikesCount", 0) or 0,
             "photos": photos,
             "photo1": row.get("photo1", ""),  # Добавляем отдельные поля для совместимости
             "photo2": row.get("photo2", ""),
