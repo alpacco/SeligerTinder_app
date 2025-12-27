@@ -508,7 +508,7 @@ flex: 1;
 }
 
 /* Кнопки для свайпа */
-.back-cnd-btn, .superlike_d,
+.back-cnd-btn, .forward-cnd-btn, .superlike_d,
 .dislike_d, .chat_s3, .like_d {
   position: relative;
   border: none;
@@ -526,14 +526,14 @@ flex: 1;
   width: 60px;
   height: 60px;
 }
-.back-cnd-btn, .superlike_d {
+.back-cnd-btn, .forward-cnd-btn, .superlike_d {
   width: 50px;
   height: 50px;
 }
  .dislike_d { 
     background-color: var(--color-gray);
    }
- .back-cnd-btn, .superlike_d, .dislike_d:active { 
+ .back-cnd-btn, .forward-cnd-btn, .superlike_d, .dislike_d:active { 
     background-color: var(--color-gray);
    }
    .like_d { 
@@ -544,6 +544,7 @@ flex: 1;
    }
 
 .back-cnd-btn img,
+.forward-cnd-btn img,
 .dislike_d img,
 .like_d img,
 .superlike_d img, .delete-match-btn img {
@@ -564,6 +565,7 @@ flex: 1;
 .like-icon .st0,
 .dislike-icon .st0,
 .back-icon .st0,
+.forward-icon .st0,
 .superlike-icon .st0 {
   fill: white; /* Белый цвет для SVG */
 }
