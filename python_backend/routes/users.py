@@ -118,6 +118,15 @@ async def get_user_frontend(userId: str = Query(..., description="ID польз�
                 print(f"[getUser] Ошибка проверки Pro срока для userId={userId}: {e}")
         
         # Формируем данные для фронтенда
+        super_likes_raw = row.get("super_likes_count")
+        super_likes_alt = row.get("superLikesCount")
+        super_likes_final = super_likes_raw if super_likes_raw is not None else (super_likes_alt if super_likes_alt is not None else 0)
+        print(f"[getUser] 🔵 super_likes_count для userId={userId}: raw={super_likes_raw}, alt={super_likes_alt}, final={super_likes_final}")
+        print(f"[getUser] 🔵 row keys: {list(row.keys())}")
+        print(f"[getUser] 🔵 'super_likes_count' in row: {'super_likes_count' in row}")
+        print(f"[getUser] 🔵 row.get('super_likes_count'): {row.get('super_likes_count')}")
+        print(f"[getUser] 🔵 type(row.get('super_likes_count')): {type(row.get('super_likes_count'))}")
+        
         user_data = {
             "userId": row.get("userId"),
             "id": row.get("userId"),
@@ -127,7 +136,7 @@ async def get_user_frontend(userId: str = Query(..., description="ID польз�
             "gender": row.get("gender", ""),
             "bio": row.get("bio", ""),
             "age": row.get("age", 0),
-            "super_likes_count": row.get("super_likes_count", 0) or row.get("superLikesCount", 0) or 0,
+            "super_likes_count": super_likes_final,
             "photos": photos,
             "photo1": row.get("photo1", ""),  # Добавляем отдельные поля для совместимости
             "photo2": row.get("photo2", ""),

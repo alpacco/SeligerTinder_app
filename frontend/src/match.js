@@ -238,6 +238,8 @@ export async function showCandidateProfile(match) {
   if (headerTitle) headerTitle.textContent = 'Ваш Match';
   // ПОКАЗ LAST LOGIN для PRO-пользователей (с учетом срока действия)
   console.log('[match.js] ========== НАЧАЛО ПРОВЕРКИ LAST LOGIN ==========');
+  console.log('[match.js] showCandidateProfile ВЫЗВАНА для match:', match);
+  console.log('[match.js] window.currentUser:', window.currentUser);
   const now = Date.now();
   const isProActive = window.currentUser && 
     (window.currentUser.is_pro === true || window.currentUser.is_pro === 'true' || window.currentUser.is_pro === 1) &&
@@ -247,9 +249,13 @@ export async function showCandidateProfile(match) {
   console.log('[match.js] Проверка PRO для last login:', {
     isProActive,
     is_pro: window.currentUser?.is_pro,
+    is_pro_type: typeof window.currentUser?.is_pro,
     pro_end: window.currentUser?.pro_end,
     now: new Date(now).toISOString(),
     pro_end_time: window.currentUser?.pro_end ? new Date(window.currentUser.pro_end).toISOString() : null,
+    pro_end_timestamp: window.currentUser?.pro_end ? new Date(window.currentUser.pro_end).getTime() : null,
+    now_timestamp: now,
+    comparison: window.currentUser?.pro_end ? new Date(window.currentUser.pro_end).getTime() > now : false,
     currentUser: window.currentUser
   });
   

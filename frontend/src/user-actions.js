@@ -42,6 +42,9 @@ export async function loadUserData() {
     }
     
     console.log("📥 [loadUserData] Ответ сервера:", json);
+    console.log("📥 [loadUserData] json.success:", json?.success);
+    console.log("📥 [loadUserData] json.data:", json?.data);
+    console.log("📥 [loadUserData] json.data.super_likes_count:", json?.data?.super_likes_count);
     if (!json || !json.success) {
       console.log("📥 [loadUserData] Неуспешный ответ, пропускаем");
       return;
@@ -49,6 +52,8 @@ export async function loadUserData() {
 
     const d = json.data;
     console.log("📥 [loadUserData] Данные пользователя:", d);
+    console.log("📥 [loadUserData] d.super_likes_count (прямой доступ):", d?.super_likes_count);
+    console.log("📥 [loadUserData] d.super_likes_count (тип):", typeof d?.super_likes_count);
     currentUser.name     = d.name     || currentUser.name;
     currentUser.username = d.username || currentUser.username;
     currentUser.gender   = d.gender;
@@ -124,11 +129,15 @@ export async function loadUserData() {
     }
     
     // Загружаем superLikesCount из БД - используем значение напрямую, без автоматического выделения
-    const dbSuperLikes = Number(json.data.super_likes_count) || 0;
     console.log("🔵 [loadUserData] ========== ЗАГРУЗКА СУПЕРЛАЙКОВ ==========");
-    console.log("🔵 [loadUserData] json.data.super_likes_count (raw):", json.data.super_likes_count);
+    console.log("🔵 [loadUserData] json.data:", json.data);
+    console.log("🔵 [loadUserData] json.data.super_likes_count (raw):", json.data?.super_likes_count);
+    console.log("🔵 [loadUserData] json.data.super_likes_count (тип):", typeof json.data?.super_likes_count);
+    console.log("🔵 [loadUserData] d.super_likes_count:", d?.super_likes_count);
+    console.log("🔵 [loadUserData] d.super_likes_count (тип):", typeof d?.super_likes_count);
+    const dbSuperLikes = Number(d?.super_likes_count || json.data?.super_likes_count || 0);
     console.log("🔵 [loadUserData] dbSuperLikes (parsed):", dbSuperLikes);
-    console.log("🔵 [loadUserData] d.super_likes_count:", d.super_likes_count);
+    console.log("🔵 [loadUserData] isNaN(dbSuperLikes):", isNaN(dbSuperLikes));
     
     currentUser.needPhoto = Number(d.needPhoto || 0);
     currentUser.is_pro = Number(d.is_pro) === 1;
