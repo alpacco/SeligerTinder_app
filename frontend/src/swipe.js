@@ -858,7 +858,7 @@ export function customHideBadges(cardEl) {
   if (nopeB) nopeB.style.opacity = 0;
 }
 
-export function moveToNextCandidate(direction = 'right') {
+export async function moveToNextCandidate(direction = 'right') {
   // Удаляем кандидата только если это НЕ взаимный лайк
   if (!window._isBackAction && !window.inMutualMatch) {
     const currentCandidate = window.candidates[window.currentIndex];
@@ -970,7 +970,7 @@ export function moveToNextCandidate(direction = 'right') {
       dislikeBtn.parentNode.replaceChild(newDislikeBtn, dislikeBtn);
       dislikeBtn = newDislikeBtn;
       // Восстанавливаем обработчик события для Dislike
-      dislikeBtn.addEventListener('click', (e) => {
+      dislikeBtn.addEventListener('click', async (e) => {
         e.preventDefault();
         e.stopPropagation();
         console.log('🔄 [moveToNextCandidate] Кнопка дизлайка нажата (из moveToNextCandidate)');
@@ -1334,7 +1334,7 @@ export function onSuperMatch() {
     }
 }
 
-export function onSuperPending() {
+export async function onSuperPending() {
   // Скрываем исходные кнопки
   document.querySelectorAll(".like_d, .dislike_d").forEach(b => b.style.display = "none");
   // Отображаем бейдж pending
@@ -1457,10 +1457,12 @@ export function onSuperRejected() {
 }
 
 // Обработчик клика по кнопке Like (первый шаг: только проверки)
-export function handleLikeClick() {
+export async function handleLikeClick() {
     // Проверка наличия кандидатов и текущего индекса
     if (!window.candidates || window.candidates.length === 0 || window.currentIndex >= window.candidates.length) {
-        window.showCandidate && window.showCandidate();
+        if (window.showCandidate) {
+            await window.showCandidate();
+        }
     } else {
         window.doLike && window.doLike();
     }
@@ -1565,10 +1567,12 @@ export async function doLike() {
 }
 
 // Обработчик клика по кнопке Dislike (первый шаг: только проверки)
-export function handleDislikeClick() {
+export async function handleDislikeClick() {
     // Проверка наличия кандидатов и текущего индекса
     if (!window.candidates || window.candidates.length === 0 || window.currentIndex >= window.candidates.length) {
-        window.showCandidate && window.showCandidate();
+        if (window.showCandidate) {
+            await window.showCandidate();
+        }
     } else {
         window.doDislike && window.doDislike();
     }
@@ -1583,11 +1587,11 @@ export function attachDislikeHandler() {
         const newDislikeBtn = dislikeBtn.cloneNode(true);
         dislikeBtn.parentNode.replaceChild(newDislikeBtn, dislikeBtn);
         // Добавляем новый обработчик
-        newDislikeBtn.addEventListener('click', (e) => {
+        newDislikeBtn.addEventListener('click', async (e) => {
             console.log('🔄 [attachDislikeHandler] Кнопка дизлайка нажата!');
             e.preventDefault();
             e.stopPropagation();
-            handleDislikeClick();
+            await handleDislikeClick();
         });
         console.log('🔄 [attachDislikeHandler] Обработчик дизлайка установлен');
     } else {
@@ -2088,7 +2092,9 @@ export async function loadCandidates() {
     } else if (!window.inMutualMatch && window.candidates.length > 0) {
       // Показываем первого кандидата только если НЕ в mutual match режиме
       window.currentIndex = 0;
-      window.showCandidate && window.showCandidate();
+      if (window.showCandidate) {
+        await window.showCandidate();
+      }
     } else if (!window.inMutualMatch) {
       window.currentIndex = 0;
       if (typeof updateSwipeScreen === 'function') updateSwipeScreen();
@@ -2157,7 +2163,9 @@ export async function initSwipeScreen() {
   
   // После загрузки кандидатов и лайков показываем первого кандидата с бейджем
   if (window.candidates && window.candidates.length > 0) {
-    window.showCandidate && window.showCandidate();
+    if (window.showCandidate) {
+      await window.showCandidate();
+    }
   }
   // Проверяем PRO статус с учетом срока действия (как в pro.js)
   // Используем переменные now и isPro, объявленные выше (строки 1531-1535)
@@ -2166,7 +2174,9 @@ export async function initSwipeScreen() {
   }
   if (window.currentUser.needPhoto === 1) {
     window.candidates = [];
-    window.showCandidate && window.showCandidate();
+    if (window.showCandidate) {
+      await window.showCandidate();
+    }
     window.updateMatchesCount && window.updateMatchesCount();
     window.currentIndex = 0;
     hideSwipeSkeleton();
