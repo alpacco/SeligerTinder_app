@@ -14,14 +14,21 @@ router = APIRouter()
 @router.post("/sendPush")
 async def send_push(data: Dict = Body(...)):
     """Записать визит (wave) между пользователями"""
-    senderId = data.get("senderId")
+    senderId = data.get("senderId") or data.get("userId")  # Поддержка обоих вариантов
     senderUsername = data.get("senderUsername")
     receiverId = data.get("receiverId")
     
+    # Проверяем, что все обязательные параметры присутствуют
+    if not senderId:
+        raise HTTPException(status_code=400, detail="senderId or userId is required")
+    if not receiverId:
+        raise HTTPException(status_code=400, detail="receiverId is required")
+    
     try:
         # Используем правильные имена колонок из таблицы visits: userId и visitorId
+        # В PostgreSQL используем %s вместо ?
         await db_run(
-            "INSERT INTO visits (\"userId\", \"visitorId\", timestamp) VALUES (?, ?, CURRENT_TIMESTAMP)",
+            "INSERT INTO visits (\"userId\", \"visitorId\", timestamp) VALUES (%s, %s, CURRENT_TIMESTAMP)",
             [receiverId, senderId]  # receiverId = userId (кто получил), senderId = visitorId (кто отправил)
         )
         return {"success": True}
