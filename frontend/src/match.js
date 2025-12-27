@@ -161,7 +161,22 @@ export async function renderMatches() {
  * Показать профиль кандидата из Matches
  * @param {Object} match - объект мэтча
  */
+// Флаг для предотвращения множественных вызовов
+let isShowingCandidateProfile = false;
+let lastShownCandidateId = null;
+
 export async function showCandidateProfile(match) {
+  const candidateId = String(match?.id || match?.userId || '');
+  
+  // Предотвращаем множественные вызовы для одного и того же кандидата
+  if (isShowingCandidateProfile && lastShownCandidateId === candidateId) {
+    console.log('[match.js] ⚠️ showCandidateProfile уже выполняется для этого кандидата, пропускаем');
+    return;
+  }
+  
+  isShowingCandidateProfile = true;
+  lastShownCandidateId = candidateId;
+  
   console.log('[match.js] ========== showCandidateProfile ВЫЗВАН ==========');
   console.log('[match.js] match объект:', match);
   console.log('[match.js] match.id:', match?.id);
@@ -395,17 +410,32 @@ export async function showCandidateProfile(match) {
               updateLastLoginText(finalText);
               console.log('[match.js] Текст установлен:', finalText);
             } else {
-              console.log('[match.js] lastLoginTime отсутствует в ответе (null или undefined), показываем "—"');
-              updateLastLoginText('—');
+              console.log('[match.js] lastLoginTime отсутствует в ответе (null или undefined), показываем "Была/Был давно"');
+              // Определяем правильный глагол на основе пола кандидата
+              let verb;
+              if (window.currentUser.gender === 'male') verb = 'Была';
+              else if (window.currentUser.gender === 'female') verb = 'Был';
+              else verb = ((match.gender || window.viewingCandidate?.gender) === 'female' ? 'Была' : 'Был');
+              updateLastLoginText(`${verb} давно`);
             }
           })
           .catch((err) => { 
             console.error('[match.js] Ошибка при загрузке last login:', err);
-            updateLastLoginText('—');
+            // При ошибке тоже показываем "Была/Был давно"
+            let verb;
+            if (window.currentUser.gender === 'male') verb = 'Была';
+            else if (window.currentUser.gender === 'female') verb = 'Был';
+            else verb = ((match.gender || window.viewingCandidate?.gender) === 'female' ? 'Была' : 'Был');
+            updateLastLoginText(`${verb} давно`);
           });
         } else {
           console.warn('[match.js] userIdForLastLogin отсутствует, match:', match);
-          updateLastLoginText('—');
+          // Если userId отсутствует, тоже показываем "Была/Был давно"
+          let verb;
+          if (window.currentUser.gender === 'male') verb = 'Была';
+          else if (window.currentUser.gender === 'female') verb = 'Был';
+          else verb = ((match.gender || window.viewingCandidate?.gender) === 'female' ? 'Была' : 'Был');
+          updateLastLoginText(`${verb} давно`);
         }
       } else {
         console.warn('[match.js] header-sub-row не найден в header');

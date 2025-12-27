@@ -1,6 +1,6 @@
 // Модуль swipe.js: ВСЯ ЛОГИКА СВАЙПОВ, анимаций, обработчиков свайпов, кнопок и спец.событий
 // Версия модуля для отладки кэша
-const SWIPE_MODULE_VERSION = '2025-01-27-match-badge-pro-v11';
+const SWIPE_MODULE_VERSION = '2025-01-27-lastlogin-fix-v12';
 console.log('🔄 [CACHE] swipe.js загружен, версия:', SWIPE_MODULE_VERSION);
 console.log('🔄 [CACHE] swipe.js загружен, timestamp:', new Date().toISOString());
 // Экспортируемые функции:
@@ -12,10 +12,8 @@ console.log('🔄 [CACHE] swipe.js загружен, timestamp:', new Date().toI
 
 // Логика свайпа и кандидатов, вынесенная из main.js
 import { hideBadges, renderPaginator } from './utils.js';
-import { sendLike, sendDislike, sendSuperLike, sendPush, fetchGoals } from './api.js';
+import { sendLike, sendDislike, sendSuperLike, sendPush, fetchGoals, fetchLikesReceived } from './api.js';
 import { fillCard } from './card.js';
-import { fetchLikesReceived } from './api.js';
-import { fetchLikesReceived } from './api.js';
 // Динамический импорт user-actions для избежания проблем с Vite
 let loadUserData, handlePhotoAddition;
 import('./user-actions.js').then(module => {
