@@ -187,6 +187,16 @@ export async function loadUserData() {
     
     console.log("✅ [loadUserData] ФИНАЛЬНОЕ значение superLikesCount:", currentUser.superLikesCount);
     console.log("🔵 [loadUserData] ========== КОНЕЦ ЗАГРУЗКИ СУПЕРЛАЙКОВ ==========");
+    
+    // Обновляем время последнего входа
+    try {
+      const { updateLastLogin } = await import('./api.js');
+      await updateLastLogin(currentUser.userId);
+      console.log("✅ [loadUserData] lastLogin обновлён");
+    } catch (err) {
+      console.warn("⚠️ [loadUserData] Ошибка обновления lastLogin:", err);
+    }
+    
     console.log("✅ [loadUserData] currentUser обновлён:", currentUser);
   } catch (err) {
     console.error("❌ [loadUserData] Ошибка:", err);

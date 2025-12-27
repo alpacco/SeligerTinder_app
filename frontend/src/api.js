@@ -112,6 +112,7 @@ export const saveGoals = (userId, goals) => request('/goals', { method: 'POST', 
 
 // Last login
 export const fetchLastLogin = (userId) => request(`/last-login/${userId}`);
+export const updateLastLogin = (userId) => request('/last-login', { method: 'POST', body: JSON.stringify({ userId }) });
 
 // Profile
 export const updateProfile = (profileData) => request('/updateProfile', { method: 'POST', body: JSON.stringify(profileData) });
