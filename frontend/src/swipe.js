@@ -999,6 +999,13 @@ export async function showCandidate() {
       console.log('[showCandidate] PRO-кнопки не найдены, вызываем setupSwipeControls');
       window.setupSwipeControls && window.setupSwipeControls();
     }
+    
+    // КРИТИЧНО: Обновляем состояние кнопки "Вперед" после показа кандидата
+    const likeBtn = document.querySelector(".like_d");
+    if (likeBtn) {
+      const shouldShowForward = canGoForward() && !window.inMutualMatch;
+      updateForwardButton(likeBtn, shouldShowForward);
+    }
   } else {
     // Скрываем PRO-кнопки для обычных пользователей или с истекшим сроком
     document.querySelectorAll(".back-cnd-btn, .forward-cnd-btn, .superlike_d").forEach(b => {
