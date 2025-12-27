@@ -636,7 +636,10 @@ export function moveToNextCandidate(direction = 'right') {
       dislikeBtn.parentNode.replaceChild(newDislikeBtn, dislikeBtn);
       dislikeBtn = newDislikeBtn;
       // Восстанавливаем обработчик события для Dislike
-      dislikeBtn.addEventListener('click', () => {
+      dislikeBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log('🔄 [moveToNextCandidate] Кнопка дизлайка нажата (из moveToNextCandidate)');
         if (!window.candidates || window.candidates.length === 0 || window.currentIndex >= window.candidates.length) {
           window.showCandidate && window.showCandidate();
         } else {
