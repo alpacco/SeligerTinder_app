@@ -809,7 +809,7 @@ flex: 1;
   width: 100%;
   padding: 15px 20px;
   white-space: nowrap;
-  overflow-x: auto;
+  overflow: visible; /* Убираем overflow-x: auto, чтобы скролл был только у контейнера */
 }
 .match-main-row {
     display: flex;
