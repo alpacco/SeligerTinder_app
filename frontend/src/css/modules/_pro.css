@@ -8,6 +8,7 @@ body.is-pro {
 
 /* PRO Colors */
 body.is-pro .user-name,
+body.is-pro .user-link,
 body.is-pro .match-name,
 body.is-pro .goal-label,
 body.is-pro .age-label {
