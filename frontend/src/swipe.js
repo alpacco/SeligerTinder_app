@@ -1523,11 +1523,25 @@ function showMatchBadgeIfLiked(cardEl, candidate) {
     const badge = document.createElement('div');
     badge.className = 'match-badge-pro';
     badge.textContent = 'Мэтч 💯';
-    badge.style.cssText = 'position: absolute; top: 20px; right: 20px; background-color: var(--color-gold_p, #9f722f); color: var(--color-white); padding: 8px 16px; border-radius: 20px; font-size: var(--font-size-sm); font-weight: bold; z-index: 1000; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3); display: flex; align-items: center; justify-content: center; visibility: visible; opacity: 1;';
+    // Используем конкретные значения вместо CSS переменных для гарантированной видимости
+    badge.style.cssText = 'position: absolute !important; top: 20px !important; right: 20px !important; background-color: #9f722f !important; color: #ffffff !important; padding: 8px 16px !important; border-radius: 20px !important; font-size: 14px !important; font-weight: bold !important; z-index: 10000 !important; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important; display: flex !important; align-items: center !important; justify-content: center !important; visibility: visible !important; opacity: 1 !important; pointer-events: none !important;';
     cardEl.appendChild(badge);
     console.log('[swipe.js] ✅ Плашка "Мэтч 💯" добавлена для кандидата:', candidateId);
     console.log('[swipe.js] ✅ Плашка добавлена в DOM, элемент:', badge);
     console.log('[swipe.js] ✅ Плашка стили:', badge.style.cssText);
+    // Проверяем computed styles
+    setTimeout(() => {
+      const computed = window.getComputedStyle(badge);
+      console.log('[swipe.js] ✅ Плашка computed styles:', {
+        display: computed.display,
+        visibility: computed.visibility,
+        opacity: computed.opacity,
+        zIndex: computed.zIndex,
+        position: computed.position,
+        top: computed.top,
+        right: computed.right
+      });
+    }, 100);
   } else {
     console.log('[swipe.js] ℹ️ showMatchBadgeIfLiked: кандидат', candidateId, 'не лайкнул, плашка не показывается');
   }
