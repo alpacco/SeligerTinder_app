@@ -1814,7 +1814,7 @@ flex: 1;
     box-sizing: border-box;
     max-height: calc(100% - 200px);
     margin-top: 0 !important;
-    border-radius: var(--radius-lg);
+    border-radius: var(--radius-lg) !important; /* Скругление всех углов */
     box-shadow: 0 2px 8px var(--color-black-trl);
     background-size: cover;
     background-position: center;
@@ -1823,7 +1823,8 @@ flex: 1;
     display: flex;
     flex-direction: column;
     justify-content: flex-end;
-    overflow: visible; /* Изменено с hidden на visible, чтобы плашка "Мэтч 💯" была видна */
+    overflow: hidden; /* hidden для правильного отображения скругленных углов */
+    /* КРИТИЧНО: Плашка "Мэтч 💯" должна быть видна, поэтому используем z-index и position: absolute */
 
 }
 

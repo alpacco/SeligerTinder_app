@@ -139,6 +139,7 @@ body.is-pro .edit-button {
 
 body.is-pro .app-card {
   border-radius: 30px !important;
+  overflow: hidden !important; /* Для правильного отображения скругленных углов */
 }
 
 /* Переопределяем белый цвет для лайка в PRO режиме */
