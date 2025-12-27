@@ -1682,17 +1682,18 @@ export async function refreshCurrentUser() {
       
       // КРИТИЧНО: НЕ перезагружаем кандидатов, если мы в режиме mutual match
       // Это предотвращает изменение currentIndex и потерю текущего кандидата
-      if (!wasInMutualMatch && window.candidates.length === 0) {
+      if (wasInMutualMatch) {
+        // В режиме mutual match НЕ перезагружаем кандидатов и сохраняем индекс
+        window.currentIndex = savedIndex;
+        console.log('[refreshCurrentUser] Сохраняем currentIndex в mutual match режиме:', window.currentIndex, '(не вызываем loadCandidates)');
+      } else if (window.candidates.length === 0) {
         // Перезагружаем кандидатов только если список пуст и мы НЕ в mutual match
         await loadCandidates();
-      } else if (!wasInMutualMatch) {
+        // После loadCandidates индекс может сброситься, но это нормально при пустом списке
+      } else {
         // Если не в mutual match и список не пуст, восстанавливаем индекс
         window.currentIndex = savedIndex;
-        console.log('[refreshCurrentUser] Восстановлен currentIndex:', window.currentIndex);
-      } else {
-        // В режиме mutual match сохраняем индекс
-        window.currentIndex = savedIndex;
-        console.log('[refreshCurrentUser] Сохраняем currentIndex в mutual match режиме:', window.currentIndex);
+        console.log('[refreshCurrentUser] Восстановлен currentIndex:', window.currentIndex, '(не вызываем loadCandidates, список не пуст)');
       }
     }
   } catch (e) {
