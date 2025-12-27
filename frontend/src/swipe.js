@@ -1206,15 +1206,25 @@ export async function doLike() {
             window.currentUser.likes = window.currentUser.likes || [];
             window.currentUser.likes.push(topUserId);
             
+            // КРИТИЧНО: Сохраняем индекс ДО refreshCurrentUser, так как он может вызвать loadCandidates
+            const savedIndexBeforeRefresh = window.currentIndex;
+            console.log('🔄 [doLike] Сохраняем индекс перед refreshCurrentUser:', savedIndexBeforeRefresh);
+            
             // Обновляем данные пользователя после лайка
             await refreshCurrentUser();
+            
+            // КРИТИЧНО: Восстанавливаем индекс после refreshCurrentUser, если он изменился
+            if (window.currentIndex !== savedIndexBeforeRefresh) {
+                console.warn('🚨 [doLike] currentIndex изменился после refreshCurrentUser! Было:', savedIndexBeforeRefresh, 'Стало:', window.currentIndex);
+                window.currentIndex = savedIndexBeforeRefresh;
+            }
             
             // Проверяем, есть ли взаимный лайк
             // ВАЖНО: бэкенд возвращает "match", а не "isMatch"
             console.log('🔄 [doLike] Проверяем мэтч: json.match =', json.match, 'json.isMatch =', json.isMatch);
             const isMatch = json.match === true || json.isMatch === true || ((candidate.id || candidate.userId) && (candidate.id || candidate.userId).startsWith('VALID_') && candidate.username);
             if (isMatch) {
-                console.log('🔄 [doLike] МЭТЧ! Вызываем onMutualLike');
+                console.log('🔄 [doLike] МЭТЧ! Вызываем onMutualLike, currentIndex:', window.currentIndex);
                 window.onMutualLike && window.onMutualLike();
             } else {
                 console.log('🔄 [doLike] Нет мэтча, улетаем вправо');
