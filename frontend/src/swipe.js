@@ -327,7 +327,9 @@ export async function showNextCandidate() {
     window._isBackAction = false;
     if (window.candidates.length > 0) {
       window.currentIndex = (window.currentIndex + 1) % window.candidates.length;
-      window.showCandidate && window.showCandidate();
+      if (window.showCandidate) {
+        await window.showCandidate();
+      }
     }
     console.log('🔄 [showNextCandidate] Выходим из истории, переходим к следующему новому кандидату');
   } else {
