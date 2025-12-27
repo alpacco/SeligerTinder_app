@@ -280,9 +280,7 @@ flex: 1;
 }
 
 /* КРИТИЧНО: В grid layout (.header-main-row) margin-right не нужен, так как позиционирование через grid */
-.header-main-row .back-btn {
-  margin-right: 0 !important;
-}
+/* Полное определение для .header-main-row .back-btn находится ниже, после определения .header-main-row */
 
 .back-btn img {
   width: 24px;
