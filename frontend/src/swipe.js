@@ -1092,10 +1092,11 @@ export async function moveToNextCandidate(direction = 'right') {
       // КРИТИЧНО: Проверяем, остались ли кандидаты после удаления
       if (window.candidates.length === 0) {
         window.currentIndex = 0;
-        // Если кандидатов не осталось, показываем экран "Пригласить" сразу
+        // Если кандидатов не осталось, показываем экран "Пригласить" сразу, без анимации
+        window._isBackAction = false;
         if (window.showCandidate) {
           await window.showCandidate();
-          return;
+          return; // Выходим, не запуская анимацию
         }
       } else if (window.currentIndex >= window.candidates.length) {
         window.currentIndex = 0;
@@ -1105,6 +1106,15 @@ export async function moveToNextCandidate(direction = 'right') {
   
   // Сбрасываем флаги
   window._isBackAction = false;
+  
+  // КРИТИЧНО: Проверяем наличие кандидатов перед запуском анимации
+  if (!window.candidates || window.candidates.length === 0) {
+    window.currentIndex = 0;
+    if (window.showCandidate) {
+      await window.showCandidate();
+      return; // Выходим, не запуская анимацию
+    }
+  }
   
   window.singleCard.style.transition = 'transform 0.5s ease';
   window.singleCard.style.transform = 'translate(1000px, 0) rotate(45deg)';
