@@ -1896,7 +1896,7 @@ flex: 1;
   position: absolute;
   top: 20px;
   right: 20px;
-  background-color: var(--color-gold_p, #9f722f);
+  background-color: rgba(159, 114, 47, 0.6); /* Золотой фон с opacity 0.6 */
   color: var(--color-white);
   padding: 8px 16px;
   border-radius: 20px;
@@ -1908,7 +1908,7 @@ flex: 1;
   align-items: center;
   justify-content: center;
   visibility: visible !important;
-  opacity: 0.9 !important; /* Изменено с 1 на 0.9 */
+  opacity: 1 !important; /* Текст и эмодзи с opacity 1.0 */
 }
 .app-card .user-bio {
   font-size: var(--font-size-sm);

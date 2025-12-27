@@ -749,7 +749,10 @@ export async function showCandidate() {
       const badge = document.createElement('div');
       badge.className = 'match-badge-pro';
       badge.textContent = 'Мэтч 💯';
-      badge.style.cssText = 'position: absolute !important; top: 20px !important; right: 20px !important; background-color: #9f722f !important; color: #ffffff !important; padding: 8px 16px !important; border-radius: 20px !important; font-size: 14px !important; font-weight: bold !important; z-index: 10000 !important; box-shadow: none !important; display: flex !important; align-items: center !important; justify-content: center !important; visibility: visible !important; opacity: 0.9 !important; pointer-events: none !important;';
+      badge.style.cssText = 'position: absolute !important; top: 20px !important; right: 20px !important; background-color: rgba(159, 114, 47, 0.6) !important; color: #ffffff !important; padding: 8px 16px !important; border-radius: 20px !important; font-size: 14px !important; font-weight: bold !important; z-index: 10000 !important; box-shadow: none !important; display: flex !important; align-items: center !important; justify-content: center !important; visibility: visible !important; opacity: 1 !important; pointer-events: none !important;';
+      // Устанавливаем opacity: 1 для текста и эмодзи
+      badge.style.setProperty('color', '#ffffff', 'important');
+      badge.style.setProperty('opacity', '1', 'important');
       singleCard.appendChild(badge);
       console.log('[swipe.js] ✅ Плашка "Мэтч 💯" добавлена СРАЗУ для кандидата:', candidateId);
     }
@@ -1123,7 +1126,10 @@ export function onMutualLike() {
       const newBadge = document.createElement('div');
       newBadge.className = 'match-badge-pro';
       newBadge.textContent = 'Мэтч 💯';
-      newBadge.style.cssText = 'position: absolute !important; top: 20px !important; right: 20px !important; background-color: #9f722f !important; color: #ffffff !important; padding: 8px 16px !important; border-radius: 20px !important; font-size: 14px !important; font-weight: bold !important; z-index: 10000 !important; box-shadow: none !important; display: flex !important; align-items: center !important; justify-content: center !important; visibility: visible !important; opacity: 0.9 !important; pointer-events: none !important;';
+      newBadge.style.cssText = 'position: absolute !important; top: 20px !important; right: 20px !important; background-color: rgba(159, 114, 47, 0.6) !important; color: #ffffff !important; padding: 8px 16px !important; border-radius: 20px !important; font-size: 14px !important; font-weight: bold !important; z-index: 10000 !important; box-shadow: none !important; display: flex !important; align-items: center !important; justify-content: center !important; visibility: visible !important; opacity: 1 !important; pointer-events: none !important;';
+      // Устанавливаем opacity: 1 для текста и эмодзи
+      newBadge.style.setProperty('color', '#ffffff', 'important');
+      newBadge.style.setProperty('opacity', '1', 'important');
       window.singleCard.appendChild(newBadge);
       console.log('[swipe.js] ✅ Плашка восстановлена после fillCard в onMutualLike для кандидата:', candidateId);
     }
