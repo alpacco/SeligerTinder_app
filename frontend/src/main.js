@@ -831,7 +831,7 @@ function showScreen(screenId) {
       if (avatarFrame) {
         avatarFrame.style.cursor = "pointer";
         avatarFrame.addEventListener("click", () => {
-          viewingCandidate = null;
+          window.viewingCandidate = null;
           showScreen("screen-profile");
         });
       }
