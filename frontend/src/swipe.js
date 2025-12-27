@@ -1,6 +1,6 @@
 // Модуль swipe.js: ВСЯ ЛОГИКА СВАЙПОВ, анимаций, обработчиков свайпов, кнопок и спец.событий
 // Версия модуля для отладки кэша
-const SWIPE_MODULE_VERSION = '2025-01-27-back-btn-fix-v10';
+const SWIPE_MODULE_VERSION = '2025-01-27-match-badge-pro-v11';
 console.log('🔄 [CACHE] swipe.js загружен, версия:', SWIPE_MODULE_VERSION);
 console.log('🔄 [CACHE] swipe.js загружен, timestamp:', new Date().toISOString());
 // Экспортируемые функции:
@@ -14,6 +14,8 @@ console.log('🔄 [CACHE] swipe.js загружен, timestamp:', new Date().toI
 import { hideBadges, renderPaginator } from './utils.js';
 import { sendLike, sendDislike, sendSuperLike, sendPush, fetchGoals } from './api.js';
 import { fillCard } from './card.js';
+import { fetchLikesReceived } from './api.js';
+import { fetchLikesReceived } from './api.js';
 // Динамический импорт user-actions для избежания проблем с Vite
 let loadUserData, handlePhotoAddition;
 import('./user-actions.js').then(module => {
@@ -368,6 +370,10 @@ export function showCandidate() {
   // Обычная карточка
   const currentCandidate = window.candidates[window.currentIndex];
   fillCard(singleCard, { ...currentCandidate });
+  
+  // Показываем плашку "Мэтч 💯" для PRO пользователей, если кандидат поставил лайк
+  showMatchBadgeIfLiked(singleCard, currentCandidate);
+  
   singleCard.classList.remove("show-match", "returning");
   // Добавляю анимацию появления
   singleCard.classList.add("card-appear");
@@ -1383,6 +1389,70 @@ export function updateSwipeScreen() {
     }
 }
 
+// Глобальная переменная для хранения списка пользователей, которые поставили лайк
+window.likesReceivedList = null;
+
+/**
+ * Загружает список пользователей, которые поставили лайк текущему пользователю
+ */
+async function loadLikesReceived() {
+  if (!window.currentUser?.userId) return;
+  
+  try {
+    const response = await fetchLikesReceived(window.currentUser.userId);
+    console.log('[swipe.js] Ответ API для полученных лайков:', response);
+    if (response && response.success) {
+      // API возвращает массив пользователей в response.users
+      const users = response.users || [];
+      window.likesReceivedList = new Set(users.map(String));
+      console.log('[swipe.js] Загружен список полученных лайков:', window.likesReceivedList);
+    } else {
+      window.likesReceivedList = new Set();
+    }
+  } catch (err) {
+    console.error('[swipe.js] Ошибка загрузки полученных лайков:', err);
+    window.likesReceivedList = new Set();
+  }
+}
+
+/**
+ * Показывает плашку "Мэтч 💯" в правом верхнем углу карточки, если кандидат поставил лайк и пользователь PRO
+ */
+function showMatchBadgeIfLiked(cardEl, candidate) {
+  if (!cardEl || !candidate) return;
+  
+  // Проверяем, является ли пользователь PRO
+  const now = Date.now();
+  const isPro = window.currentUser && 
+    (window.currentUser.is_pro === true || window.currentUser.is_pro === 'true' || window.currentUser.is_pro === 1) &&
+    window.currentUser.pro_end && 
+    new Date(window.currentUser.pro_end).getTime() > now;
+  
+  if (!isPro) {
+    // Удаляем плашку, если она есть, но пользователь не PRO
+    const existingBadge = cardEl.querySelector('.match-badge-pro');
+    if (existingBadge) existingBadge.remove();
+    return;
+  }
+  
+  // Проверяем, поставил ли кандидат лайк
+  const candidateId = String(candidate.id || candidate.userId);
+  const hasLiked = window.likesReceivedList && window.likesReceivedList.has(candidateId);
+  
+  // Удаляем старую плашку, если она есть
+  const existingBadge = cardEl.querySelector('.match-badge-pro');
+  if (existingBadge) existingBadge.remove();
+  
+  if (hasLiked) {
+    // Создаем плашку "Мэтч 💯"
+    const badge = document.createElement('div');
+    badge.className = 'match-badge-pro';
+    badge.textContent = 'Мэтч 💯';
+    cardEl.appendChild(badge);
+    console.log('[swipe.js] Плашка "Мэтч 💯" добавлена для кандидата:', candidateId);
+  }
+}
+
 // --- ДОБАВИТЬ: функция для обновления пользователя после изменений ---
 export async function refreshCurrentUser() {
   try {
@@ -1458,6 +1528,16 @@ export async function initSwipeScreen() {
   // Обновляем UI (аватар, имя, бейдж)
   window.updateSwipeScreen && window.updateSwipeScreen();
   window.updateMatchesCount && window.updateMatchesCount();
+  
+  // Загружаем список полученных лайков для PRO пользователей
+  const now = Date.now();
+  const isPro = window.currentUser && 
+    (window.currentUser.is_pro === true || window.currentUser.is_pro === 'true' || window.currentUser.is_pro === 1) &&
+    window.currentUser.pro_end && 
+    new Date(window.currentUser.pro_end).getTime() > now;
+  if (isPro) {
+    await loadLikesReceived();
+  }
 
   // Навешиваем переход на профиль по клику на аватар
   const avatarFrame = document.querySelector("#screen-swipe .ava-frame");

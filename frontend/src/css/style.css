@@ -1862,6 +1862,24 @@ flex: 1;
   border-radius: var(--radius-lg);
   z-index: 5;
 }
+
+/* Плашка "Мэтч 💯" для PRO пользователей */
+.match-badge-pro {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background-color: var(--color-gold_p, #9f722f);
+  color: var(--color-white);
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: var(--font-size-sm);
+  font-weight: bold;
+  z-index: 10;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 .app-card .user-bio {
   font-size: var(--font-size-sm);
   line-height: 1.3;

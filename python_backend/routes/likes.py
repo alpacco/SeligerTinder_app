@@ -102,12 +102,12 @@ async def superlike_user(data: SuperlikeRequest):
 
 @router.get("/likesReceived")
 async def get_likes_received(userId: str = Query(..., description="ID пользователя")):
-    """Получить количество пользователей, которые лайкнули текущего пользователя"""
+    """Получить список пользователей, которые лайкнули текущего пользователя"""
     # Находим всех пользователей, у которых в likes есть userId текущего пользователя
     # Используем jsonb_array_elements_text для развертывания массива и проверки наличия значения
     try:
         sql = """
-            SELECT COUNT(*) as count
+            SELECT "userId"
             FROM users
             WHERE EXISTS (
                 SELECT 1
@@ -115,18 +115,20 @@ async def get_likes_received(userId: str = Query(..., description="ID польз
                 WHERE elem = %s
             )
         """
-        result = await db_get(sql, [userId])
+        rows = await db_all(sql, [userId])
         
-        if not result:
-            return {"success": True, "count": 0}
+        if not rows:
+            return {"success": True, "count": 0, "users": []}
         
-        count = result.get("count", 0)
-        return {"success": True, "count": count}
+        # Извлекаем userId из результатов
+        users = [str(row["userId"]) for row in rows]
+        count = len(users)
+        return {"success": True, "count": count, "users": users}
     except Exception as e:
         print(f"[GET /api/likesReceived] Ошибка: {e}")
         import traceback
         traceback.print_exc()
-        return {"success": True, "count": 0}
+        return {"success": True, "count": 0, "users": []}
 
 
 @router.get("/likesMade")
