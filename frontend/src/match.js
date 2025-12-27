@@ -194,8 +194,12 @@ export async function showCandidateProfile(match) {
   }
 
   // Удаляем блок статистики лайков, если он есть (чтобы не было на чужих профилях)
+  // ВАЖНО: Удаляем только если мы смотрим профиль кандидата (не свой профиль)
   const oldStats = document.querySelector('#screen-profile .profile-likes-stats');
-  if (oldStats) oldStats.remove();
+  if (oldStats && window.viewingCandidate) {
+    console.log('[match.js] Удаляем статистику лайков для профиля кандидата');
+    oldStats.remove();
+  }
 
   // Сброс и рендер
   if (pic) {
