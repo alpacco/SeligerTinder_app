@@ -1357,7 +1357,7 @@ export function onMutualLike() {
     if (likeBtn) {
       likeBtn.style.display = "flex";
       likeBtn.innerHTML = `<img class="next" src="/img/next.svg" alt="next" />`;
-      likeBtn.onclick = () => {
+      likeBtn.onclick = async () => {
         // Удаляем кандидата из массива только сейчас
         const idx = window.candidates.findIndex(c => String(c.id || c.userId) === String(currentCandidate.id || currentCandidate.userId));
         if (idx >= 0) {
