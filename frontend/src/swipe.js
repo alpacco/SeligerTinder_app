@@ -191,8 +191,68 @@ export async function showPreviousCandidate() {
     window.setupSwipeControls && window.setupSwipeControls();
     // КРИТИЧНО: Увеличиваем задержку и вызываем обработчики еще раз, чтобы они точно установились
     setTimeout(() => {
-      window.attachLikeHandler && window.attachLikeHandler();
+      // Проверяем, нужно ли заменить кнопку "Лайк" на "Вперед"
+      const canGoForward = window.swipeHistoryIndex >= 0 && window.swipeHistoryIndex < window.swipeHistory.length - 1;
+      const likeBtn = document.querySelector(".like_d");
+      if (likeBtn && canGoForward && !window.inMutualMatch) {
+        // Заменяем кнопку "Лайк" на кнопку "Вперед"
+        likeBtn.innerHTML = `<svg class="forward-icon" width="36" height="36" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><g><path class="st0" d="M39,33.7L28.5,23.2c-1-1-2.6-1-3.5,0l0,0c-1,1-1,2.6,0,3.5L35.5,37.3c1,1,2.6,1,3.5,0l0,0C40,36.3,40,34.7,39,33.7z"/><path class="st0" d="M39,33.8l-10.5,10.5c-1,1-2.6,1-3.5,0l0,0c-1-1-1-2.6,0-3.5L35.5,30.3c1-1,2.6-1,3.5,0l0,0C40,31.2,40,32.8,39,33.8z"/></g></svg>`;
+        likeBtn.onclick = async (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          console.log('🔄 [forwardBtn] Кнопка "Вперед" нажата, swipeHistory.length:', window.swipeHistory.length, 'swipeHistoryIndex:', window.swipeHistoryIndex);
+          if (!window.singleCard) {
+            console.error('🔄 [forwardBtn] singleCard не найден!');
+            return;
+          }
+          window.singleCard.style.transition = "transform 0.5s ease";
+          window.singleCard.style.transform = "translate(1000px, 0) rotate(45deg)";
+          setTimeout(async () => {
+            if (window.showNextCandidate) {
+              await window.showNextCandidate();
+            }
+            if (window.singleCard) {
+              window.singleCard.style.transition = "none";
+              window.singleCard.style.transform = "none";
+            }
+          }, 500);
+        };
+        console.log('🔄 [showPreviousCandidate] Кнопка "Вперед" установлена, canGoForward:', canGoForward);
+      } else if (likeBtn && !canGoForward && !window.inMutualMatch) {
+        // Восстанавливаем кнопку "Лайк" если нет возможности перейти вперед
+        // (но только если она была заменена на "Вперед")
+        if (likeBtn.innerHTML.includes('forward-icon')) {
+          likeBtn.innerHTML = `<svg class="like-icon" width="36" height="36" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><path class="st0" d="M40.2,19.3c-5.1-0.5-7.5,2.5-8.2,3.5c-0.6-1-3.1-4-8.2-3.5c-5.4,0.6-10.8,7-5.7,15.6c4.2,6.9,13.6,11.9,13.9,12.1l0,0l0,0l0,0l0,0c0.2-0.1,9.7-5.1,13.9-12.1C51,26.3,45.6,19.9,40.2,19.3L40.2,19.3z"/></svg>`;
+          likeBtn.onclick = null;
+          window.attachLikeHandler && window.attachLikeHandler();
+          console.log('🔄 [showPreviousCandidate] Кнопка "Лайк" восстановлена, canGoForward:', canGoForward);
+        } else {
+          window.attachLikeHandler && window.attachLikeHandler();
+        }
+      } else {
+        window.attachLikeHandler && window.attachLikeHandler();
+      }
       window.attachDislikeHandler && window.attachDislikeHandler();
+      
+      // Обновляем видимость кнопки "Назад"
+      const backBtn = document.querySelector(".back-cnd-btn");
+      const canGoBack = window.swipeHistory.length > 0 && (window.swipeHistoryIndex === -1 || window.swipeHistoryIndex > 0);
+      if (backBtn) {
+        // Всегда показываем кнопку для PRO пользователей
+        backBtn.style.display = "flex";
+        if (canGoBack) {
+          backBtn.style.pointerEvents = "auto";
+          backBtn.style.opacity = "1";
+          backBtn.disabled = false;
+          console.log('🔄 [showPreviousCandidate] Кнопка "Назад" активна, canGoBack:', canGoBack);
+        } else {
+          backBtn.style.pointerEvents = "none";
+          backBtn.style.opacity = "0.5";
+          backBtn.disabled = true;
+          console.log('🔄 [showPreviousCandidate] Кнопка "Назад" неактивна, canGoBack:', canGoBack);
+        }
+      }
+      
       console.log('🔄 [showPreviousCandidate] Обработчики кнопок восстановлены');
     }, 150);
     
@@ -1012,13 +1072,17 @@ export async function moveToNextCandidate(direction = 'right') {
     if (currentCandidate) {
       // Определяем тип действия по направлению свайпа
       const action = direction === 'right' ? 'like' : 'dislike';
-      // Если мы были в истории, удаляем все элементы после текущей позиции
+      // КРИТИЧНО: Если мы были в истории, удаляем все элементы после текущей позиции
+      // Это нужно, чтобы при лайке после возврата история обновлялась правильно
       if (window.swipeHistoryIndex >= 0) {
+        console.log('🔄 [moveToNextCandidate] Обрезаем историю после индекса', window.swipeHistoryIndex, 'было элементов:', window.swipeHistory.length);
         window.swipeHistory = window.swipeHistory.slice(0, window.swipeHistoryIndex + 1);
+        console.log('🔄 [moveToNextCandidate] После обрезки элементов:', window.swipeHistory.length);
       }
       // Добавляем текущего кандидата в историю
       window.swipeHistory.push({ candidate: currentCandidate, index: window.currentIndex, action });
       window.swipeHistoryIndex = -1; // Выходим из истории, так как переходим к новому кандидату
+      console.log('🔄 [moveToNextCandidate] Добавили кандидата в историю, swipeHistory.length:', window.swipeHistory.length, 'swipeHistoryIndex:', window.swipeHistoryIndex);
       window.candidates.splice(window.currentIndex, 1);
       if (window.currentIndex >= window.candidates.length) {
         window.currentIndex = 0;
