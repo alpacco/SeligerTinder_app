@@ -825,6 +825,11 @@ flex: 1;
 }
 .match-card .match-name {
   margin-right: auto;
+  flex: 1; /* Занимает доступное пространство */
+  min-width: 0; /* Позволяет сжиматься */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .match-info {
   display: flex;
@@ -838,6 +843,11 @@ flex: 1;
   align-items: center;
   font-size: var(--font-size-lg);
   font-weight: bold;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+  min-width: 0; /* Позволяет flex-элементу сжиматься */
 }
 .match-actions button {
   padding-top: 6px;
@@ -851,6 +861,8 @@ flex: 1;
   gap: 12px;
   margin-bottom: 0;
   flex: 1;
+  min-width: 0; /* Позволяет flex-элементу сжиматься для text-overflow */
+  overflow: hidden; /* Скрываем переполнение */
 }
 .match-username {
   font-size: var(--font-size-lg);
