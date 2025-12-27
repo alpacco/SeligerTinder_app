@@ -300,12 +300,13 @@ export function setupSwipeControls() {
     window.currentUser.pro_end && 
     new Date(window.currentUser.pro_end).getTime() > now;
   
-  // Back button for PRO users
+  // Back and Forward buttons for PRO users
   if (isPro) {
+    // Back button
     const backBtn = document.createElement("button");
     backBtn.className = "back-cnd-btn";
     backBtn.innerHTML = `<svg class="back-icon" width="36" height="36" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><g><path class="st0" d="M25,30.3L25,30.3c1-1,2.6-1,3.5,0L39,40.8c1,1,1,2.6,0,3.5l0,0c-1,1-2.6,1-3.5,0L25,33.8C24,32.8,24,31.2,25,30.3z"/><path class="st0" d="M25,30.2l10.5-10.5c1-1,2.6-1,3.5,0l0,0c1,1,1,2.6,0,3.5L28.5,33.7c-1,1-2.6,1-3.5,0l0,0C24,32.8,24,31.2,25,30.2z"/></g></svg>`;
-    backBtn.style.display = "flex"; // Явно показываем кнопку
+    backBtn.style.display = "flex";
     backBtn.addEventListener("click", () => {
       window.singleCard.style.transition = "transform 0.5s ease";
       window.singleCard.style.transform = "translate(-1000px, 0) rotate(-45deg)";
@@ -315,12 +316,30 @@ export function setupSwipeControls() {
         window.singleCard.style.transform = "none";
       }, 500);
     });
-    // Вставляем Back кнопку ПЕРЕД кнопками dislike и like
+    
+    // Forward button
+    const forwardBtn = document.createElement("button");
+    forwardBtn.className = "forward-cnd-btn";
+    forwardBtn.innerHTML = `<svg class="forward-icon" width="36" height="36" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><g><path class="st0" d="M39,33.7L28.5,23.2c-1-1-2.6-1-3.5,0l0,0c-1,1-1,2.6,0,3.5L35.5,37.3c1,1,2.6,1,3.5,0l0,0C40,36.3,40,34.7,39,33.7z"/><path class="st0" d="M39,33.8l-10.5,10.5c-1,1-2.6,1-3.5,0l0,0c-1-1-1-2.6,0-3.5L35.5,30.3c1-1,2.6-1,3.5,0l0,0C40,31.2,40,32.8,39,33.8z"/></g></svg>`;
+    forwardBtn.style.display = "flex";
+    forwardBtn.addEventListener("click", () => {
+      window.singleCard.style.transition = "transform 0.5s ease";
+      window.singleCard.style.transform = "translate(1000px, 0) rotate(45deg)";
+      setTimeout(() => {
+        window.showNextCandidate && window.showNextCandidate();
+        window.singleCard.style.transition = "none";
+        window.singleCard.style.transform = "none";
+      }, 500);
+    });
+    
+    // Вставляем Back и Forward кнопки ПЕРЕД кнопками dislike и like
     const dislikeBtn = cardsBtns.querySelector(".dislike_d");
     if (dislikeBtn) {
       cardsBtns.insertBefore(backBtn, dislikeBtn);
+      cardsBtns.insertBefore(forwardBtn, dislikeBtn);
     } else {
       cardsBtns.appendChild(backBtn);
+      cardsBtns.appendChild(forwardBtn);
     }
   }
   
@@ -740,7 +759,7 @@ export function showCandidate() {
     }
   } else {
     // Скрываем PRO-кнопки для обычных пользователей или с истекшим сроком
-    document.querySelectorAll(".back-cnd-btn, .superlike_d").forEach(b => {
+    document.querySelectorAll(".back-cnd-btn, .forward-cnd-btn, .superlike_d").forEach(b => {
       if (b) {
         b.style.display = "none";
       }
