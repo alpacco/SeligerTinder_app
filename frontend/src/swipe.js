@@ -1,6 +1,6 @@
 // Модуль swipe.js: ВСЯ ЛОГИКА СВАЙПОВ, анимаций, обработчиков свайпов, кнопок и спец.событий
 // Версия модуля для отладки кэша
-const SWIPE_MODULE_VERSION = '2025-01-27-invite-screen-fix-v1';
+const SWIPE_MODULE_VERSION = '2025-01-27-invite-screen-fix-v2';
 console.log('🔄 [CACHE] swipe.js загружен, версия:', SWIPE_MODULE_VERSION);
 console.log('🔄 [CACHE] swipe.js загружен, timestamp:', new Date().toISOString());
 // Экспортируемые функции:
@@ -836,7 +836,36 @@ export async function showCandidate() {
   // Обычная карточка
   const currentCandidate = window.candidates[window.currentIndex];
   if (!currentCandidate) {
-    console.warn('[swipe.js] ⚠️ showCandidate: нет кандидата по индексу', window.currentIndex);
+    console.warn('[swipe.js] ⚠️ showCandidate: нет кандидата по индексу', window.currentIndex, 'candidates.length:', window.candidates.length);
+    // КРИТИЧНО: Если кандидата нет, показываем экран "Пригласить"
+    singleCard.style.backgroundImage = "none";
+    singleCard.style.backgroundColor = "#fff";
+    singleCard.style.boxShadow = "none";
+    const buttonText = window.currentUser && window.currentUser.needPhoto === 1 ? "Загрузите фото" : "Пригласить";
+    const buttonId = window.currentUser && window.currentUser.needPhoto === 1 ? "add-photo-swipe-btn" : "invite-button";
+    singleCard.innerHTML = `
+      <div class="no-users invite-wrapper">
+        <h3>Нет новых пользователей</h3>
+        <button id="${buttonId}" class="invite-button">${buttonText}</button>
+      </div>
+    `;
+    singleCard.className = "app-card";
+    document.querySelectorAll(".like_d, .dislike_d").forEach(b => b.style.display = "none");
+    const btn = singleCard.querySelector(`#${buttonId}`);
+    if (btn) {
+      const newBtn = btn.cloneNode(true);
+      btn.parentNode.replaceChild(newBtn, btn);
+      if (window.currentUser && window.currentUser.needPhoto === 1) {
+        newBtn.addEventListener("click", () => {
+          const input = document.getElementById("photo-upload-input");
+          if (input) input.click();
+        });
+      } else {
+        newBtn.addEventListener("click", () => {
+          if (window.shareInvite) window.shareInvite();
+        });
+      }
+    }
     return;
   }
   
