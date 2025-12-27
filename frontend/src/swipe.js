@@ -1735,8 +1735,17 @@ export async function doLike() {
                 window.singleCard.style.transition = "transform 0.5s ease";
                 window.singleCard.style.transform = `translate(1000px, 0) rotate(45deg)`;
                 setTimeout(() => {
+                    // КРИТИЧНО: Если мы были в истории, удаляем все элементы после текущей позиции
+                    // Это нужно, чтобы при лайке после возврата история обновлялась правильно
+                    if (window.swipeHistoryIndex >= 0) {
+                        console.log('🔄 [doLike] Обрезаем историю после индекса', window.swipeHistoryIndex, 'было элементов:', window.swipeHistory.length);
+                        window.swipeHistory = window.swipeHistory.slice(0, window.swipeHistoryIndex + 1);
+                        console.log('🔄 [doLike] После обрезки элементов:', window.swipeHistory.length);
+                    }
                     // Сохраняем кандидата в истории в правильном формате с типом действия
                     window.swipeHistory.push({ candidate: window.candidates[idx], index: idx, action: 'like' });
+                    window.swipeHistoryIndex = -1; // Выходим из истории, так как переходим к новому кандидату
+                    console.log('🔄 [doLike] Добавили кандидата в историю, swipeHistory.length:', window.swipeHistory.length, 'swipeHistoryIndex:', window.swipeHistoryIndex);
                     // УБИРАЕМ удаление кандидата отсюда - оно будет в moveToNextCandidate
                     // window.candidates.splice(idx, 1);
                     window.moveToNextCandidate && window.moveToNextCandidate('right');
