@@ -19,7 +19,6 @@ export default defineConfig({
         'function_descriptions': resolve(__dirname, 'src/function_descriptions.js'),
         'function_ids': resolve(__dirname, 'src/function_ids.js'),
         utils: resolve(__dirname, 'src/utils.js'),
-        gift: resolve(__dirname, 'src/gift.js'),
         pro: resolve(__dirname, 'src/pro.js'),
         'pro-modal': resolve(__dirname, 'src/pro-modal.js'),
       },
