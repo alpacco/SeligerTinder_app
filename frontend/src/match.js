@@ -197,8 +197,21 @@ export async function showCandidateProfile(match) {
   }
 
   // Удаляем блок статистики лайков, если он есть (чтобы не было на чужих профилях)
+  // ВАЖНО: Удаляем статистику лайков из header-sub-row, чтобы освободить место для last login
   const oldStats = document.querySelector('#screen-profile .profile-likes-stats');
-  if (oldStats) oldStats.remove();
+  if (oldStats) {
+    console.log('[match.js] Удаляем статистику лайков из профиля');
+    oldStats.remove();
+  }
+  // Также удаляем из header-sub-row, если есть
+  const headerSubRow = document.querySelector('#screen-profile .header-sub-row');
+  if (headerSubRow) {
+    const statsInSubRow = headerSubRow.querySelector('.profile-likes-stats');
+    if (statsInSubRow) {
+      console.log('[match.js] Удаляем статистику лайков из header-sub-row');
+      statsInSubRow.remove();
+    }
+  }
 
   // Сброс и рендер
   if (pic) {
@@ -268,16 +281,38 @@ export async function showCandidateProfile(match) {
         }
         const el = document.createElement('div');
         el.className = 'candidate-last-login';
+        el.id = 'candidate-last-login-element'; // Добавляем ID для отладки
         el.style.textAlign = 'center';
         el.style.color = 'var(--color-white)';
         el.style.fontSize = 'var(--font-size-sm)';
         el.style.display = 'block';
         el.style.width = '100%';
         el.style.marginTop = '5px';
+        el.style.padding = '5px 0';
+        el.style.opacity = '1';
+        el.style.visibility = 'visible';
         el.textContent = 'Загрузка...';
         subRow.appendChild(el);
-        console.log('[match.js] Элемент last login создан и добавлен в subRow, subRow.innerHTML:', subRow.innerHTML.substring(0, 200));
-        console.log('[match.js] Элемент создан и добавлен в DOM');
+        console.log('[match.js] ✅ Элемент last login создан и добавлен в subRow');
+        console.log('[match.js] subRow.innerHTML длина:', subRow.innerHTML.length);
+        console.log('[match.js] subRow.children.length:', subRow.children.length);
+        console.log('[match.js] Элемент в DOM:', document.getElementById('candidate-last-login-element'));
+        // Проверяем, что элемент действительно виден
+        setTimeout(() => {
+          const checkEl = document.getElementById('candidate-last-login-element');
+          if (checkEl) {
+            const styles = window.getComputedStyle(checkEl);
+            console.log('[match.js] Проверка элемента через 100ms:', {
+              display: styles.display,
+              visibility: styles.visibility,
+              opacity: styles.opacity,
+              color: styles.color,
+              textContent: checkEl.textContent
+            });
+          } else {
+            console.error('[match.js] ❌ Элемент не найден через 100ms!');
+          }
+        }, 100);
         if (userIdForLastLogin) {
           console.log('[match.js] Загружаем last login для userId:', userIdForLastLogin, 'URL:', `${window.API_URL}/last-login/${userIdForLastLogin}`);
           fetch(`${window.API_URL}/last-login/${userIdForLastLogin}`)
