@@ -725,8 +725,16 @@ export function onMutualLike() {
     window.customHideBadges && window.customHideBadges(window.singleCard);
 
     // КРИТИЧНО: Восстанавливаем индекс, чтобы показать правильного кандидата
+    // И блокируем изменение индекса до завершения восстановления
     window.currentIndex = savedIndex;
-    console.log('🔄 [onMutualLike] Восстановлен индекс:', window.currentIndex);
+    console.log('🔄 [onMutualLike] Восстановлен индекс:', window.currentIndex, 'savedIndex был:', savedIndex);
+    console.log('🔄 [onMutualLike] Проверка: кандидат по индексу', window.currentIndex, '=', window.candidates[window.currentIndex]?.id || window.candidates[window.currentIndex]?.userId);
+    
+    // КРИТИЧНО: Проверяем, что индекс не изменился перед fillCard
+    if (window.currentIndex !== savedIndex) {
+      console.error('🚨 [onMutualLike] КРИТИЧНО: currentIndex изменился! Было:', savedIndex, 'Стало:', window.currentIndex);
+      window.currentIndex = savedIndex; // Восстанавливаем
+    }
     
     // КРИТИЧНО: Сохраняем плашку перед fillCard
     const candidateId = String(currentCandidate.id || currentCandidate.userId || '');
@@ -735,7 +743,14 @@ export function onMutualLike() {
       window.likesReceivedList.has(candidateId);
     
     // Обновляем карточку с данными текущего кандидата (чтобы убедиться, что данные актуальны)
+    console.log('🔄 [onMutualLike] Заполняем карточку для кандидата:', currentCandidate.id || currentCandidate.userId);
     fillCard(window.singleCard, currentCandidate);
+    
+    // КРИТИЧНО: Еще раз проверяем индекс после fillCard
+    if (window.currentIndex !== savedIndex) {
+      console.error('🚨 [onMutualLike] КРИТИЧНО: currentIndex изменился после fillCard! Было:', savedIndex, 'Стало:', window.currentIndex);
+      window.currentIndex = savedIndex; // Восстанавливаем
+    }
     
     // КРИТИЧНО: Восстанавливаем плашку после fillCard, если она была
     if (shouldShowBadge && window.likesReceivedList && window.likesReceivedList.has(candidateId)) {
