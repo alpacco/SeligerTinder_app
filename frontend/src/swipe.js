@@ -225,7 +225,7 @@ export async function showPreviousCandidate() {
         // (но только если она была заменена на "Вперед")
         if (likeBtn.innerHTML.includes('forward-icon')) {
           // КРИТИЧНО: Восстанавливаем красный фон для кнопки "Лайк"
-          likeBtn.style.backgroundColor = '';
+          likeBtn.style.backgroundColor = 'var(--color-red)';
           likeBtn.innerHTML = `<svg class="like-icon" width="36" height="36" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><path class="st0" d="M40.2,19.3c-5.1-0.5-7.5,2.5-8.2,3.5c-0.6-1-3.1-4-8.2-3.5c-5.4,0.6-10.8,7-5.7,15.6c4.2,6.9,13.6,11.9,13.9,12.1l0,0l0,0l0,0l0,0c0.2-0.1,9.7-5.1,13.9-12.1C51,26.3,45.6,19.9,40.2,19.3L40.2,19.3z"/></svg>`;
           likeBtn.onclick = null;
           window.attachLikeHandler && window.attachLikeHandler();
@@ -583,6 +583,18 @@ export function setupSwipeControls() {
     const likeBtn = cardsBtns.querySelector(".like_d");
     if (likeBtn && canGoForward && !window.inMutualMatch) {
       // Заменяем кнопку "Лайк" на кнопку "Вперед"
+      // КРИТИЧНО: Сбрасываем стили фона, чтобы кнопка была белой/серой, а не красной
+      // В PRO режиме фон должен быть var(--color-black_p), в обычном - var(--color-gray)
+      const now = Date.now();
+      const isPro = window.currentUser && 
+        (window.currentUser.is_pro === true || window.currentUser.is_pro === 'true' || window.currentUser.is_pro === 1) &&
+        window.currentUser.pro_end && 
+        new Date(window.currentUser.pro_end).getTime() > now;
+      if (isPro) {
+        likeBtn.style.backgroundColor = 'var(--color-black_p)';
+      } else {
+        likeBtn.style.backgroundColor = 'var(--color-gray)';
+      }
       likeBtn.innerHTML = `<svg class="forward-icon" width="36" height="36" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><g><path class="st0" d="M39,33.7L28.5,23.2c-1-1-2.6-1-3.5,0l0,0c-1,1-1,2.6,0,3.5L35.5,37.3c1,1,2.6,1,3.5,0l0,0C40,36.3,40,34.7,39,33.7z"/><path class="st0" d="M39,33.8l-10.5,10.5c-1,1-2.6,1-3.5,0l0,0c-1-1-1-2.6,0-3.5L35.5,30.3c1-1,2.6-1,3.5,0l0,0C40,31.2,40,32.8,39,33.8z"/></g></svg>`;
       likeBtn.onclick = async (e) => {
         e.preventDefault();
