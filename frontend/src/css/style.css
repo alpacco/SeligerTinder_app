@@ -1880,11 +1880,13 @@ flex: 1;
   border-radius: 20px;
   font-size: var(--font-size-sm);
   font-weight: bold;
-  z-index: 10;
+  z-index: 1000 !important;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-  display: flex;
+  display: flex !important;
   align-items: center;
   justify-content: center;
+  visibility: visible !important;
+  opacity: 1 !important;
 }
 .app-card .user-bio {
   font-size: var(--font-size-sm);

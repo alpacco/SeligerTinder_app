@@ -1064,29 +1064,52 @@ export function handleLikeClick() {
 
 // Функция для навешивания обработчика на кнопку Like
 export function attachLikeHandler() {
+    console.log('🔄 [attachLikeHandler] ВЫЗВАН, версия:', SWIPE_MODULE_VERSION);
     const likeBtn = document.querySelector('.like_d');
     if (likeBtn) {
-        likeBtn.addEventListener('click', handleLikeClick);
+        // Удаляем старые обработчики через клонирование
+        const newLikeBtn = likeBtn.cloneNode(true);
+        likeBtn.parentNode.replaceChild(newLikeBtn, likeBtn);
+        // Добавляем новый обработчик
+        newLikeBtn.addEventListener('click', (e) => {
+            console.log('🔄 [attachLikeHandler] Кнопка лайка нажата!');
+            e.preventDefault();
+            e.stopPropagation();
+            handleLikeClick();
+        });
+        console.log('🔄 [attachLikeHandler] Обработчик лайка установлен');
+    } else {
+        console.warn('🔄 [attachLikeHandler] Кнопка .like_d не найдена!');
     }
 }
 
 // Асинхронная функция doLike (добавлена первая часть логики)
 export async function doLike() {
-
+    console.log('🔄 [doLike] ВЫЗВАН, версия:', SWIPE_MODULE_VERSION);
+    console.log('🔄 [doLike] window.inMutualMatch:', window.inMutualMatch);
+    
     if (window.inMutualMatch) {
-
+        console.log('🔄 [doLike] В режиме mutual match, переходим к следующему кандидату');
         window.moveToNextCandidate && window.moveToNextCandidate('right');
         return;
     }
     const topUserId = window.singleCard?.dataset?.userId;
+    console.log('🔄 [doLike] topUserId:', topUserId);
 
     const idx = window.candidates?.findIndex(c => String(c.id || c.userId) === String(topUserId));
+    console.log('🔄 [doLike] idx:', idx);
 
-    if (idx < 0) return;
+    if (idx < 0) {
+        console.warn('🔄 [doLike] Кандидат не найден в массиве');
+        return;
+    }
     const candidate = window.candidates[idx];
+    console.log('🔄 [doLike] candidate:', candidate);
+    
     try {
-
+        console.log('🔄 [doLike] Отправляем лайк...');
         const json = await sendLike(window.currentUser.userId, topUserId);
+        console.log('🔄 [doLike] Ответ от сервера:', json);
 
         
         if (json && json.success) {
@@ -1097,11 +1120,12 @@ export async function doLike() {
             await refreshCurrentUser();
             
             // Проверяем, есть ли взаимный лайк
+            console.log('🔄 [doLike] Проверяем мэтч: json.isMatch =', json.isMatch);
             if (json.isMatch || ((candidate.id || candidate.userId) && (candidate.id || candidate.userId).startsWith('VALID_') && candidate.username)) {
-
+                console.log('🔄 [doLike] МЭТЧ! Вызываем onMutualLike');
                 window.onMutualLike && window.onMutualLike();
             } else {
-
+                console.log('🔄 [doLike] Нет мэтча, улетаем вправо');
                 // Анимация улетающей карточки вправо
                 window.singleCard.style.transition = "transform 0.5s ease";
                 window.singleCard.style.transform = `translate(1000px, 0) rotate(45deg)`;
@@ -1113,6 +1137,8 @@ export async function doLike() {
                     window.updateMatchesCount && window.updateMatchesCount();
                 }, 500);
             }
+        } else {
+            console.warn('🔄 [doLike] Лайк не успешен:', json);
         }
     } catch (err) {
         console.error('❌ Ошибка лайка:', err);
@@ -1494,10 +1520,11 @@ function showMatchBadgeIfLiked(cardEl, candidate) {
     const badge = document.createElement('div');
     badge.className = 'match-badge-pro';
     badge.textContent = 'Мэтч 💯';
-    badge.style.display = 'flex';
+    badge.style.cssText = 'position: absolute; top: 20px; right: 20px; background-color: var(--color-gold_p, #9f722f); color: var(--color-white); padding: 8px 16px; border-radius: 20px; font-size: var(--font-size-sm); font-weight: bold; z-index: 1000; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3); display: flex; align-items: center; justify-content: center; visibility: visible; opacity: 1;';
     cardEl.appendChild(badge);
     console.log('[swipe.js] ✅ Плашка "Мэтч 💯" добавлена для кандидата:', candidateId);
     console.log('[swipe.js] ✅ Плашка добавлена в DOM, элемент:', badge);
+    console.log('[swipe.js] ✅ Плашка стили:', badge.style.cssText);
   } else {
     console.log('[swipe.js] ℹ️ showMatchBadgeIfLiked: кандидат', candidateId, 'не лайкнул, плашка не показывается');
   }
