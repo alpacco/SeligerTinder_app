@@ -1372,11 +1372,6 @@ export async function initSwipeScreen() {
   // Обновляем UI (аватар, имя, бейдж)
   window.updateSwipeScreen && window.updateSwipeScreen();
   window.updateMatchesCount && window.updateMatchesCount();
-  
-  // Рендерим статистику лайков для PRO пользователей
-  if (window.renderProSwipeStats && window.currentUser) {
-    window.renderProSwipeStats(window.currentUser);
-  }
 
   // Навешиваем переход на профиль по клику на аватар
   const avatarFrame = document.querySelector("#screen-swipe .ava-frame");

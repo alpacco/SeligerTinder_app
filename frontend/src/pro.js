@@ -324,15 +324,12 @@ function initProFeatures(currentUser) {
   // Очищаем статистику лайков перед рендерингом (на случай, если она была в HTML)
   const profileSubRow = document.querySelector('.profile-header .header-sub-row');
   const matchesSubRow = document.querySelector('.matches-header .header-sub-row');
-  const swipeSubRow = document.querySelector('.cards-header .header-sub-row');
   if (profileSubRow) profileSubRow.innerHTML = '';
   if (matchesSubRow) matchesSubRow.innerHTML = '';
-  if (swipeSubRow) swipeSubRow.innerHTML = '';
   
-  // Рендерим статистику только для PRO пользователей
+  // Рендерим статистику только для PRO пользователей (только на экранах Профиль и Мэтчи)
   renderProLikesStats(currentUser);
   renderProMatchesStats(currentUser);
-  renderProSwipeStats(currentUser);
   toggleProLayout();
 }
 

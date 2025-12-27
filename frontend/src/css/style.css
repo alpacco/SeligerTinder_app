@@ -413,23 +413,14 @@ flex: 1;
     left: 50%;
     transform: translateX(-50%);
     width: 400px;
-    height: var(--header-height, 100px);
+    height: 80px;
     z-index: 10;
     background: transparent;
     display: flex;
-    flex-direction: column;
-    align-items: stretch;
-    justify-content: flex-start;
-    padding: 20px 20px 10px 20px;
-    box-sizing: border-box;
-}
-
-.cards-header .header-main-row {
-    display: flex;
     align-items: center;
     justify-content: space-between;
-    height: 40px;
-    position: relative;
+    padding: 20px 20px 10px 20px;
+    box-sizing: border-box;
 }
 .common-header h2,
 .cards-header h2,
