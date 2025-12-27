@@ -164,6 +164,8 @@ export async function renderMatches() {
 // Флаг для предотвращения множественных вызовов
 let isShowingCandidateProfile = false;
 let lastShownCandidateId = null;
+// Кэш для lastLogin, чтобы не делать повторные запросы
+const lastLoginCache = new Map();
 
 export async function showCandidateProfile(match) {
   const candidateId = String(match?.id || match?.userId || '');
@@ -378,6 +380,37 @@ export async function showCandidateProfile(match) {
         };
         
         if (userIdForLastLogin) {
+          // Проверяем кэш - если уже знаем, что lastLogin = null, сразу показываем "Была/Был давно"
+          if (lastLoginCache.has(userIdForLastLogin)) {
+            const cachedValue = lastLoginCache.get(userIdForLastLogin);
+            console.log('[match.js] Используем кэшированное значение lastLogin для userId:', userIdForLastLogin, 'значение:', cachedValue);
+            if (cachedValue === null) {
+              let verb;
+              if (window.currentUser.gender === 'male') verb = 'Была';
+              else if (window.currentUser.gender === 'female') verb = 'Был';
+              else verb = ((match.gender || window.viewingCandidate?.gender) === 'female' ? 'Была' : 'Был');
+              updateLastLoginText(`${verb} давно`);
+              return; // Не делаем запрос, если уже знаем, что null
+            } else {
+              // Если есть значение, показываем его
+              const dt = new Date(cachedValue);
+              const nowDate = new Date();
+              const diffH = (nowDate - dt) / (1000 * 60 * 60);
+              let timeText;
+              if      (diffH < 24)    timeText = 'сегодня';
+              else if (diffH < 48)    timeText = 'вчера';
+              else if (diffH < 24*7)  timeText = `${Math.floor(diffH/24)} дня назад`;
+              else if (diffH < 24*30) timeText = `${Math.floor(diffH/24)} дней назад`;
+              else                    timeText = 'давно';
+              let verb;
+              if (window.currentUser.gender === 'male') verb = 'Была';
+              else if (window.currentUser.gender === 'female') verb = 'Был';
+              else verb = ((match.gender || window.viewingCandidate?.gender) === 'female' ? 'Была' : 'Был');
+              updateLastLoginText(`${verb} ${timeText}`);
+              return; // Не делаем запрос, используем кэш
+            }
+          }
+          
           console.log('[match.js] Загружаем last login для userId:', userIdForLastLogin, 'URL:', `${window.API_URL}/last-login/${userIdForLastLogin}`);
           fetch(`${window.API_URL}/last-login/${userIdForLastLogin}`)
            .then(r => {
@@ -393,9 +426,11 @@ export async function showCandidateProfile(match) {
              const lastLoginTime = js.lastLogin;
             if (lastLoginTime) {
               console.log('[match.js] lastLoginTime найден:', lastLoginTime);
+              // Кэшируем значение
+              lastLoginCache.set(userIdForLastLogin, lastLoginTime);
               const dt = new Date(lastLoginTime);
-              const now = new Date();
-              const diffH = (now - dt) / (1000 * 60 * 60);
+              const nowDate = new Date();
+              const diffH = (nowDate - dt) / (1000 * 60 * 60);
               let timeText;
               if      (diffH < 24)    timeText = 'сегодня';
               else if (diffH < 48)    timeText = 'вчера';
@@ -411,6 +446,8 @@ export async function showCandidateProfile(match) {
               console.log('[match.js] Текст установлен:', finalText);
             } else {
               console.log('[match.js] lastLoginTime отсутствует в ответе (null или undefined), показываем "Была/Был давно"');
+              // Кэшируем null, чтобы не делать повторные запросы
+              lastLoginCache.set(userIdForLastLogin, null);
               // Определяем правильный глагол на основе пола кандидата
               let verb;
               if (window.currentUser.gender === 'male') verb = 'Была';

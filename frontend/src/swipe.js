@@ -1,6 +1,6 @@
 // Модуль swipe.js: ВСЯ ЛОГИКА СВАЙПОВ, анимаций, обработчиков свайпов, кнопок и спец.событий
 // Версия модуля для отладки кэша
-const SWIPE_MODULE_VERSION = '2025-01-27-lastlogin-fix-v12';
+const SWIPE_MODULE_VERSION = '2025-01-27-lastlogin-fix-v13';
 console.log('🔄 [CACHE] swipe.js загружен, версия:', SWIPE_MODULE_VERSION);
 console.log('🔄 [CACHE] swipe.js загружен, timestamp:', new Date().toISOString());
 // Экспортируемые функции:
@@ -1555,13 +1555,13 @@ export async function initSwipeScreen() {
   // Загружаем пользователя и кандидатов
   await window.loadCandidates();
   window.setupSwipeControls && window.setupSwipeControls();
-    // Проверяем PRO статус с учетом срока действия (как в pro.js)
-    const now = Date.now();
-    const isPro = window.currentUser && 
-      (window.currentUser.is_pro === true || window.currentUser.is_pro === 'true' || window.currentUser.is_pro === 1) &&
-      window.currentUser.pro_end && 
-      new Date(window.currentUser.pro_end).getTime() > now;
-    if (isPro) {
+  // Проверяем PRO статус с учетом срока действия (как в pro.js)
+  // Используем переменную now, объявленную выше (строка 1531)
+  const isPro = window.currentUser && 
+    (window.currentUser.is_pro === true || window.currentUser.is_pro === 'true' || window.currentUser.is_pro === 1) &&
+    window.currentUser.pro_end && 
+    new Date(window.currentUser.pro_end).getTime() > now;
+  if (isPro) {
     sendPush({ userId: window.currentUser.userId });
   }
   if (window.currentUser.needPhoto === 1) {
