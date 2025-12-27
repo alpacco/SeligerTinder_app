@@ -135,23 +135,35 @@ export async function loadUserData() {
     }
     
     // Загружаем суперлайки из БД или выделяем для PRO пользователей
-    // ВАЖНО: Сначала проверяем БД, потом localStorage, потом выделяем для PRO
+    // ВАЖНО: Для PRO пользователей всегда должно быть минимум 3 суперлайка, если в БД 0
     if (currentUser.is_pro) {
-      // Если в БД есть значение, используем его, иначе выделяем 3
-      if (currentUser.superLikesCount === 0 || !currentUser.superLikesCount) {
-        console.log("▶ Allocating 3 SuperLikes for PRO user (БД значение отсутствует)");
-        currentUser.superLikesCount = 3;
-      } else {
-        console.log("▶ SuperLikes из БД:", currentUser.superLikesCount);
+      // Проверяем localStorage сначала (там может быть актуальное значение после использования)
+      const stored = localStorage.getItem('superLikesCount');
+      if (stored !== null) {
+        const storedCount = parseInt(stored, 10);
+        if (!isNaN(storedCount) && storedCount >= 0) {
+          currentUser.superLikesCount = storedCount;
+          console.log("▶ SuperLikes из localStorage:", currentUser.superLikesCount);
+        }
       }
-    }
-    // Проверяем localStorage только если значение в БД отсутствует
-    const stored = localStorage.getItem('superLikesCount');
-    if (stored !== null && (currentUser.superLikesCount === 0 || !currentUser.superLikesCount)) {
-      const storedCount = parseInt(stored, 10);
-      if (!isNaN(storedCount) && storedCount >= 0) {
-        currentUser.superLikesCount = storedCount;
-        console.log("▶ SuperLikes из localStorage:", currentUser.superLikesCount);
+      
+      // Если значение из БД или localStorage равно 0 или отсутствует, выделяем 3 для PRO
+      if (currentUser.superLikesCount === 0 || !currentUser.superLikesCount) {
+        console.log("▶ Allocating 3 SuperLikes for PRO user (БД значение 0 или отсутствует)");
+        currentUser.superLikesCount = 3;
+        // Сохраняем в localStorage
+        localStorage.setItem('superLikesCount', '3');
+      } else {
+        console.log("▶ SuperLikes из БД/localStorage:", currentUser.superLikesCount);
+      }
+    } else {
+      // Для не-PRO пользователей используем значение из БД или localStorage
+      const stored = localStorage.getItem('superLikesCount');
+      if (stored !== null) {
+        const storedCount = parseInt(stored, 10);
+        if (!isNaN(storedCount) && storedCount >= 0) {
+          currentUser.superLikesCount = storedCount;
+        }
       }
     }
     console.log("✅ [loadUserData] currentUser обновлён:", currentUser);

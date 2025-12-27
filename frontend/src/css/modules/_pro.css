@@ -236,13 +236,13 @@ body.is-pro #matches-count {
   line-height: 20px;
   text-align: center;
   border-radius: var(--radius-md);
-  border: 1px solid rgba(23, 21, 21, 0.697);
 }
 
 body.is-pro #superlike-count {
   background: var(--color-black_p);
   color: var(--color-gold_p);
   border: 1px solid var(--color-gray-dark-tr);
+  box-shadow: 0 0px 8px #171717;
   top: -3px;
   right: -3px;
 }
