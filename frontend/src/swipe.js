@@ -314,7 +314,24 @@ export async function showNextCandidate() {
     window.setupSwipeControls && window.setupSwipeControls();
     // КРИТИЧНО: Увеличиваем задержку и вызываем обработчики еще раз, чтобы они точно установились
     setTimeout(() => {
-      window.attachLikeHandler && window.attachLikeHandler();
+      // Проверяем, нужно ли заменить кнопку "Лайк" на "Вперед"
+      const canGoForward = window.swipeHistoryIndex >= 0 && window.swipeHistoryIndex < window.swipeHistory.length - 1;
+      const likeBtn = document.querySelector(".like_d");
+      if (likeBtn && canGoForward && !window.inMutualMatch) {
+        // Заменяем кнопку "Лайк" на кнопку "Вперед"
+        likeBtn.innerHTML = `<svg class="forward-icon" width="36" height="36" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><g><path class="st0" d="M39,33.7L28.5,23.2c-1-1-2.6-1-3.5,0l0,0c-1,1-1,2.6,0,3.5L35.5,37.3c1,1,2.6,1,3.5,0l0,0C40,36.3,40,34.7,39,33.7z"/><path class="st0" d="M39,33.8l-10.5,10.5c-1,1-2.6,1-3.5,0l0,0c-1-1-1-2.6,0-3.5L35.5,30.3c1-1,2.6-1,3.5,0l0,0C40,31.2,40,32.8,39,33.8z"/></g></svg>`;
+        likeBtn.onclick = () => {
+          window.singleCard.style.transition = "transform 0.5s ease";
+          window.singleCard.style.transform = "translate(1000px, 0) rotate(45deg)";
+          setTimeout(() => {
+            window.showNextCandidate && window.showNextCandidate();
+            window.singleCard.style.transition = "none";
+            window.singleCard.style.transform = "none";
+          }, 500);
+        };
+      } else {
+        window.attachLikeHandler && window.attachLikeHandler();
+      }
       window.attachDislikeHandler && window.attachDislikeHandler();
       console.log('🔄 [showNextCandidate] Обработчики кнопок восстановлены');
     }, 150);
@@ -394,29 +411,41 @@ export function setupSwipeControls() {
       }, 500);
     });
     
-    // Forward button
-    const forwardBtn = document.createElement("button");
-    forwardBtn.className = "forward-cnd-btn";
-    forwardBtn.innerHTML = `<svg class="forward-icon" width="36" height="36" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><g><path class="st0" d="M39,33.7L28.5,23.2c-1-1-2.6-1-3.5,0l0,0c-1,1-1,2.6,0,3.5L35.5,37.3c1,1,2.6,1,3.5,0l0,0C40,36.3,40,34.7,39,33.7z"/><path class="st0" d="M39,33.8l-10.5,10.5c-1,1-2.6,1-3.5,0l0,0c-1-1-1-2.6,0-3.5L35.5,30.3c1-1,2.6-1,3.5,0l0,0C40,31.2,40,32.8,39,33.8z"/></g></svg>`;
-    forwardBtn.style.display = "flex";
-    forwardBtn.addEventListener("click", () => {
-      window.singleCard.style.transition = "transform 0.5s ease";
-      window.singleCard.style.transform = "translate(1000px, 0) rotate(45deg)";
-      setTimeout(() => {
-        window.showNextCandidate && window.showNextCandidate();
-        window.singleCard.style.transition = "none";
-        window.singleCard.style.transform = "none";
-      }, 500);
-    });
+    // Forward button - НЕ создаем отдельную кнопку
+    // Кнопка "Вперед" будет заменять кнопку "Лайк" когда есть возможность перейти вперед в истории
+    // Логика замены будет в showPreviousCandidate и showNextCandidate
     
-    // Вставляем Back и Forward кнопки ПЕРЕД кнопками dislike и like
+    // Вставляем Back кнопку ПЕРЕД кнопками dislike и like
     const dislikeBtn = cardsBtns.querySelector(".dislike_d");
     if (dislikeBtn) {
       cardsBtns.insertBefore(backBtn, dislikeBtn);
-      cardsBtns.insertBefore(forwardBtn, dislikeBtn);
     } else {
-    cardsBtns.appendChild(backBtn);
-      cardsBtns.appendChild(forwardBtn);
+      cardsBtns.appendChild(backBtn);
+    }
+    
+    // КРИТИЧНО: Обновляем видимость кнопки "Вперед" (заменяет кнопку "Лайк")
+    // Проверяем, есть ли возможность перейти вперед в истории
+    const canGoForward = window.swipeHistoryIndex >= 0 && window.swipeHistoryIndex < window.swipeHistory.length - 1;
+    const likeBtn = cardsBtns.querySelector(".like_d");
+    if (likeBtn && canGoForward && !window.inMutualMatch) {
+      // Заменяем кнопку "Лайк" на кнопку "Вперед"
+      likeBtn.innerHTML = `<svg class="forward-icon" width="36" height="36" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><g><path class="st0" d="M39,33.7L28.5,23.2c-1-1-2.6-1-3.5,0l0,0c-1,1-1,2.6,0,3.5L35.5,37.3c1,1,2.6,1,3.5,0l0,0C40,36.3,40,34.7,39,33.7z"/><path class="st0" d="M39,33.8l-10.5,10.5c-1,1-2.6,1-3.5,0l0,0c-1-1-1-2.6,0-3.5L35.5,30.3c1-1,2.6-1,3.5,0l0,0C40,31.2,40,32.8,39,33.8z"/></g></svg>`;
+      likeBtn.onclick = () => {
+        window.singleCard.style.transition = "transform 0.5s ease";
+        window.singleCard.style.transform = "translate(1000px, 0) rotate(45deg)";
+        setTimeout(() => {
+          window.showNextCandidate && window.showNextCandidate();
+          window.singleCard.style.transition = "none";
+          window.singleCard.style.transform = "none";
+        }, 500);
+      };
+    } else if (likeBtn && !canGoForward && !window.inMutualMatch) {
+      // Восстанавливаем кнопку "Лайк" если нет возможности перейти вперед
+      // (но только если она была заменена на "Вперед")
+      if (likeBtn.innerHTML.includes('forward-icon')) {
+        likeBtn.innerHTML = `<svg class="like-icon" width="36" height="36" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><path class="st0" d="M40.2,19.3c-5.1-0.5-7.5,2.5-8.2,3.5c-0.6-1-3.1-4-8.2-3.5c-5.4,0.6-10.8,7-5.7,15.6c4.2,6.9,13.6,11.9,13.9,12.1l0,0l0,0l0,0l0,0c0.2-0.1,9.7-5.1,13.9-12.1C51,26.3,45.6,19.9,40.2,19.3L40.2,19.3z"/></svg>`;
+        likeBtn.onclick = null;
+      }
     }
   }
   
