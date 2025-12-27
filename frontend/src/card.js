@@ -19,17 +19,17 @@ export function fillCard(cardEl, data, options = {}) {
   
   // Нормализуем ВСЕ фотографии в массиве для правильного переключения
   const normalizedPhotos = validPhotos.map(rawPhoto => {
-    if (rawPhoto.startsWith('http') || rawPhoto.startsWith('data:')) {
+  if (rawPhoto.startsWith('http') || rawPhoto.startsWith('data:')) {
       return rawPhoto;
-    } else if (rawPhoto.startsWith('/data/img/')) {
+  } else if (rawPhoto.startsWith('/data/img/')) {
       return rawPhoto;
-    } else if (rawPhoto === '/img/photo.svg') {
+  } else if (rawPhoto === '/img/photo.svg') {
       return rawPhoto;
-    } else {
+  } else {
       // Если это только имя файла, формируем полный путь
-      const filename = rawPhoto.split('/').pop();
+    const filename = rawPhoto.split('/').pop();
       return `/data/img/${data.userId || data.id}/${filename}`;
-    }
+  }
   });
   
   const finalPhotoUrl = normalizedPhotos[0];
