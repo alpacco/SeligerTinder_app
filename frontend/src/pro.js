@@ -141,6 +141,50 @@ function renderProLikesStats(currentUser) {
 }
 
 /**
+ * Рендерит статистику лайков для PRO-пользователей в экране свайпов
+ */
+function renderProSwipeStats(currentUser) {
+  const subRow = document.querySelector('.cards-header .header-sub-row');
+  if (!subRow) return;
+  
+  // Очищаем строку для всех пользователей
+  subRow.innerHTML = '';
+  
+  // Если пользователь не PRO - не показываем статистику
+  if (!currentUser.is_pro) {
+    return;
+  }
+  
+  // Проверяем срок действия Pro
+  const now = Date.now();
+  const isProActive = currentUser.is_pro && currentUser.pro_end && new Date(currentUser.pro_end).getTime() > now;
+  
+  if (!isProActive) {
+    return;
+  }
+  
+  // Показываем статистику только для активных PRO пользователей
+  const made = currentUser.likes.length;
+  subRow.innerHTML = `
+    <div class="profile-likes-stats">
+      <span class="likes-made-line">
+        Вы: <span class="likes-made-count">${made}</span>
+        <img src='/img/your_like.svg' alt='like'/>
+      </span>
+      <span class="likes-rec-line">
+        Вам: <span class="likes-rec-count">…</span>
+        <img src='/img/for_your_like.svg' alt='like'/>
+      </span>
+    </div>
+  `;
+  fetchLikesReceived(currentUser.userId)
+    .then(js => {
+      if (!js) return;
+      if (js.success) subRow.querySelector(".likes-rec-count").textContent = js.count;
+    });
+}
+
+/**
  * Рендерит статистику лайков для PRO-пользователей в мэтчах
  */
 function renderProMatchesStats(currentUser) {
@@ -217,12 +261,15 @@ function initProFeatures(currentUser) {
   // Очищаем статистику лайков перед рендерингом (на случай, если она была в HTML)
   const profileSubRow = document.querySelector('.profile-header .header-sub-row');
   const matchesSubRow = document.querySelector('.matches-header .header-sub-row');
+  const swipeSubRow = document.querySelector('.cards-header .header-sub-row');
   if (profileSubRow) profileSubRow.innerHTML = '';
   if (matchesSubRow) matchesSubRow.innerHTML = '';
+  if (swipeSubRow) swipeSubRow.innerHTML = '';
   
   // Рендерим статистику только для PRO пользователей
   renderProLikesStats(currentUser);
   renderProMatchesStats(currentUser);
+  renderProSwipeStats(currentUser);
   toggleProLayout();
 }
 
@@ -242,6 +289,7 @@ window.renderProBadge = renderProBadge;
 window.renderProInfo = renderProInfo;
 window.renderProLikesStats = renderProLikesStats;
 window.renderProMatchesStats = renderProMatchesStats;
+window.renderProSwipeStats = renderProSwipeStats;
 window.toggleProLayout = toggleProLayout;
 window.updateProStatus = updateProStatus;
 window.initProFeatures = initProFeatures;
@@ -254,6 +302,7 @@ export {
   renderProInfo,
   renderProLikesStats,
   renderProMatchesStats,
+  renderProSwipeStats,
   toggleProLayout,
   updateProStatus,
   initProFeatures
