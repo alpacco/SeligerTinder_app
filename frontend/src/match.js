@@ -70,10 +70,13 @@ export async function renderMatches() {
       const candidateId = m.userId || m.id || "";
       // Кнопка подарков удалена
       if (superLikeStatus !== 'pending') {
-        // Кнопка НАПИСАТЬ только для VALID_ и username
-        if (candidateId.startsWith('VALID_') && username) {
+        // Кнопка НАПИСАТЬ если есть username (без проверки на VALID_)
+        console.log('[match.js] renderMatches: проверка кнопки для', name, 'username:', username, 'candidateId:', candidateId);
+        if (username && username.trim()) {
+          console.log('[match.js] renderMatches: показываем НАПИСАТЬ для', name);
           actionsHTML += `<button class="match-write-btn">НАПИСАТЬ</button>`;
         } else {
+          console.log('[match.js] renderMatches: показываем ПОМАХАТЬ для', name, 'username отсутствует');
           if (pushSent) {
             actionsHTML += `<button class="match-push-btn" disabled>ВЫ ПОМАХАЛИ</button>`;
           } else {
@@ -140,6 +143,9 @@ export async function renderMatches() {
       if (userSection) {
         userSection.style.cursor = 'pointer';
         userSection.addEventListener('click', () => {
+          console.log('[match.js] renderMatches: клик на match-user для', m.name, 'm:', m);
+          // Устанавливаем viewingCandidate перед вызовом
+          window.viewingCandidate = m;
           showCandidateProfile(m);
         });
       }
@@ -305,22 +311,31 @@ export async function showCandidateProfile(match) {
         console.log('[match.js] subRow.innerHTML длина:', subRow.innerHTML.length);
         console.log('[match.js] subRow.children.length:', subRow.children.length);
         console.log('[match.js] Элемент в DOM:', document.getElementById('candidate-last-login-element'));
-        // Проверяем, что элемент действительно виден
-        setTimeout(() => {
-          const checkEl = document.getElementById('candidate-last-login-element');
-          if (checkEl) {
-            const styles = window.getComputedStyle(checkEl);
-            console.log('[match.js] Проверка элемента через 100ms:', {
-              display: styles.display,
-              visibility: styles.visibility,
-              opacity: styles.opacity,
-              color: styles.color,
-              textContent: checkEl.textContent
-            });
-          } else {
-            console.error('[match.js] ❌ Элемент не найден через 100ms!');
-          }
-        }, 100);
+        console.log('[match.js] window.viewingCandidate установлен:', !!window.viewingCandidate);
+        // Проверяем, что элемент действительно виден через разные интервалы
+        [50, 100, 200, 500, 1000].forEach(delay => {
+          setTimeout(() => {
+            const checkEl = document.getElementById('candidate-last-login-element');
+            if (checkEl) {
+              const styles = window.getComputedStyle(checkEl);
+              const parent = checkEl.parentElement;
+              console.log(`[match.js] Проверка элемента через ${delay}ms:`, {
+                display: styles.display,
+                visibility: styles.visibility,
+                opacity: styles.opacity,
+                color: styles.color,
+                textContent: checkEl.textContent,
+                parent: parent ? parent.className : 'нет родителя',
+                parentInnerHTML: parent ? parent.innerHTML.substring(0, 100) : 'нет родителя',
+                windowViewingCandidate: !!window.viewingCandidate
+              });
+            } else {
+              console.error(`[match.js] ❌ Элемент не найден через ${delay}ms!`);
+              console.error('[match.js] subRow.innerHTML:', subRow.innerHTML);
+              console.error('[match.js] subRow.children:', Array.from(subRow.children).map(c => c.id || c.className));
+            }
+          }, delay);
+        });
         if (userIdForLastLogin) {
           console.log('[match.js] Загружаем last login для userId:', userIdForLastLogin, 'URL:', `${window.API_URL}/last-login/${userIdForLastLogin}`);
           fetch(`${window.API_URL}/last-login/${userIdForLastLogin}`)
@@ -334,8 +349,16 @@ export async function showCandidateProfile(match) {
            })
            .then(js => {
              console.log('[match.js] Получен ответ last login:', js);
+             // Проверяем, что элемент все еще существует перед обновлением
+             const currentEl = document.getElementById('candidate-last-login-element');
+             if (!currentEl) {
+               console.error('[match.js] ❌ Элемент удален до обновления текста!');
+               return;
+             }
+             console.log('[match.js] Элемент найден перед обновлением, textContent:', currentEl.textContent);
              const lastLoginTime = js.lastLogin;
             if (lastLoginTime) {
+              console.log('[match.js] lastLoginTime найден:', lastLoginTime);
               const dt = new Date(lastLoginTime);
               const now = new Date();
               const diffH = (now - dt) / (1000 * 60 * 60);
@@ -348,11 +371,12 @@ export async function showCandidateProfile(match) {
               if (window.currentUser.gender === 'male') verb = 'Была';
               else if (window.currentUser.gender === 'female') verb = 'Был';
               else verb = ((match.gender || window.viewingCandidate?.gender) === 'female' ? 'Была' : 'Был');
-              el.textContent = `${verb} ${timeText}`;
-              console.log('[match.js] Текст установлен:', el.textContent);
+              currentEl.textContent = `${verb} ${timeText}`;
+              console.log('[match.js] Текст установлен:', currentEl.textContent);
             } else {
-              console.log('[match.js] lastLoginTime отсутствует в ответе');
-              el.textContent = '—';
+              console.log('[match.js] lastLoginTime отсутствует в ответе (null или undefined), показываем "—"');
+              currentEl.textContent = '—';
+              console.log('[match.js] Текст "—" установлен, элемент:', currentEl);
             }
           })
           .catch((err) => { 

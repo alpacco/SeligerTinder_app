@@ -1012,11 +1012,23 @@ async function renderMatchesOld() {
 
       matchesListEl.appendChild(div);
       // Открыть детальную карточку кандидата по клику на аватар+имя
-      div.querySelector('.match-user').addEventListener('click', () => {
-        viewingCandidate = m;
-        // Используем правильную версию из match.js
-        window.showCandidateProfile && window.showCandidateProfile(m);
-      });
+      // ВАЖНО: Эта функция renderMatchesOld не используется, используется renderMatches из match.js
+      // Но оставляем обработчик на случай, если эта функция все еще вызывается
+      const matchUserEl = div.querySelector('.match-user');
+      if (matchUserEl) {
+        matchUserEl.addEventListener('click', () => {
+          console.log('[main.js] renderMatchesOld: клик на match-user для', m.name, 'm:', m);
+          viewingCandidate = m;
+          window.viewingCandidate = m;
+          // Импортируем showCandidateProfile из match.js
+          import('./match.js').then(module => {
+            console.log('[main.js] renderMatchesOld: импортирован модуль match.js, вызываем showCandidateProfile');
+            module.showCandidateProfile(m);
+          }).catch(err => {
+            console.error('[main.js] renderMatchesOld: ошибка импорта match.js:', err);
+          });
+        });
+      }
     });
 
     // Обновляем PRO-информацию на экране Matches
