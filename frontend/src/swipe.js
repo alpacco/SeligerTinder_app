@@ -591,7 +591,10 @@ export function moveToNextCandidate(direction = 'right') {
       likeBtn.parentNode.replaceChild(newLikeBtn, likeBtn);
       likeBtn = newLikeBtn;
       // Восстанавливаем обработчик события для Like
-      likeBtn.addEventListener('click', () => {
+      likeBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log('🔄 [moveToNextCandidate] Кнопка лайка нажата (из moveToNextCandidate)');
         if (!window.candidates || window.candidates.length === 0 || window.currentIndex >= window.candidates.length) {
           window.showCandidate && window.showCandidate();
         } else {
