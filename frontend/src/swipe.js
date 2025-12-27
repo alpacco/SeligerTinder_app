@@ -372,14 +372,18 @@ export async function showNextCandidate() {
       // 2. И мы либо не в истории (swipeHistoryIndex === -1), либо не на первом элементе (swipeHistoryIndex > 0)
       const canGoBack = window.swipeHistory.length > 0 && (window.swipeHistoryIndex === -1 || window.swipeHistoryIndex > 0);
       if (backBtn) {
+        // Всегда показываем кнопку для PRO пользователей
+        backBtn.style.display = "flex";
         if (canGoBack) {
-          backBtn.style.display = "flex";
           backBtn.style.pointerEvents = "auto";
           backBtn.style.opacity = "1";
-          console.log('🔄 [showNextCandidate] Кнопка "Назад" видна, canGoBack:', canGoBack);
+          backBtn.disabled = false;
+          console.log('🔄 [showNextCandidate] Кнопка "Назад" активна, canGoBack:', canGoBack);
         } else {
-          backBtn.style.display = "none";
-          console.log('🔄 [showNextCandidate] Кнопка "Назад" скрыта, canGoBack:', canGoBack);
+          backBtn.style.pointerEvents = "none";
+          backBtn.style.opacity = "0.5";
+          backBtn.disabled = true;
+          console.log('🔄 [showNextCandidate] Кнопка "Назад" неактивна, canGoBack:', canGoBack);
         }
       }
       
