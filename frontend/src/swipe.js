@@ -650,6 +650,13 @@ export function moveToNextCandidate(direction = 'right') {
     
     // КРИТИЧНО: Показываем нового кандидата ПОСЛЕ сброса кнопок и переключения индекса
     window.showCandidate && window.showCandidate();
+    
+    // КРИТИЧНО: Переустанавливаем обработчики ПОСЛЕ showCandidate, чтобы они не перезаписывались
+    // Это гарантирует, что обработчики из attachLikeHandler будут установлены последними
+    setTimeout(() => {
+      window.attachLikeHandler && window.attachLikeHandler();
+      window.attachDislikeHandler && window.attachDislikeHandler();
+    }, 100);
     window.setupSwipeHandlers && window.setupSwipeHandlers();
     window.setupSwipeControls && window.setupSwipeControls();
     window.showCandidate && window.showCandidate();
