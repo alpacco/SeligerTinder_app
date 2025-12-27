@@ -1556,11 +1556,7 @@ export async function initSwipeScreen() {
   await window.loadCandidates();
   window.setupSwipeControls && window.setupSwipeControls();
   // Проверяем PRO статус с учетом срока действия (как в pro.js)
-  // Используем переменную now, объявленную выше (строка 1531)
-  const isPro = window.currentUser && 
-    (window.currentUser.is_pro === true || window.currentUser.is_pro === 'true' || window.currentUser.is_pro === 1) &&
-    window.currentUser.pro_end && 
-    new Date(window.currentUser.pro_end).getTime() > now;
+  // Используем переменные now и isPro, объявленные выше (строки 1531-1535)
   if (isPro) {
     sendPush({ userId: window.currentUser.userId });
   }
