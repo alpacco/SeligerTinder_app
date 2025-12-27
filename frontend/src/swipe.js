@@ -168,11 +168,17 @@ export function setupSwipeControls() {
         window.showToast && window.showToast('Ошибка при отправке суперлайка');
       }
     });
-    // Вставляем SuperLike кнопку ПЕРЕД кнопкой like
+    // Вставляем SuperLike кнопку ПОСЛЕ кнопки like
+    // Порядок должен быть: Назад Дизлайк Лайк СуперЛайк
     const likeBtn = cardsBtns.querySelector(".like_d");
-    if (likeBtn) {
-      cardsBtns.insertBefore(superBtn, likeBtn);
+    if (likeBtn && likeBtn.nextSibling) {
+      // Вставляем после кнопки like
+      cardsBtns.insertBefore(superBtn, likeBtn.nextSibling);
+    } else if (likeBtn) {
+      // Если nextSibling нет, добавляем в конец
+      cardsBtns.appendChild(superBtn);
     } else {
+      // Если кнопки like нет, добавляем в конец
       cardsBtns.appendChild(superBtn);
     }
   }

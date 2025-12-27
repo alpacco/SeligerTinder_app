@@ -134,13 +134,25 @@ export async function loadUserData() {
       window.initProFeatures(currentUser);
     }
     
+    // Загружаем суперлайки из БД или выделяем для PRO пользователей
+    // ВАЖНО: Сначала проверяем БД, потом localStorage, потом выделяем для PRO
     if (currentUser.is_pro) {
-      console.log("▶ Allocating 3 SuperLikes for PRO user");
-      currentUser.superLikesCount = 3;
+      // Если в БД есть значение, используем его, иначе выделяем 3
+      if (currentUser.superLikesCount === 0 || !currentUser.superLikesCount) {
+        console.log("▶ Allocating 3 SuperLikes for PRO user (БД значение отсутствует)");
+        currentUser.superLikesCount = 3;
+      } else {
+        console.log("▶ SuperLikes из БД:", currentUser.superLikesCount);
+      }
     }
+    // Проверяем localStorage только если значение в БД отсутствует
     const stored = localStorage.getItem('superLikesCount');
-    if (stored !== null) {
-      currentUser.superLikesCount = parseInt(stored, 10);
+    if (stored !== null && (currentUser.superLikesCount === 0 || !currentUser.superLikesCount)) {
+      const storedCount = parseInt(stored, 10);
+      if (!isNaN(storedCount) && storedCount >= 0) {
+        currentUser.superLikesCount = storedCount;
+        console.log("▶ SuperLikes из localStorage:", currentUser.superLikesCount);
+      }
     }
     console.log("✅ [loadUserData] currentUser обновлён:", currentUser);
   } catch (err) {

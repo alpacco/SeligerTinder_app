@@ -242,6 +242,7 @@ body.is-pro #matches-count {
 body.is-pro #superlike-count {
   background: var(--color-black_p);
   color: var(--color-gold_p);
+  border: 1px solid var(--color-gray-dark-tr);
   top: -3px;
   right: -3px;
 }
