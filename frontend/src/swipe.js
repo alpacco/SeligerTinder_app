@@ -1,6 +1,6 @@
 // Модуль swipe.js: ВСЯ ЛОГИКА СВАЙПОВ, анимаций, обработчиков свайпов, кнопок и спец.событий
 // Версия модуля для отладки кэша
-const SWIPE_MODULE_VERSION = '2025-01-27-async-handler-fix-v1';
+const SWIPE_MODULE_VERSION = '2025-01-27-forward-button-fix-v1';
 console.log('🔄 [CACHE] swipe.js загружен, версия:', SWIPE_MODULE_VERSION);
 console.log('🔄 [CACHE] swipe.js загружен, timestamp:', new Date().toISOString());
 // Экспортируемые функции:
@@ -298,7 +298,9 @@ export async function showPreviousCandidate() {
     // КРИТИЧНО: Увеличиваем задержку и вызываем обработчики еще раз, чтобы они точно установились
     setTimeout(() => {
       const likeBtn = document.querySelector(".like_d");
-      updateForwardButton(likeBtn, true);
+      // КРИТИЧНО: Показываем кнопку "Вперед" только если действительно можно перейти вперед
+      const shouldShowForward = canGoForward() && !window.inMutualMatch;
+      updateForwardButton(likeBtn, shouldShowForward);
       window.attachDislikeHandler && window.attachDislikeHandler();
       
       // Обновляем видимость кнопки "Назад"
@@ -447,7 +449,9 @@ export async function showNextCandidate() {
     // КРИТИЧНО: Увеличиваем задержку и вызываем обработчики еще раз, чтобы они точно установились
     setTimeout(() => {
       const likeBtn = document.querySelector(".like_d");
-      updateForwardButton(likeBtn, true);
+      // КРИТИЧНО: Показываем кнопку "Вперед" только если действительно можно перейти вперед
+      const shouldShowForward = canGoForward() && !window.inMutualMatch;
+      updateForwardButton(likeBtn, shouldShowForward);
       window.attachDislikeHandler && window.attachDislikeHandler();
       
       // Обновляем видимость кнопки "Назад"
@@ -560,7 +564,10 @@ export function setupSwipeControls() {
     updateBackButton(backBtn);
     
     const likeBtn = cardsBtns.querySelector(".like_d");
-    updateForwardButton(likeBtn, true);
+    // КРИТИЧНО: Показываем кнопку "Вперед" только если действительно можно перейти вперед
+    // и мы не в режиме mutual match
+    const shouldShowForward = canGoForward() && !window.inMutualMatch;
+    updateForwardButton(likeBtn, shouldShowForward);
   }
   
   // Super-Like for PRO users
@@ -2284,6 +2291,8 @@ export async function initSwipeScreen() {
   console.log('[swipe.js] 🔵 ========== initSwipeScreen ВЫЗВАНА ==========');
   showSwipeSkeleton();
   // setTimeout(() => { hideSwipeSkeleton(); }, 2000); // УБРАНО: отладочный таймаут
+  // КРИТИЧНО: Сбрасываем индекс истории при инициализации экрана свайпов
+  window.swipeHistoryIndex = -1;
   // Обновляем UI (аватар, имя, бейдж)
   window.updateSwipeScreen && window.updateSwipeScreen();
   window.updateMatchesCount && window.updateMatchesCount();
