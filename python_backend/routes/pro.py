@@ -86,17 +86,18 @@ async def upgrade_pro(data: UpgradeProRequest):
     new_end = (base_time + timedelta(days=data.durationDays)).isoformat()
     
     # Получаем текущее количество суперлайков
-    user_row = await db_get('SELECT "super_likes_count" FROM users WHERE "userId" = ?', [data.userId])
-    current_super_likes = user_row.get("super_likes_count", 0) if user_row else 0
+    # В БД колонка называется superLikesCount (camelCase)!
+    user_row = await db_get('SELECT "superLikesCount" FROM users WHERE "userId" = ?', [data.userId])
+    current_super_likes = user_row.get("superLikesCount", 0) if user_row else 0
     
     # Если суперлайков 0 или отсутствуют, выделяем 3 при обновлении PRO
     if current_super_likes == 0 or current_super_likes is None:
-        await db_run('UPDATE users SET is_pro = 1, "pro_end" = ?, "super_likes_count" = 3 WHERE "userId" = ?', 
+        await db_run('UPDATE users SET is_pro = 1, "pro_end" = ?, "superLikesCount" = 3 WHERE "userId" = ?', 
                      [new_end, data.userId])
-        print(f"PRO upgraded for user {data.userId}, new end: {new_end}, super_likes_count set to 3")
+        print(f"PRO upgraded for user {data.userId}, new end: {new_end}, superLikesCount set to 3")
     else:
         await db_run('UPDATE users SET is_pro = 1, "pro_end" = ? WHERE "userId" = ?', [new_end, data.userId])
-        print(f"PRO upgraded for user {data.userId}, new end: {new_end}, super_likes_count kept: {current_super_likes}")
+        print(f"PRO upgraded for user {data.userId}, new end: {new_end}, superLikesCount kept: {current_super_likes}")
     
     return {"success": True, "is_pro": 1, "pro_end": new_end}
 
