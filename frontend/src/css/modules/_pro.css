@@ -142,14 +142,15 @@ body.is-pro .app-card {
 }
 
 /* Переопределяем белый цвет для лайка в PRO режиме */
-body.is-pro .like-icon .st0,
+/* Важно: используем максимально специфичные селекторы для переопределения белого цвета */
+body.is-pro .like_d svg path.st0,
 body.is-pro .like_d svg .st0,
-body.is-pro .like_d svg path,
-body.is-pro .like_d svg .st0,
+body.is-pro .like_d .like-icon path.st0,
 body.is-pro .like_d .like-icon .st0,
-body.is-pro .like_d .like-icon path {
+body.is-pro .like-icon .st0,
+body.is-pro .like-icon path.st0 {
   fill: var(--color-red) !important;
-  stroke: var(--color-red) !important;
+  stroke: none !important;
 }
 
 body.is-pro .back-icon .st0 {

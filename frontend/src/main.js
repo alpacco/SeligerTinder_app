@@ -14,7 +14,7 @@
 
 // Версия приложения для обхода кэша Telegram
 // ВАЖНО: версия должна быть СТАТИЧЕСКОЙ, иначе будет бесконечная перезагрузка!
-const APP_VERSION = '2025-01-27-match-badge-animation-fix-v3';
+const APP_VERSION = '2025-01-27-match-badge-animation-fix-v4';
 console.log('🔄 [CACHE] main.js загружен, версия:', APP_VERSION);
 
 // Импортируем CSS (Vite обработает и скомпилирует)
@@ -815,30 +815,42 @@ function showScreen(screenId) {
   }
 
     if (screenId === "screen-swipe") {
-      // Сначала обновляем UI (аватар, имя, бейдж)
-      updateSwipeScreen();
-      updateMatchesCount();
-      
-      // Attach profile navigation to the avatar frame (как в старом коде - внутри showScreen)
-      const avatarFrame = document.querySelector("#screen-swipe .ava-frame");
-      if (avatarFrame) {
-        avatarFrame.style.cursor = "pointer";
-        avatarFrame.addEventListener("click", () => {
-          viewingCandidate = null;
-          showScreen("screen-profile");
-        });
+      // КРИТИЧНО: Вызываем initSwipeScreen для полной инициализации экрана свайпов
+      // Это загрузит кандидатов, likesReceived для PRO пользователей и покажет первого кандидата
+      if (window.initSwipeScreen) {
+        console.log('[main.js] 🔵 showScreen: вызываем initSwipeScreen для screen-swipe');
+        window.initSwipeScreen();
+      } else {
+        console.warn('[main.js] ⚠️ showScreen: window.initSwipeScreen не найден, используем fallback');
+        // Fallback: обновляем UI (аватар, имя, бейдж)
+        updateSwipeScreen();
+        updateMatchesCount();
+        
+        // Attach profile navigation to the avatar frame (как в старом коде - внутри showScreen)
+        const avatarFrame = document.querySelector("#screen-swipe .ava-frame");
+        if (avatarFrame) {
+          avatarFrame.style.cursor = "pointer";
+          avatarFrame.addEventListener("click", () => {
+            viewingCandidate = null;
+            showScreen("screen-profile");
+          });
+        }
       }
       
-      // Потом подгружаем актуального пользователя и кандидатов
-      loadUserData()
-        .then(() => {
-          if (currentUser.needPhoto === 1) {
-          candidates = [];
-            window.candidates = candidates;
-            window.showCandidate && window.showCandidate();
-            updateMatchesCount();
-          } else {
-            loadCandidates();
+      // КРИТИЧНО: Если initSwipeScreen не был вызван выше, вызываем его здесь
+      // initSwipeScreen загрузит кандидатов, likesReceived для PRO и покажет первого кандидата
+      if (!window.initSwipeScreen) {
+        console.warn('[main.js] ⚠️ window.initSwipeScreen не найден, используем старую логику');
+        // Потом подгружаем актуального пользователя и кандидатов
+        loadUserData()
+          .then(() => {
+            if (currentUser.needPhoto === 1) {
+            candidates = [];
+              window.candidates = candidates;
+              window.showCandidate && window.showCandidate();
+              updateMatchesCount();
+            } else {
+              loadCandidates();
           }
         })
         .catch(err => console.error("Ошибка загрузки пользователя на свайпе:", err));

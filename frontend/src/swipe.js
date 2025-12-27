@@ -1,6 +1,6 @@
 // Модуль swipe.js: ВСЯ ЛОГИКА СВАЙПОВ, анимаций, обработчиков свайпов, кнопок и спец.событий
 // Версия модуля для отладки кэша
-const SWIPE_MODULE_VERSION = '2025-01-27-match-badge-animation-fix-v3';
+const SWIPE_MODULE_VERSION = '2025-01-27-match-badge-animation-fix-v4';
 console.log('🔄 [CACHE] swipe.js загружен, версия:', SWIPE_MODULE_VERSION);
 console.log('🔄 [CACHE] swipe.js загружен, timestamp:', new Date().toISOString());
 // Экспортируемые функции:
@@ -683,21 +683,27 @@ export function onMutualLike() {
     // Обновляем карточку с данными текущего кандидата (чтобы убедиться, что данные актуальны)
     fillCard(window.singleCard, currentCandidate);
 
-    // Создаем элемент .badge-match, если его нет (для анимации мэтча)
+    // Находим или создаем элемент .badge-match для анимации мэтча
+    // Элемент уже есть в HTML (index.html строка 273), но может быть скрыт
     let matchBadge = window.singleCard.querySelector(".badge-match");
     if (!matchBadge) {
+      console.warn('[swipe.js] ⚠️ Элемент .badge-match не найден в DOM, создаем его');
       matchBadge = document.createElement('div');
       matchBadge.className = 'badge-match';
-      matchBadge.style.position = 'absolute';
-      matchBadge.style.top = '50%';
-      matchBadge.style.left = '50%';
-      matchBadge.style.transform = 'translate(-50%, -50%)';
-      matchBadge.style.zIndex = '1000';
-      matchBadge.style.fontSize = '64px';
-      matchBadge.style.pointerEvents = 'none';
       window.singleCard.appendChild(matchBadge);
       console.log('[swipe.js] ✅ Создан элемент .badge-match для анимации');
+    } else {
+      console.log('[swipe.js] ✅ Элемент .badge-match найден в DOM:', matchBadge);
     }
+    
+    // Убеждаемся, что элемент имеет правильные стили
+    matchBadge.style.position = 'absolute';
+    matchBadge.style.top = '50%';
+    matchBadge.style.left = '50%';
+    matchBadge.style.transform = 'translate(-50%, -50%)';
+    matchBadge.style.zIndex = '1000';
+    matchBadge.style.fontSize = '64px';
+    matchBadge.style.pointerEvents = 'none';
     if (matchBadge) {
       console.log('🎬 [onMutualLike] Показываем эмодзи ❤️‍🔥 с анимацией');
       matchBadge.innerHTML = "❤️‍🔥";
