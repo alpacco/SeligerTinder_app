@@ -792,7 +792,9 @@ flex: 1;
 .matches-list {
   flex: 1;
   overflow-y: auto;
+  overflow-x: hidden; /* Запрещаем горизонтальный скролл */
   padding: 10px 20px;
+  -webkit-overflow-scrolling: touch; /* Плавный скролл на iOS */
 }
 .no-matches {
   text-align: center;
@@ -819,7 +821,7 @@ flex: 1;
     width: 100%;
     padding: 0;
     margin-top: 0px;
-
+    overflow: visible; /* Убираем любой overflow */
 }
 .match-card .match-name {
   margin-right: auto;
