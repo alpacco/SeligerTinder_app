@@ -25,6 +25,11 @@ BOT_TOKEN = os.getenv("BOT_TOKEN", "")
 if not BOT_TOKEN:
     print("⚠️ ВНИМАНИЕ: BOT_TOKEN не установлен! Бот не будет работать!")
 
+# Developer Chat ID (для получения сообщений об ошибках и запросов)
+DEV_CHAT_ID = int(os.getenv("DEV_CHAT_ID", "0"))  # 0 = отключено
+if not DEV_CHAT_ID:
+    print("⚠️ ВНИМАНИЕ: DEV_CHAT_ID не установлен! Сообщения об ошибках не будут отправляться!")
+
 # Web App URL
 WEB_APP_URL = os.getenv("WEB_APP_URL", "")
 if not WEB_APP_URL:

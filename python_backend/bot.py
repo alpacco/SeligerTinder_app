@@ -22,12 +22,9 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Импортируем конфигурацию
-from config import BOT_TOKEN, WEB_APP_URL
+from config import BOT_TOKEN, WEB_APP_URL, DEV_CHAT_ID
 
 API_URL = f"{WEB_APP_URL}/api" if WEB_APP_URL else ""
-
-# DEV_CHAT_ID можно вынести в переменные окружения если нужно
-DEV_CHAT_ID = int(os.getenv("DEV_CHAT_ID", "0"))  # 0 = отключено
 # Состояния пользователей
 user_states = {}
 
@@ -322,55 +319,103 @@ async def masssend_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
     
     message_text = " ".join(args)
+    print(f"🔵 [BOT] Текст сообщения для рассылки: {message_text[:100]}...")
     
     try:
         async with httpx.AsyncClient() as client:
             # Получаем список всех пользователей
+            print(f"🔵 [BOT] Запрос списка пользователей из API: {API_URL}/users")
             response = await client.get(f"{API_URL}/users")
             response.raise_for_status()
             users_result = response.json()
             
             if not users_result.get("success"):
+                print(f"❌ [BOT] API вернул ошибку: {users_result}")
                 await update.message.reply_text("❌ Не удалось получить список пользователей.")
                 return
             
             users = users_result.get("users", [])
             if not users:
+                print(f"⚠️ [BOT] Список пользователей пуст")
                 await update.message.reply_text("❌ Пользователи не найдены.")
                 return
+            
+            print(f"✅ [BOT] Получено {len(users)} пользователей для рассылки")
             
             # Отправляем сообщение каждому пользователю
             success_count = 0
             error_count = 0
+            blocked_count = 0
+            invalid_count = 0
             
-            await update.message.reply_text(f"📤 Начинаю рассылку сообщения {len(users)} пользователям...")
+            status_message = await update.message.reply_text(
+                f"📤 Начинаю рассылку сообщения {len(users)} пользователям...\n"
+                f"⏳ Отправлено: 0/{len(users)}"
+            )
             
-            for user in users:
+            for index, user in enumerate(users, 1):
                 user_id_str = str(user.get("userId", ""))
-                if not user_id_str:
+                if not user_id_str or not user_id_str.isdigit():
+                    print(f"⚠️ [BOT] Пропущен пользователь с невалидным ID: {user_id_str}")
+                    invalid_count += 1
                     continue
                 
                 try:
+                    user_id_int = int(user_id_str)
                     await context.bot.send_message(
-                        chat_id=int(user_id_str),
+                        chat_id=user_id_int,
                         text=message_text
                     )
                     success_count += 1
+                    if index % 10 == 0:  # Обновляем статус каждые 10 сообщений
+                        try:
+                            await status_message.edit_text(
+                                f"📤 Рассылка в процессе...\n"
+                                f"✅ Отправлено: {success_count}/{len(users)}\n"
+                                f"❌ Ошибок: {error_count}"
+                            )
+                        except:
+                            pass  # Игнорируем ошибки обновления статуса
                 except Exception as e:
-                    print(f"⚠️ Ошибка отправки сообщения пользователю {user_id_str}: {e}")
-                    error_count += 1
+                    error_msg = str(e).lower()
+                    # Проверяем тип ошибки
+                    if "blocked" in error_msg or "chat not found" in error_msg:
+                        blocked_count += 1
+                        print(f"⚠️ [BOT] Пользователь {user_id_str} заблокировал бота или чат не найден")
+                    else:
+                        error_count += 1
+                        print(f"⚠️ [BOT] Ошибка отправки сообщения пользователю {user_id_str}: {e}")
                 
-                # Небольшая задержка, чтобы не превысить лимиты Telegram
+                # Небольшая задержка, чтобы не превысить лимиты Telegram (30 сообщений в секунду)
                 await asyncio.sleep(0.05)
             
-            await update.message.reply_text(
-                f"✅ Рассылка завершена!\n"
-                f"📊 Успешно отправлено: {success_count}\n"
-                f"❌ Ошибок: {error_count}"
+            # Финальное сообщение с детальной статистикой
+            final_message = (
+                f"✅ Рассылка завершена!\n\n"
+                f"📊 Статистика:\n"
+                f"✅ Успешно отправлено: {success_count}\n"
             )
+            if blocked_count > 0:
+                final_message += f"🚫 Заблокировали бота: {blocked_count}\n"
+            if error_count > 0:
+                final_message += f"❌ Ошибок: {error_count}\n"
+            if invalid_count > 0:
+                final_message += f"⚠️ Невалидных ID: {invalid_count}\n"
+            
+            try:
+                await status_message.edit_text(final_message)
+            except:
+                await update.message.reply_text(final_message)
+            
+            print(f"✅ [BOT] Рассылка завершена: успешно={success_count}, ошибок={error_count}, заблокировали={blocked_count}, невалидных={invalid_count}")
+    except httpx.HTTPError as e:
+        print(f"❌ [BOT] HTTP ошибка при получении списка пользователей: {e}")
+        await update.message.reply_text(f"❌ Ошибка при получении списка пользователей: {e}")
     except Exception as e:
-        print(f"❌ Ошибка /masssend: {e}")
-        await update.message.reply_text("❌ Ошибка при массовой рассылке.")
+        print(f"❌ [BOT] Критическая ошибка /masssend: {e}")
+        import traceback
+        traceback.print_exc()
+        await update.message.reply_text(f"❌ Критическая ошибка при массовой рассылке: {e}")
 
 
 async def send_pro_invoice(update: Update, context: ContextTypes.DEFAULT_TYPE, days: int):
@@ -604,11 +649,14 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     elif data.startswith("req_badge_"):
         # Пользователь выбрал конкретный бейдж
+        print(f"🔵 [BOT] Обработка запроса бейджа: data={data}, user_id={user_id}")
         badge_letter = data.split("_")[-1]
         names = {"S": "Seliger City", "P": "Пик", "L": "Любовь и голуби", "DN": "DN", "LV": "LV"}
         badge_name = names.get(badge_letter, badge_letter)
         username = update.effective_user.username if update.effective_user else "N/A"
         full_name = update.effective_user.full_name if update.effective_user else "N/A"
+        
+        print(f"🔵 [BOT] Запрос бейджа: badge={badge_letter} ({badge_name}), user={user_id} (@{username}), DEV_CHAT_ID={DEV_CHAT_ID}")
         
         # Отправляем запрос администратору с кнопками для одобрения/отклонения
         if DEV_CHAT_ID:
@@ -622,7 +670,9 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                         InlineKeyboardButton("Отмена", callback_data="cancel_action")
                     ]
                 ])
-                await query.message.bot.send_message(
+                print(f"🔵 [BOT] Отправка сообщения администратору (DEV_CHAT_ID={DEV_CHAT_ID})...")
+                # Используем context.bot для надежности
+                await context.bot.send_message(
                     DEV_CHAT_ID,
                     f"🏅 Запрос бейджа «{badge_name}» ({badge_letter})\n\n"
                     f"👤 Пользователь: {full_name}\n"
@@ -630,6 +680,7 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     f"🆔 ID: {user_id}",
                     reply_markup=admin_keyboard
                 )
+                print(f"✅ [BOT] Сообщение администратору отправлено успешно")
                 await query.answer(f"✅ Ваш запрос на бейдж «{badge_name}» отправлен администратору", show_alert=False)
                 await query.edit_message_text(
                     f"✅ Запрос на бейдж «{badge_name}» отправлен администратору.\n\n"
@@ -639,9 +690,12 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     ])
                 )
             except Exception as e:
-                print(f"⚠️ [BOT] Не удалось отправить запрос администратору: {e}")
+                print(f"❌ [BOT] Ошибка при отправке запроса администратору: {e}")
+                import traceback
+                traceback.print_exc()
                 await query.answer("❌ Ошибка при отправке запроса. Попробуйте позже.", show_alert=True)
         else:
+            print(f"⚠️ [BOT] DEV_CHAT_ID не установлен, запрос не может быть отправлен")
             await query.answer("⚠️ Администратор не настроен. Запрос не может быть отправлен.", show_alert=True)
     
     elif data.startswith("grant_badge_"):
@@ -676,7 +730,7 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     )
                     # Уведомляем пользователя
                     try:
-                        await query.message.bot.send_message(
+                        await context.bot.send_message(
                             int(target_user_id),
                             f"🎉 Бейдж «{badge_name}» успешно добавлен!"
                         )
@@ -709,7 +763,7 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         # Уведомляем пользователя
         try:
-            await query.message.bot.send_message(
+            await context.bot.send_message(
                 int(target_user_id),
                 f"❌ Ваш запрос на бейдж «{badge_name}» был отклонен администратором."
             )
@@ -995,8 +1049,11 @@ def create_bot_application():
                         )
                 else:
                     await update.message.reply_text(
-                        "⚠️ Администратор не настроен. Сообщение не может быть отправлено."
+                        "⚠️ Администратор не настроен.\n\n"
+                        "Сообщение не может быть отправлено, так как DEV_CHAT_ID не установлен в переменных окружения.\n\n"
+                        "Обратитесь к администратору приложения для настройки."
                     )
+                    print(f"⚠️ [BOT] Попытка отправить сообщение от пользователя {user_id}, но DEV_CHAT_ID не установлен")
             
             # Если состояние не соответствует ожидаемому, игнорируем сообщение
             else:
