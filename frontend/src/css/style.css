@@ -645,6 +645,13 @@ flex: 1;
   padding: 20px;
   position: relative;
 }
+#screen-gender #continue-button,
+#screen-gender .btn-main {
+  background-color: var(--color-red) !important;
+  color: var(--color-white) !important;
+  border: 1px solid var(--color-red) !important;
+  opacity: 1 !important;
+}
 .gender-content {
   width: 100%;
   max-width: 400px;
