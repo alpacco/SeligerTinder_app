@@ -159,9 +159,16 @@ export async function loadUserData() {
       const storedCount = parseInt(stored, 10);
       console.log("🔵 [loadUserData] storedCount (parsed):", storedCount);
       if (!isNaN(storedCount) && storedCount >= 0) {
-        // Используем значение из localStorage, если оно не больше значения из БД
-        // (защита от манипуляций)
-        if (storedCount <= dbSuperLikes) {
+        // КРИТИЧНО: Если значение из БД больше, чем в localStorage, значит суперлайки были начислены
+        // (например, при активации промокода или покупке PRO)
+        // В этом случае используем значение из БД и обновляем localStorage
+        if (dbSuperLikes > storedCount) {
+          console.log("✅ [loadUserData] БД значение больше localStorage (суперлайки начислены), используем БД:", dbSuperLikes);
+          currentUser.superLikesCount = dbSuperLikes;
+          localStorage.setItem('superLikesCount', String(dbSuperLikes));
+        } else if (storedCount <= dbSuperLikes) {
+          // Используем значение из localStorage, если оно не больше значения из БД
+          // (защита от манипуляций, но только если БД не больше)
           currentUser.superLikesCount = storedCount;
           console.log("✅ [loadUserData] SuperLikes из localStorage:", currentUser.superLikesCount);
         } else {
@@ -173,6 +180,7 @@ export async function loadUserData() {
       } else {
         console.log("⚠️ [loadUserData] storedCount невалидный, используем БД:", dbSuperLikes);
         currentUser.superLikesCount = dbSuperLikes;
+        localStorage.setItem('superLikesCount', String(dbSuperLikes));
       }
     } else {
       // Если localStorage пустой, используем значение из БД
