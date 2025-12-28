@@ -1,14 +1,15 @@
 /* ========== MAIN CSS - Импорт всех модулей ========== */
+/* Версия: 2025-12-28-pro-styling-fixes-v1 */
 
 /* 1. Переменные (должны быть первыми) */
-@import url('./modules/_variables.css');
+@import url('./modules/_variables.css?v=2025-12-28-pro-styling-fixes-v1');
 
 /* 2. Сброс стилей */
-@import url('./modules/_reset.css');
+@import url('./modules/_reset.css?v=2025-12-28-pro-styling-fixes-v1');
 
 /* 3. Основной файл стилей */
-@import url('./style.css');
+@import url('./style.css?v=2025-12-28-pro-styling-fixes-v1');
 
 /* 4. PRO стили (только переопределения, без дубликатов) */
-@import url('./modules/_pro.css');
+@import url('./modules/_pro.css?v=2025-12-28-pro-styling-fixes-v1');
 
