@@ -111,6 +111,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         # CSP (Content Security Policy) - улучшенная настройка
         # Примечание: 'unsafe-inline' необходим для Telegram Web App, но это снижает защиту
         # В идеале нужно использовать nonce или hash для скриптов
+        # frame-ancestors разрешает загрузку в Telegram Web App
         csp = (
             "default-src 'self'; "
             "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://telegram.org; "
@@ -122,7 +123,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
             "object-src 'none'; "
             "base-uri 'self'; "
             "form-action 'self'; "
-            "frame-ancestors 'none';"
+            "frame-ancestors https://web.telegram.org https://telegram.org;"
         )
         response.headers["Content-Security-Policy"] = csp
         
