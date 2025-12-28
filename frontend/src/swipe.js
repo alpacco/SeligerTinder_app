@@ -657,6 +657,10 @@ export function setupSwipeControls() {
 export async function showCandidate() {
   console.log('🔄 [showCandidate] ВЫЗВАН, версия:', SWIPE_MODULE_VERSION);
   
+  // Объявляем переменные для элементов DOM один раз
+  const singleCard = document.getElementById('singleCard');
+  const skeleton = document.getElementById('swipe-skeleton');
+  
   // КРИТИЧНО: Сбрасываем кнопки ПЕРЕД всеми проверками
   const dislikeBtn = document.querySelector(".dislike_d");
   const likeBtn = document.querySelector(".like_d");
@@ -935,12 +939,10 @@ export async function showCandidate() {
     cardContainer.style.display = '';
   }
   // Показываем саму карточку
-  const singleCard = document.getElementById('singleCard');
   if (singleCard) {
     singleCard.style.display = '';
   }
   // Скрываем skeleton, если он есть
-  const skeleton = document.getElementById('swipe-skeleton');
   if (skeleton) {
     skeleton.style.display = 'none';
   }
