@@ -275,3 +275,169 @@ async def extract_data(
         import traceback
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Ошибка распаковки данных: {str(e)}")
+
+
+@router.get("/admin_help")
+async def admin_help(
+    request: Request,
+    authorization: Optional[str] = Header(None)
+):
+    """Получить список всех доступных команд для администратора"""
+    verify_admin(request, authorization)
+    
+    help_text = {
+        "title": "📋 Список команд для администратора",
+        "description": "Доступные команды бота и API эндпоинты",
+        "bot_commands": [
+            {
+                "command": "/start",
+                "description": "Начать работу с ботом",
+                "usage": "/start [buy_pro_menu]",
+                "example": "/start или /start buy_pro_menu"
+            },
+            {
+                "command": "/grantpro",
+                "description": "Выдать PRO подписку пользователю",
+                "usage": "/grantpro <userId> <days>",
+                "example": "/grantpro 307954967 30"
+            },
+            {
+                "command": "/addbadge",
+                "description": "Выдать бейдж пользователю",
+                "usage": "/addbadge <userId> <badge>",
+                "example": "/addbadge 307954967 S",
+                "note": "Доступные бейджи: L, P, S, DN, LV, VERIFIED, PREMIUM, ADMIN"
+            },
+            {
+                "command": "/stats",
+                "description": "Получить статистику приложения",
+                "usage": "/stats",
+                "example": "/stats"
+            },
+            {
+                "command": "/delete_user",
+                "description": "Удалить пользователя",
+                "usage": "/delete_user <userId>",
+                "example": "/delete_user 307954967"
+            },
+            {
+                "command": "/clear_photos",
+                "description": "Очистить фотографии пользователя",
+                "usage": "/clear_photos <userId>",
+                "example": "/clear_photos 307954967"
+            },
+            {
+                "command": "/masssend",
+                "description": "Массовая рассылка сообщений всем пользователям",
+                "usage": "/masssend <сообщение>",
+                "example": "/masssend Привет всем пользователям!"
+            }
+        ],
+        "api_endpoints": [
+            {
+                "method": "GET",
+                "endpoint": "/api/admin/get-all-users-for-admin",
+                "description": "Получить всех пользователей",
+                "headers": "Authorization: Bearer <token> или X-Telegram-User-Id: <telegram_id>"
+            },
+            {
+                "method": "GET",
+                "endpoint": "/api/admin/search-users-for-admin?query=<query>",
+                "description": "Поиск пользователей по имени, username или userId",
+                "headers": "Authorization: Bearer <token> или X-Telegram-User-Id: <telegram_id>",
+                "example": "/api/admin/search-users-for-admin?query=Иван"
+            },
+            {
+                "method": "GET",
+                "endpoint": "/api/admin/get-user-data-for-badge?userId=<userId>",
+                "description": "Получить данные пользователя для заявки на бейдж",
+                "headers": "Authorization: Bearer <token> или X-Telegram-User-Id: <telegram_id>",
+                "example": "/api/admin/get-user-data-for-badge?userId=307954967"
+            },
+            {
+                "method": "POST",
+                "endpoint": "/api/admin/update-user-for-admin",
+                "description": "Обновить данные пользователя",
+                "headers": "Authorization: Bearer <token> или X-Telegram-User-Id: <telegram_id>",
+                "body": {
+                    "userId": "string (обязательно)",
+                    "name": "string (опционально)",
+                    "username": "string (опционально)",
+                    "bio": "string (опционально)",
+                    "age": "number (опционально)",
+                    "gender": "string (опционально)",
+                    "badge": "string (опционально)",
+                    "blocked": "boolean (опционально)",
+                    "is_pro": "boolean (опционально)",
+                    "pro_start": "string (опционально)",
+                    "pro_end": "string (опционально)",
+                    "warned": "boolean (опционально)",
+                    "pushSent": "boolean (опционально)"
+                },
+                "example": {
+                    "userId": "307954967",
+                    "name": "Новое имя",
+                    "badge": "S"
+                }
+            },
+            {
+                "method": "POST",
+                "endpoint": "/api/admin/delete-user-for-admin",
+                "description": "Удалить пользователя",
+                "headers": "Authorization: Bearer <token> или X-Telegram-User-Id: <telegram_id>",
+                "body": {
+                    "userId": "string (обязательно)"
+                },
+                "example": {
+                    "userId": "307954967"
+                }
+            },
+            {
+                "method": "POST",
+                "endpoint": "/api/admin/send-message-for-admin",
+                "description": "Отправить сообщение пользователю",
+                "headers": "Authorization: Bearer <token> или X-Telegram-User-Id: <telegram_id>",
+                "body": {
+                    "userId": "string (обязательно)",
+                    "message": "string (обязательно, макс. 4096 символов)"
+                },
+                "example": {
+                    "userId": "307954967",
+                    "message": "Привет!"
+                }
+            },
+            {
+                "method": "POST",
+                "endpoint": "/api/admin/updateBadge",
+                "description": "Обновить бейдж пользователя",
+                "headers": "Authorization: Bearer <token> или X-Telegram-User-Id: <telegram_id>",
+                "body": {
+                    "userId": "string (обязательно)",
+                    "badge": "string (обязательно: L, P, S, DN, LV, VERIFIED, PREMIUM, ADMIN или пустая строка)"
+                },
+                "example": {
+                    "userId": "307954967",
+                    "badge": "S"
+                }
+            },
+            {
+                "method": "POST",
+                "endpoint": "/api/admin/extract-data",
+                "description": "Распаковать данные из архива",
+                "headers": "Authorization: Bearer <token> или X-Telegram-User-Id: <telegram_id>",
+                "note": "Ищет последний архив data-backup-*.tar.gz в /tmp и распаковывает его"
+            }
+        ],
+        "authorization": {
+            "methods": [
+                "Bearer Token: Authorization: Bearer <ADMIN_TOKEN>",
+                "Telegram ID: X-Telegram-User-Id: <telegram_id> (должен быть в ADMIN_TELEGRAM_IDS)"
+            ],
+            "note": "Для использования API эндпоинтов требуется авторизация через один из методов выше"
+        }
+    }
+    
+    return {
+        "success": True,
+        "help": help_text
+    }
