@@ -302,8 +302,9 @@ export async function showPreviousCandidate() {
     
     // Восстанавливаем обработчики кнопок
     // КРИТИЧНО: Сначала вызываем setupSwipeControls, который также вызывает attachLikeHandler/attachDislikeHandler
+    // Передаем skipForwardButton = true, чтобы не менять кнопку "Лайк" на "Вперед" при возврате назад
     // Затем еще раз вызываем их с задержкой, чтобы гарантировать, что обработчики установлены
-    window.setupSwipeControls && window.setupSwipeControls();
+    window.setupSwipeControls && window.setupSwipeControls(true);
     // КРИТИЧНО: Увеличиваем задержку и вызываем обработчики еще раз, чтобы они точно установились
     setTimeout(() => {
       const likeBtn = document.querySelector(".like_d");
@@ -311,7 +312,7 @@ export async function showPreviousCandidate() {
       // КРИТИЧНО: НЕ показываем кнопку "Вперед" при возврате назад
       // Кнопка "Вперед" должна показываться только при навигации вперед через showNextCandidate
       // При возврате назад кнопка всегда должна быть в обычном состоянии "Лайк"
-      // Поэтому явно восстанавливаем кнопку "Лайк", даже если setupSwipeControls изменил её на "Вперед"
+      // Дополнительная проверка на случай, если кнопка все еще в режиме "Forward" (защита от гонок)
       if (likeBtn) {
         // Проверяем, не в режиме ли "Forward"
         if (likeBtn.innerHTML.includes('forward-icon') || likeBtn.querySelector('.forward-icon')) {
