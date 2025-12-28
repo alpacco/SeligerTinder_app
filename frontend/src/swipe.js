@@ -818,7 +818,6 @@ export async function showCandidate() {
     if (!inviteContainer) {
       inviteContainer = document.createElement('div');
       inviteContainer.className = 'invite-container';
-      inviteContainer.style.cssText = 'display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 20px; text-align: center;';
       // Вставляем после header, перед card-container
       const cardContainerEl = swipeScreen.querySelector('.card-container');
       if (cardContainerEl) {

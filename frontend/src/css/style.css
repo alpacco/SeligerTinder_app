@@ -2666,3 +2666,23 @@ flex: 1;
 .hidden-by-bio {
   display: none !important;
 }
+
+/* Контейнер приглашения - центрирование */
+.invite-container {
+  display: flex !important;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: calc(100vh - var(--header-height));
+  padding: 40px 20px;
+  text-align: center;
+  margin-top: var(--header-height);
+  box-sizing: border-box;
+}
+
+.invite-container h3 {
+  margin-bottom: 20px;
+  font-size: 18px;
+  color: var(--color-text, #333);
+}
