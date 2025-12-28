@@ -562,6 +562,57 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif data == "cancel_delete":
         await query.message.reply_text("Главное меню", reply_markup=get_start_keyboard())
     
+    elif data == "show_advice":
+        advice_text = (
+            "💡 Советы для успешного использования SeligerTinder:\n\n"
+            "✨ Загрузите качественные фотографии\n"
+            "📝 Заполните профиль полностью\n"
+            "❤️ Будьте активны - ставьте лайки\n"
+            "⭐ Используйте суперлайки для важных людей\n"
+            "👀 Регулярно проверяйте мэтчи\n\n"
+            "Удачи в поисках! 🍀"
+        )
+        await query.edit_message_text(
+            advice_text,
+            reply_markup=InlineKeyboardMarkup([
+                [InlineKeyboardButton("Назад", callback_data="show_menu")]
+            ])
+        )
+    
+    elif data == "request_badge":
+        await query.edit_message_text(
+            "🏅 Запрос бейджа:\n\n"
+            "Отправьте запрос на получение бейджа администратору.\n"
+            "Ваш запрос будет рассмотрен в ближайшее время.",
+            reply_markup=InlineKeyboardMarkup([
+                [InlineKeyboardButton("Назад", callback_data="show_menu")]
+            ])
+        )
+        # Можно добавить отправку уведомления администратору
+        if DEV_CHAT_ID:
+            try:
+                await query.message.bot.send_message(
+                    DEV_CHAT_ID,
+                    f"🏅 Запрос бейджа от пользователя {user_id} (@{update.effective_user.username if update.effective_user else 'N/A'})"
+                )
+            except Exception as e:
+                print(f"⚠️ [BOT] Не удалось отправить уведомление администратору: {e}")
+    
+    elif data == "dev_message":
+        # Устанавливаем состояние ожидания сообщения от пользователя
+        user_states[user_id] = "waiting_for_dev_message"
+        print(f"✅ [BOT] Состояние установлено: user_id={user_id}, state=waiting_for_dev_message")
+        await query.edit_message_text(
+            "📝 Пожаловаться/Сообщить об ошибке:\n\n"
+            "Опишите проблему или ошибку, которую вы обнаружили.\n"
+            "Отправьте ваше сообщение текстом.",
+            reply_markup=InlineKeyboardMarkup([
+                [InlineKeyboardButton("Отмена", callback_data="show_menu")]
+            ])
+        )
+    
+    elif data == "app_unavailable":
+        await query.answer("⚠️ Приложение временно недоступно. Проверьте настройки сервера.", show_alert=True)
     
     elif data.startswith("buy_pro_"):
         # Обработка покупки PRO: buy_pro_7, buy_pro_30, buy_pro_90
@@ -725,31 +776,32 @@ def create_bot_application():
         application.add_handler(MessageHandler(filters.SUCCESSFUL_PAYMENT, successful_payment_handler))
         print("✅ SuccessfulPaymentHandler зарегистрирован")
         
-        # Регистрация обработчика текстовых сообщений для промокодов
+        # Регистрация обработчика текстовых сообщений для промокодов и dev_message
         # КРИТИЧНО: Регистрируем ПЕРВЫМ, чтобы он обрабатывался до WebApp handler
-        print("  - Регистрация MessageHandler для промокодов...")
-        async def promo_code_message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
-            """Обработчик текстовых сообщений для ввода промокода"""
-            print(f"🔵 [BOT] ========== promo_code_message_handler ВЫЗВАН ==========")
+        print("  - Регистрация MessageHandler для промокодов и сообщений...")
+        async def text_message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+            """Обработчик текстовых сообщений для ввода промокода и dev_message"""
+            print(f"🔵 [BOT] ========== text_message_handler ВЫЗВАН ==========")
             print(f"🔵 [BOT] update.message: {update.message}")
             print(f"🔵 [BOT] update.message.text: {update.message.text if update.message else None}")
             print(f"🔵 [BOT] update.message.web_app_data: {update.message.web_app_data if update.message else None}")
             
             if not update.message or not update.message.text:
-                print(f"⚠️ [BOT] promo_code_message_handler: нет сообщения или текста - ВЫХОД")
+                print(f"⚠️ [BOT] text_message_handler: нет сообщения или текста - ВЫХОД")
                 return
             
             # Проверяем, что это не WebApp данные
             if update.message.web_app_data:
-                print(f"⚠️ [BOT] promo_code_message_handler: это WebApp данные, пропускаем - ВЫХОД")
+                print(f"⚠️ [BOT] text_message_handler: это WebApp данные, пропускаем - ВЫХОД")
                 return
             
             user_id = update.effective_user.id
             state = user_states.get(user_id)
             
-            print(f"🔵 [BOT] promo_code_message_handler: user_id={user_id}, state={state}, text={update.message.text}")
+            print(f"🔵 [BOT] text_message_handler: user_id={user_id}, state={state}, text={update.message.text}")
             print(f"🔵 [BOT] Все состояния: {dict(user_states)}")
             
+            # Обработка промокода
             if state == "waiting_for_promo_code":
                 print(f"✅ [BOT] ========== СОСТОЯНИЕ ПОДТВЕРЖДЕНО, ОБРАБАТЫВАЕМ ПРОМОКОД ==========")
                 promo_code = update.message.text.strip()
@@ -790,12 +842,12 @@ def create_bot_application():
         # Используем стандартные фильтры: TEXT (текстовые сообщения) и не команды
         # Проверку состояния пользователя делаем в обработчике
         # ВАЖНО: НЕ используем ~web_app_data_filter, так как это может блокировать сообщения
-        promo_code_filter = filters.TEXT & ~filters.COMMAND
+        text_message_filter = filters.TEXT & ~filters.COMMAND
         
-        # КРИТИЧНО: Регистрируем обработчик промокодов БЕЗ группы, чтобы он обрабатывался ПЕРВЫМ
+        # КРИТИЧНО: Регистрируем обработчик текстовых сообщений БЕЗ группы, чтобы он обрабатывался ПЕРВЫМ
         # Это важно, так как он должен проверить состояние пользователя до других обработчиков
-        application.add_handler(MessageHandler(promo_code_filter, promo_code_message_handler))
-        print("✅ PromoCodeMessageHandler зарегистрирован (без группы, приоритет)")
+        application.add_handler(MessageHandler(text_message_filter, text_message_handler))
+        print("✅ TextMessageHandler зарегистрирован (без группы, приоритет) - обрабатывает промокоды и dev_message")
         
         # Регистрация обработчика данных от WebApp
         # Регистрируем ПОСЛЕ промокодов, чтобы промокоды обрабатывались первыми
