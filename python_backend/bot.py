@@ -576,16 +576,24 @@ async def masssend_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("❌ Команда /masssend доступна только администратору.")
         return
     
-    args = context.args
-    if len(args) < 1:
+    # Получаем текст сообщения с сохранением форматирования (переносы строк)
+    full_text = update.message.text or ""
+    
+    # Удаляем команду /masssend из начала текста
+    if full_text.startswith("/masssend"):
+        message_text = full_text[len("/masssend"):].strip()
+    else:
+        message_text = full_text.strip()
+    
+    if not message_text:
         await update.message.reply_text(
             "Использование: /masssend <сообщение>\n\n"
-            "Пример: /masssend Привет всем пользователям!"
+            "Пример: /masssend Привет всем пользователям!\n\n"
+            "Можно отправлять многострочные сообщения - форматирование сохранится."
         )
         return
     
-    message_text = " ".join(args)
-    print(f"🔵 [BOT] Текст сообщения для рассылки: {message_text[:100]}...")
+    print(f"🔵 [BOT] Текст сообщения для рассылки (первые 100 символов): {message_text[:100]}...")
     
     try:
         async with httpx.AsyncClient() as client:

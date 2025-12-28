@@ -35,15 +35,15 @@ export function fillCard(cardEl, data, options = {}) {
     }
     if (rawPhoto.startsWith('data:')) {
       return rawPhoto;
-    } else if (rawPhoto.startsWith('/data/img/')) {
+  } else if (rawPhoto.startsWith('/data/img/')) {
       return rawPhoto;
-    } else if (rawPhoto === '/img/photo.svg') {
+  } else if (rawPhoto === '/img/photo.svg') {
       return rawPhoto;
-    } else {
+  } else {
       // Если это только имя файла, формируем полный путь
-      const filename = rawPhoto.split('/').pop();
+    const filename = rawPhoto.split('/').pop();
       return `/data/img/${data.userId || data.id}/${filename}`;
-    }
+  }
   });
   
   const finalPhotoUrl = normalizedPhotos[0];
