@@ -39,6 +39,7 @@ window.currentIndex = 0;
 // Флаги для предотвращения множественных вызовов
 let isShowingCandidate = false;
 let isLoadingLikesReceived = false;
+let isShowingMatchBadge = false; // Флаг для предотвращения множественных вызовов showMatchBadgeIfLiked
 window.likesReceivedListLoaded = false; // Флаг, что список уже загружен (даже если пустой)
 
 // ========== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ДЛЯ КНОПОК НАЗАД/ВПЕРЕД ==========
@@ -1002,12 +1003,14 @@ export async function showCandidate() {
       console.log('[swipe.js] ✅ Плашка "Мэтч 💯" добавлена СРАЗУ для кандидата:', candidateId);
     }
   } else {
-    // Данные еще не загружены - используем requestAnimationFrame
-    requestAnimationFrame(() => {
-      requestAnimationFrame(async () => {
-        await showMatchBadgeIfLiked(singleCard, currentCandidate);
+    // Данные еще не загружены - используем requestAnimationFrame (только если не выполняется)
+    if (!isShowingMatchBadge) {
+      requestAnimationFrame(() => {
+        requestAnimationFrame(async () => {
+          await showMatchBadgeIfLiked(singleCard, currentCandidate);
+        });
       });
-    });
+    }
   }
   
   singleCard.classList.remove("show-match", "returning");
@@ -2279,10 +2282,21 @@ async function loadLikesReceived() {
  */
 async function showMatchBadgeIfLiked(cardEl, candidate) {
   console.log('[swipe.js] 🔵 ========== showMatchBadgeIfLiked ВЫЗВАНА ==========');
+  
+  // Защита от множественных вызовов
+  if (isShowingMatchBadge) {
+    console.log('[swipe.js] ⚠️ showMatchBadgeIfLiked: уже выполняется, пропускаем');
+    return;
+  }
+  
   if (!cardEl || !candidate) {
     console.log('[swipe.js] ⚠️ showMatchBadgeIfLiked: нет cardEl или candidate', { cardEl: !!cardEl, candidate: !!candidate });
     return;
   }
+  
+  isShowingMatchBadge = true;
+  
+  try {
   
   // Проверяем, является ли пользователь PRO
   const now = Date.now();
@@ -2510,6 +2524,15 @@ export async function initSwipeScreen() {
   // setTimeout(() => { hideSwipeSkeleton(); }, 2000); // УБРАНО: отладочный таймаут
   // КРИТИЧНО: Сбрасываем индекс истории при инициализации экрана свайпов
   window.swipeHistoryIndex = -1;
+  
+  // КРИТИЧНО: Обновляем данные пользователя перед показом экрана свайпов
+  // Это нужно, чтобы получить актуальные данные (включая superLikesCount) после активации промокода
+  if (window.loadUserData) {
+    console.log('[swipe.js] 🔵 initSwipeScreen: Обновляем данные пользователя');
+    await window.loadUserData();
+    console.log('[swipe.js] ✅ initSwipeScreen: Данные пользователя обновлены, superLikesCount:', window.currentUser?.superLikesCount);
+  }
+  
   // Обновляем UI (аватар, имя, бейдж)
   window.updateSwipeScreen && window.updateSwipeScreen();
   window.updateMatchesCount && window.updateMatchesCount();
