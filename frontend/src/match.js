@@ -250,6 +250,16 @@ export async function showCandidateProfile(match) {
       // Нормализуем пути к фото так же, как в card.js
       const rawPhotos = [d.photo1, d.photo2, d.photo3].filter(p => p);
       match.photos = rawPhotos.map(rawPhoto => {
+        // Если это Telegram userpic, оставляем полный URL или преобразуем относительный в полный
+        if (rawPhoto.includes('/i/userpic/')) {
+          if (rawPhoto.startsWith('https://t.me/i/userpic/') || rawPhoto.startsWith('http://t.me/i/userpic/')) {
+            return rawPhoto; // Уже полный URL
+          } else if (rawPhoto.startsWith('/i/userpic/')) {
+            return `https://t.me${rawPhoto}`; // Преобразуем относительный путь в полный URL
+          }
+          return rawPhoto; // В остальных случаях возвращаем как есть
+        }
+        
         // Если это старый домен amvera, извлекаем относительный путь
         if (rawPhoto.includes('sta-alpacco.amvera.io') || rawPhoto.includes('amvera.io')) {
           const pathStart = rawPhoto.indexOf('/data/img/');
@@ -258,7 +268,12 @@ export async function showCandidateProfile(match) {
           }
         }
         // Если это полный URL с новым доменом, извлекаем относительный путь
+        // НО НЕ для внешних доменов (t.me, и т.д.)
         if (rawPhoto.startsWith('http') && !rawPhoto.startsWith('data:')) {
+          // Проверяем, не является ли это внешним доменом (t.me, и т.д.)
+          if (rawPhoto.includes('t.me/') || rawPhoto.includes('telegram.org/')) {
+            return rawPhoto; // Оставляем внешние URL как есть
+          }
           const pathStart = rawPhoto.indexOf('/', rawPhoto.indexOf('//') + 2);
           if (pathStart >= 0) {
             return rawPhoto.substring(pathStart);

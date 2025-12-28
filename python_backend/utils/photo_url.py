@@ -34,6 +34,17 @@ def normalize_photo_url(photo_url: str) -> str:
     if photo_url in ["/img/logo.svg", "/img/avatar.svg", "/img/photo.svg", ""]:
         return photo_url
     
+    # Если это Telegram userpic (полный URL или относительный путь), обрабатываем отдельно
+    if '/i/userpic/' in photo_url:
+        # Если это полный URL Telegram, возвращаем как есть
+        if photo_url.startswith('https://t.me/i/userpic/') or photo_url.startswith('http://t.me/i/userpic/'):
+            return photo_url
+        # Если это относительный путь /i/userpic/..., преобразуем в полный URL
+        elif photo_url.startswith('/i/userpic/'):
+            return f"https://t.me{photo_url}"
+        # В остальных случаях возвращаем как есть (может быть в составе другого URL)
+        return photo_url
+    
     # Проверяем, содержит ли URL старый домен
     for old_domain in OLD_DOMAINS:
         if old_domain in photo_url:
@@ -48,8 +59,12 @@ def normalize_photo_url(photo_url: str) -> str:
                 # Если URL начинается со старого домена, убираем его
                 return photo_url[len(old_domain):]
     
-    # Если URL уже относительный (начинается с /), возвращаем как есть
+    # Если URL уже относительный (начинается с /), но это не Telegram userpic
+    # Telegram userpic уже обработан выше
     if photo_url.startswith('/'):
+        # Если это путь /i/userpic/..., преобразуем в полный URL Telegram
+        if photo_url.startswith('/i/userpic/'):
+            return f"https://t.me{photo_url}"
         return photo_url
     
     # Если URL полный с новым доменом, извлекаем относительный путь
