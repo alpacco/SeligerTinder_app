@@ -366,6 +366,13 @@ async def admin_help(
                 "example": "/stats"
             },
             {
+                "command": "/prostats",
+                "description": "Получить статистику PRO пользователей",
+                "usage": "/prostats",
+                "example": "/prostats",
+                "note": "Показывает общее количество PRO, активных PRO, истекших PRO и проценты"
+            },
+            {
                 "command": "/delete_user",
                 "description": "Удалить пользователя",
                 "usage": "/delete_user <userId>",
