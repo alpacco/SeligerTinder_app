@@ -1,6 +1,6 @@
 // Модуль swipe.js: ВСЯ ЛОГИКА СВАЙПОВ, анимаций, обработчиков свайпов, кнопок и спец.событий
 // Версия модуля для отладки кэша
-const SWIPE_MODULE_VERSION = '2025-01-27-invite-screen-fix-v2';
+const SWIPE_MODULE_VERSION = '2025-01-27-hide-card-show-invite-v1';
 console.log('🔄 [CACHE] swipe.js загружен, версия:', SWIPE_MODULE_VERSION);
 console.log('🔄 [CACHE] swipe.js загружен, timestamp:', new Date().toISOString());
 // Экспортируемые функции:
@@ -792,24 +792,45 @@ export async function showCandidate() {
     return;
   }
   if (!window.candidates || window.candidates.length === 0 || window.currentIndex >= window.candidates.length) {
-    console.log('🔄 [showCandidate] Нет кандидатов, показываем экран "Пригласить"');
-    // КРИТИЧНО: Очищаем карточку полностью и показываем экран приглашения
-    singleCard.style.backgroundImage = "none";
-    singleCard.style.backgroundColor = "#fff";
-    singleCard.style.boxShadow = "none";
+    console.log('🔄 [showCandidate] Нет кандидатов, скрываем карточку и показываем кнопку "Пригласить"');
+    // КРИТИЧНО: Скрываем карточку
+    const cardContainer = document.querySelector('.card-container');
+    if (cardContainer) {
+      cardContainer.style.display = 'none';
+    }
+    // Скрываем кнопки лайк/дизлайк и PRO-кнопки
+    document.querySelectorAll(".like_d, .dislike_d, .back-cnd-btn, .superlike_d").forEach(b => b.style.display = "none");
+    
+    // Создаем или находим контейнер для кнопки "Пригласить"
+    const swipeScreen = document.getElementById("screen-swipe");
+    let inviteContainer = swipeScreen.querySelector('.invite-container');
+    if (!inviteContainer) {
+      inviteContainer = document.createElement('div');
+      inviteContainer.className = 'invite-container';
+      inviteContainer.style.cssText = 'display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 20px; text-align: center;';
+      // Вставляем после header, перед card-container
+      const cardContainerEl = swipeScreen.querySelector('.card-container');
+      if (cardContainerEl) {
+        cardContainerEl.parentNode.insertBefore(inviteContainer, cardContainerEl);
+      } else {
+        swipeScreen.appendChild(inviteContainer);
+      }
+    }
+    inviteContainer.style.display = 'flex';
+    
     // Если needPhoto=1, показываем "Загрузите фото", иначе "Пригласить"
     const buttonText = window.currentUser && window.currentUser.needPhoto === 1 ? "Загрузите фото" : "Пригласить";
     const buttonId = window.currentUser && window.currentUser.needPhoto === 1 ? "add-photo-swipe-btn" : "invite-button";
-    singleCard.innerHTML = `
-      <div class="no-users invite-wrapper">
-        <h3>Нет новых пользователей</h3>
-        <button id="${buttonId}" class="invite-button">${buttonText}</button>
-      </div>
+    const titleText = window.currentUser && window.currentUser.needPhoto === 1 
+      ? "Пожалуйста, загрузите 1-3 фото с лицом, чтобы просматривать анкеты."
+      : "Нет новых пользователей";
+    
+    inviteContainer.innerHTML = `
+      <h3 style="margin-bottom: 20px; font-size: 18px; color: var(--color-text, #333);">${titleText}</h3>
+      <button id="${buttonId}" class="invite-button">${buttonText}</button>
     `;
-    singleCard.className = "app-card";
-    // Скрываем кнопки лайк/дизлайк, PRO-кнопки управляются отдельно
-    document.querySelectorAll(".like_d, .dislike_d").forEach(b => b.style.display = "none");
-    const btn = singleCard.querySelector(`#${buttonId}`);
+    
+    const btn = inviteContainer.querySelector(`#${buttonId}`);
     if (btn) {
       // Удаляем старые обработчики через клонирование
       const newBtn = btn.cloneNode(true);
@@ -837,21 +858,42 @@ export async function showCandidate() {
   const currentCandidate = window.candidates[window.currentIndex];
   if (!currentCandidate) {
     console.warn('[swipe.js] ⚠️ showCandidate: нет кандидата по индексу', window.currentIndex, 'candidates.length:', window.candidates.length);
-    // КРИТИЧНО: Если кандидата нет, показываем экран "Пригласить"
-    singleCard.style.backgroundImage = "none";
-    singleCard.style.backgroundColor = "#fff";
-    singleCard.style.boxShadow = "none";
+    // КРИТИЧНО: Если кандидата нет, скрываем карточку и показываем кнопку "Пригласить"
+    const cardContainer = document.querySelector('.card-container');
+    if (cardContainer) {
+      cardContainer.style.display = 'none';
+    }
+    // Скрываем кнопки лайк/дизлайк и PRO-кнопки
+    document.querySelectorAll(".like_d, .dislike_d, .back-cnd-btn, .superlike_d").forEach(b => b.style.display = "none");
+    
+    // Создаем или находим контейнер для кнопки "Пригласить"
+    const swipeScreen = document.getElementById("screen-swipe");
+    let inviteContainer = swipeScreen.querySelector('.invite-container');
+    if (!inviteContainer) {
+      inviteContainer = document.createElement('div');
+      inviteContainer.className = 'invite-container';
+      inviteContainer.style.cssText = 'display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 20px; text-align: center;';
+      const cardContainerEl = swipeScreen.querySelector('.card-container');
+      if (cardContainerEl) {
+        cardContainerEl.parentNode.insertBefore(inviteContainer, cardContainerEl);
+      } else {
+        swipeScreen.appendChild(inviteContainer);
+      }
+    }
+    inviteContainer.style.display = 'flex';
+    
     const buttonText = window.currentUser && window.currentUser.needPhoto === 1 ? "Загрузите фото" : "Пригласить";
     const buttonId = window.currentUser && window.currentUser.needPhoto === 1 ? "add-photo-swipe-btn" : "invite-button";
-    singleCard.innerHTML = `
-      <div class="no-users invite-wrapper">
-        <h3>Нет новых пользователей</h3>
-        <button id="${buttonId}" class="invite-button">${buttonText}</button>
-      </div>
+    const titleText = window.currentUser && window.currentUser.needPhoto === 1 
+      ? "Пожалуйста, загрузите 1-3 фото с лицом, чтобы просматривать анкеты."
+      : "Нет новых пользователей";
+    
+    inviteContainer.innerHTML = `
+      <h3 style="margin-bottom: 20px; font-size: 18px; color: var(--color-text, #333);">${titleText}</h3>
+      <button id="${buttonId}" class="invite-button">${buttonText}</button>
     `;
-    singleCard.className = "app-card";
-    document.querySelectorAll(".like_d, .dislike_d").forEach(b => b.style.display = "none");
-    const btn = singleCard.querySelector(`#${buttonId}`);
+    
+    const btn = inviteContainer.querySelector(`#${buttonId}`);
     if (btn) {
       const newBtn = btn.cloneNode(true);
       btn.parentNode.replaceChild(newBtn, btn);
@@ -867,6 +909,16 @@ export async function showCandidate() {
       }
     }
     return;
+  }
+  
+  // КРИТИЧНО: Показываем карточку и скрываем контейнер приглашения, если есть кандидаты
+  const cardContainer = document.querySelector('.card-container');
+  if (cardContainer) {
+    cardContainer.style.display = '';
+  }
+  const inviteContainer = document.getElementById("screen-swipe")?.querySelector('.invite-container');
+  if (inviteContainer) {
+    inviteContainer.style.display = 'none';
   }
   
   // КРИТИЧНО: Загружаем likesReceivedList перед fillCard, если пользователь PRO
