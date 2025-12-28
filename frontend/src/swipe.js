@@ -1235,8 +1235,7 @@ export async function moveToNextCandidate(direction = 'right') {
       likeBtn.addEventListener('click', async (e) => {
         e.preventDefault();
         e.stopPropagation();
-        ');
-      if (!window.candidates || window.candidates.length === 0 || window.currentIndex >= window.candidates.length) {
+        if (!window.candidates || window.candidates.length === 0 || window.currentIndex >= window.candidates.length) {
           if (window.showCandidate) {
             await window.showCandidate();
           }
@@ -1282,8 +1281,7 @@ export async function moveToNextCandidate(direction = 'right') {
       dislikeBtn.addEventListener('click', async (e) => {
         e.preventDefault();
         e.stopPropagation();
-        ');
-      if (!window.candidates || window.candidates.length === 0 || window.currentIndex >= window.candidates.length) {
+        if (!window.candidates || window.candidates.length === 0 || window.currentIndex >= window.candidates.length) {
           if (window.showCandidate) {
             await window.showCandidate();
           }
