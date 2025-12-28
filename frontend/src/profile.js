@@ -215,13 +215,11 @@ export function initProfileEditScreen() {
   const bioInput = document.getElementById('edit-bio-input');
   if (bioInput) {
     bioInput.value = currentUser.bio || '';
-    // Стилизация: отступы и цвет
+    // Стилизация: отступы (цвет устанавливается через CSS)
     bioInput.style.paddingLeft = '20px';
     bioInput.style.paddingRight = '20px';
-    bioInput.style.color = '#202022';
-    bioInput.addEventListener('input', function() {
-      bioInput.style.color = '#202022';
-    });
+    // Убираем inline стили для цвета - используем CSS
+    // bioInput.style.color будет установлен через CSS в зависимости от PRO режима
     
     // Добавляем обработчики для поля био
     bioInput.addEventListener('focus', function() {
@@ -248,7 +246,8 @@ export function initProfileEditScreen() {
         bioInput.style.width = '100%';
         bioInput.style.maxWidth = '400px';
         bioInput.style.margin = '0 auto';
-        bioInput.style.background = '#fff';
+        // Убираем inline стиль для background - используем CSS (PRO режим будет темным)
+        // bioInput.style.background будет установлен через CSS в зависимости от PRO режима
         bioInput.style.paddingBottom = 'env(safe-area-inset-bottom, 30px)';
       }
       // Многократное повторение скрытия для борьбы с гонками событий

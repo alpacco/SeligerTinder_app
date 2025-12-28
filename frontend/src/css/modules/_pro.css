@@ -59,10 +59,12 @@ body.is-pro .profile-button {
 }
 
 /* Кнопка "Написать" должна быть синей даже в PRO режиме */
-body.is-pro #candidate-write-btn.profile-button {
+body.is-pro #candidate-write-btn.profile-button,
+body.is-pro #candidate-write-btn {
   background-color: var(--color-blue) !important;
   color: var(--color-white) !important;
   border-color: var(--color-blue) !important;
+  border-radius: 60px !important;
 }
 
 body.is-pro .invite-button {
@@ -110,8 +112,8 @@ body.is-pro .edit-photo-card.add-photo::before {
 body.is-pro #edit-bio-input,
 body.is-pro #edit-age-input {
   color: var(--color-white) !important;
-  background-color: var(--color-gray-dark-tr);
-  border-color: var(--color-gray-dark-tr);
+  background-color: var(--color-gray-dark-tr) !important;
+  border-color: var(--color-gray-dark-tr) !important;
 }
 
 /* PRO Action Buttons */
@@ -124,8 +126,10 @@ body.is-pro .match-push-btn {
   box-shadow: 0 0 10px #101010;
 }
 
+/* Кнопки "Написать" в списке мэтчей - прозрачный фон с синей рамкой для PRO */
 body.is-pro .match-write-btn,
-body.is-pro .chat-btn {
+body.is-pro .chat-btn,
+body.is-pro button.match-write-btn {
   background-color: transparent !important;
   color: var(--color-blue) !important;
   border: 1px solid var(--color-blue) !important;
