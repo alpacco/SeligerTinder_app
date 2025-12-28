@@ -302,7 +302,7 @@ async def admin_help_command(update: Update, context: ContextTypes.DEFAULT_TYPE)
         
         async with httpx.AsyncClient() as client:
             response = await client.get(
-                f"{API_URL}/admin/admin_help",
+                f"{API_URL}/admin_help",
                 headers={"X-Telegram-User-Id": telegram_id}
             )
             response.raise_for_status()
