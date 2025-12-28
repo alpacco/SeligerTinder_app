@@ -358,11 +358,6 @@ flex: 1;
 
 /* КРИТИЧНО: Если .profile-header или .profile-edit-header используются вместе с .app-header, 
    они не должны переопределять padding - используем стили из .app-header */
-.app-header.profile-header,
-.app-header.profile-edit-header,
-.app-header.matches-header {
-  /* Используем стили из .app-header, не переопределяем */
-}
 
 .profile-header h2, .matches-header h2, .candidate-header h2 {
   flex: 1;
