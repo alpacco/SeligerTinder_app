@@ -32,6 +32,16 @@ DEV_CHAT_ID = int(os.getenv("DEV_CHAT_ID", "0"))  # 0 = отключено
 user_states = {}
 
 
+# Кастомный фильтр для WebApp данных
+class WebAppDataFilter(BaseFilter):
+    """Фильтр для сообщений с данными от WebApp"""
+    def filter(self, message):
+        return bool(message and message.web_app_data)
+
+
+web_app_data_filter = WebAppDataFilter()
+
+
 def get_start_keyboard():
     """Клавиатура для команды /start"""
     return InlineKeyboardMarkup([
