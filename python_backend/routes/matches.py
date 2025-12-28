@@ -6,6 +6,7 @@ from fastapi import APIRouter, Query, HTTPException, Body
 from typing import Dict, List
 from pydantic import BaseModel
 from db_utils import db_get, db_all, db_run, safe_json_parse
+from utils.photo_url import normalize_photo_url
 import json
 
 router = APIRouter()
@@ -39,7 +40,7 @@ async def get_matches(userId: str = Query(..., description="ID пользова�
             "userId": row["userId"],
             "name": row.get("name", ""),
             "username": row.get("username", ""),
-            "avatar": row.get("avatar") or "/img/logo.svg",
+            "avatar": normalize_photo_url(row.get("avatar") or "/img/logo.svg"),
             "mutual": True
         }
         for row in rows

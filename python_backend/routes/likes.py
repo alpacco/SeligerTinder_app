@@ -6,6 +6,7 @@ from fastapi import APIRouter, Query, HTTPException, Body
 from typing import Dict, List
 from pydantic import BaseModel
 from db_utils import db_get, db_all, db_run, safe_json_parse
+from utils.photo_url import normalize_photo_url
 import json
 
 router = APIRouter()
@@ -203,6 +204,15 @@ async def get_likes_made(userId: str = Query(..., description="ID пользов
         WHERE userId IN ({placeholders})
     """
     rows = await db_all(sql, liked_user_ids)
+    
+    # Нормализуем URL фотографий
+    for row in rows:
+        if row.get("photo1"):
+            row["photo1"] = normalize_photo_url(row["photo1"])
+        if row.get("photo2"):
+            row["photo2"] = normalize_photo_url(row["photo2"])
+        if row.get("photo3"):
+            row["photo3"] = normalize_photo_url(row["photo3"])
     
     return {"success": True, "likes": rows}
 

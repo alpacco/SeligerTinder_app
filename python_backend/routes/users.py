@@ -10,6 +10,7 @@ from middleware.security import validate_user_id
 from middleware.auth import get_telegram_user_id
 from slowapi import Limiter
 from slowapi.util import get_remote_address
+from utils.photo_url import normalize_photo_url, normalize_photos_list
 import json
 
 router = APIRouter()
@@ -44,6 +45,10 @@ async def get_all_users():
         rows = await db_all(
             'SELECT "userId", name, username, age, bio, "photoUrl", gender, badge FROM users'
         )
+        # Нормализуем photoUrl для всех пользователей
+        for row in rows:
+            if row.get("photoUrl"):
+                row["photoUrl"] = normalize_photo_url(row["photoUrl"])
         return {"success": True, "data": rows}
     except Exception as e:
         print(f"[GET /api/users] Ошибка: {e}")
@@ -79,14 +84,14 @@ async def get_user_frontend(userId: str = Query(..., description="ID польз�
         if not row:
             raise HTTPException(status_code=404, detail="User not found")
         
-        # Формируем массив фото
+        # Формируем массив фото (нормализуем URL)
         photos = []
         if row.get("photo1"):
-            photos.append(row["photo1"])
+            photos.append(normalize_photo_url(row["photo1"]))
         if row.get("photo2"):
-            photos.append(row["photo2"])
+            photos.append(normalize_photo_url(row["photo2"]))
         if row.get("photo3"):
-            photos.append(row["photo3"])
+            photos.append(normalize_photo_url(row["photo3"]))
         
         # Проверяем needPhoto: если есть хотя бы одно фото, то needPhoto = 0
         need_photo = row.get("needPhoto", 0)
@@ -140,15 +145,15 @@ async def get_user_frontend(userId: str = Query(..., description="ID польз�
             "id": row.get("userId"),
             "name": row.get("name", ""),
             "username": row.get("username", ""),
-            "photoUrl": row.get("photoUrl", ""),
+            "photoUrl": normalize_photo_url(row.get("photoUrl", "")),
             "gender": row.get("gender", ""),
             "bio": row.get("bio", ""),
             "age": row.get("age", 0),
             "super_likes_count": super_likes_final,
             "photos": photos,
-            "photo1": row.get("photo1", ""),  # Добавляем отдельные поля для совместимости
-            "photo2": row.get("photo2", ""),
-            "photo3": row.get("photo3", ""),
+            "photo1": normalize_photo_url(row.get("photo1", "")),  # Добавляем отдельные поля для совместимости
+            "photo2": normalize_photo_url(row.get("photo2", "")),
+            "photo3": normalize_photo_url(row.get("photo3", "")),
             "badge": row.get("badge", ""),
             "likes": safe_json_parse(row.get("likes", "[]")),
             "dislikes": safe_json_parse(row.get("dislikes", "[]")),
@@ -332,11 +337,11 @@ async def get_candidates(
         # Проверяем наличие фотографий (как в get_user_frontend)
         photos = []
         if user_row.get("photo1"):
-            photos.append(user_row["photo1"])
+            photos.append(normalize_photo_url(user_row["photo1"]))
         if user_row.get("photo2"):
-            photos.append(user_row["photo2"])
+            photos.append(normalize_photo_url(user_row["photo2"]))
         if user_row.get("photo3"):
-            photos.append(user_row["photo3"])
+            photos.append(normalize_photo_url(user_row["photo3"]))
         
         need_photo = user_row.get("needPhoto", 0)
         if len(photos) > 0:
@@ -387,14 +392,15 @@ async def get_candidates(
         for row in filtered:
             photos = []
             if row.get("photo1") and row["photo1"].strip():
-                photos.append(row["photo1"])
+                photos.append(normalize_photo_url(row["photo1"]))
             if row.get("photo2") and row["photo2"].strip():
-                photos.append(row["photo2"])
+                photos.append(normalize_photo_url(row["photo2"]))
             if row.get("photo3") and row["photo3"].strip():
-                photos.append(row["photo3"])
+                photos.append(normalize_photo_url(row["photo3"]))
             if not photos:
-                if row.get("photoUrl") and row["photoUrl"].strip() and row["photoUrl"] != "/img/logo.svg":
-                    photos.append(row["photoUrl"])
+                photo_url = row.get("photoUrl", "")
+                if photo_url and photo_url.strip() and photo_url != "/img/logo.svg":
+                    photos.append(normalize_photo_url(photo_url))
                 else:
                     photos.append("/img/photo.svg")
             
