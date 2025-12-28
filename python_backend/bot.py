@@ -762,10 +762,17 @@ def create_bot_application():
         # Проверку состояния пользователя делаем в обработчике
         promo_code_filter = filters.TEXT & ~filters.COMMAND & ~web_app_data_filter
         
-        # КРИТИЧНО: Регистрируем обработчик промокодов ПЕРЕД другими обработчиками текстовых сообщений
-        # чтобы он имел приоритет при проверке состояния пользователя
-        application.add_handler(MessageHandler(promo_code_filter, promo_code_message_handler), group=1)
-        print("✅ PromoCodeMessageHandler зарегистрирован (group=1)")
+        # КРИТИЧНО: Регистрируем обработчик промокодов БЕЗ группы, чтобы он обрабатывался ПЕРВЫМ
+        # Это важно, так как он должен проверить состояние пользователя до других обработчиков
+        application.add_handler(MessageHandler(promo_code_filter, promo_code_message_handler))
+        print("✅ PromoCodeMessageHandler зарегистрирован (без группы, приоритет)")
+        
+        # Регистрация обработчика данных от WebApp
+        # Регистрируем ПОСЛЕ промокодов, чтобы промокоды обрабатывались первыми
+        print("  - Регистрация MessageHandler для WebApp данных...")
+        # Используем кастомный фильтр для WebApp данных
+        application.add_handler(MessageHandler(web_app_data_filter, web_app_data_handler))
+        print("✅ WebAppDataHandler зарегистрирован")
         
         bot_application = application
         print("=" * 70)
