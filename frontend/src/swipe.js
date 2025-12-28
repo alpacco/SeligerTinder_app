@@ -2203,8 +2203,7 @@ async function loadLikesReceived() {
       const users = response.users || response.data || [];
       window.likesReceivedList = new Set(users.map(String));
       window.likesReceivedListLoaded = true; // Помечаем, что список загружен
-      );
-          } else {
+    } else {
             window.likesReceivedList = new Set();
       window.likesReceivedListLoaded = true; // Помечаем, что список загружен (даже если пустой)
     }
@@ -2273,7 +2272,6 @@ async function showMatchBadgeIfLiked(cardEl, candidate) {
   }
   
   const hasLiked = window.likesReceivedList.has(candidateId);
-    );
   
   // Удаляем старую плашку, если она есть
   const existingBadge = cardEl.querySelector('.match-badge-pro');
@@ -2455,9 +2453,7 @@ export async function initSwipeScreen() {
     new Date(window.currentUser.pro_end).getTime() > now;
     if (isPro) {
         await loadLikesReceived();
-    );
-  } else {
-      }
+    }
 
   // Навешиваем переход на профиль по клику на аватар
   const avatarFrame = document.querySelector("#screen-swipe .ava-frame");
@@ -2480,7 +2476,6 @@ export async function initSwipeScreen() {
   // ПОВТОРНО загружаем likesReceived после загрузки кандидатов (на случай если данные изменились)
   if (isPro) {
         await loadLikesReceived();
-    );
   }
   
   window.setupSwipeControls && window.setupSwipeControls();
@@ -2489,7 +2484,6 @@ export async function initSwipeScreen() {
   // Это нужно, чтобы плашка "Мэтч 💯" могла показаться сразу
   if (isPro && (!window.likesReceivedList || window.likesReceivedList.size === 0)) {
         await loadLikesReceived();
-    );
   }
   
   // После загрузки кандидатов и лайков показываем первого кандидата с бейджем или экран "Пригласить"
