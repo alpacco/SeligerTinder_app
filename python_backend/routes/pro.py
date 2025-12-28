@@ -141,7 +141,7 @@ async def activate_promo_code(data: ActivatePromoCodeRequest):
     
     # Проверяем существование промокода и его активность
     promo_row = await db_get(
-        'SELECT id, days, is_active, expires_at FROM promo_codes WHERE code = %s',
+        'SELECT id, days, is_active, expires_at FROM promo_codes WHERE code = ?',
         [promo_code]
     )
     
@@ -166,7 +166,7 @@ async def activate_promo_code(data: ActivatePromoCodeRequest):
     
     # Проверяем, не использовал ли пользователь этот промокод ранее
     usage_row = await db_get(
-        'SELECT id FROM promo_code_usage WHERE promo_code_id = %s AND user_id = %s',
+        'SELECT id FROM promo_code_usage WHERE promo_code_id = ? AND user_id = ?',
         [promo_code_id, data.userId]
     )
     
@@ -177,7 +177,7 @@ async def activate_promo_code(data: ActivatePromoCodeRequest):
     now = datetime.now(timezone.utc)
     
     # Получаем текущее pro_end
-    user_row = await db_get('SELECT "pro_end" FROM users WHERE "userId" = %s', [data.userId])
+    user_row = await db_get('SELECT "pro_end" FROM users WHERE "userId" = ?', [data.userId])
     
     base_time = now
     if user_row and user_row.get("pro_end"):
@@ -191,24 +191,24 @@ async def activate_promo_code(data: ActivatePromoCodeRequest):
     new_end = (base_time + timedelta(days=days)).isoformat()
     
     # Получаем текущее количество суперлайков
-    user_row = await db_get('SELECT "superLikesCount" FROM users WHERE "userId" = %s', [data.userId])
+    user_row = await db_get('SELECT "superLikesCount" FROM users WHERE "userId" = ?', [data.userId])
     current_super_likes = user_row.get("superLikesCount", 0) if user_row else 0
     
     # Если суперлайков 0 или отсутствуют, выделяем 3 при активации PRO
     if current_super_likes == 0 or current_super_likes is None:
         await db_run(
-            'UPDATE users SET is_pro = 1, "pro_end" = %s, "superLikesCount" = 3 WHERE "userId" = %s',
+            'UPDATE users SET is_pro = 1, "pro_end" = ?, "superLikesCount" = 3 WHERE "userId" = ?',
             [new_end, data.userId]
         )
     else:
         await db_run(
-            'UPDATE users SET is_pro = 1, "pro_end" = %s WHERE "userId" = %s',
+            'UPDATE users SET is_pro = 1, "pro_end" = ? WHERE "userId" = ?',
             [new_end, data.userId]
         )
     
     # Записываем использование промокода
     await db_run(
-        'INSERT INTO promo_code_usage (promo_code_id, user_id) VALUES (%s, %s)',
+        'INSERT INTO promo_code_usage (promo_code_id, user_id) VALUES (?, ?)',
         [promo_code_id, data.userId]
     )
     

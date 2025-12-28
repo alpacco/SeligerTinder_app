@@ -717,6 +717,8 @@ def create_bot_application():
             user_id = update.effective_user.id
             state = user_states.get(user_id)
             
+            print(f"🔵 [BOT] promo_code_message_handler вызван: user_id={user_id}, state={state}, text={update.message.text}")
+            
             if state == "waiting_for_promo_code":
                 promo_code = update.message.text.strip()
                 
@@ -763,9 +765,10 @@ def create_bot_application():
                 return False
             # Проверяем состояние пользователя
             user_id = update.effective_user.id if update.effective_user else None
-            if user_id and user_states.get(user_id) == "waiting_for_promo_code":
-                return True
-            return False
+            state = user_states.get(user_id) if user_id else None
+            is_waiting = state == "waiting_for_promo_code"
+            print(f"🔵 [BOT] text_message_filter: user_id={user_id}, state={state}, is_waiting={is_waiting}, text={update.message.text[:50]}")
+            return is_waiting
         
         application.add_handler(MessageHandler(text_message_filter, promo_code_message_handler))
         print("✅ PromoCodeMessageHandler зарегистрирован")
