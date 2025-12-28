@@ -15,7 +15,6 @@
 // Версия приложения для обхода кэша Telegram
 // ВАЖНО: версия должна быть СТАТИЧЕСКОЙ, иначе будет бесконечная перезагрузка!
 const APP_VERSION = '2025-01-27-match-badge-like-animation-fix-v8';
-console.log('🔄 [CACHE] main.js загружен, версия:', APP_VERSION);
 
 // Импортируем CSS (Vite обработает и скомпилирует)
 // CSS не собирается через Vite, загружается напрямую из /css/main.css
@@ -51,9 +50,8 @@ if (window.Telegram && window.Telegram.WebApp) {
   tg.expand();
   tg.setHeaderColor("#ffffff");
   tg.setBackgroundColor("#f4f4f4");
-  console.log("✅ Telegram.WebApp подключен:", tg);
-} else {
-  console.warn("⚠ Telegram.WebApp не найден (серверный/локальный режим?)");
+  } else {
+  ");
 }
 
 // API_URL будет установлен из window.API_URL или конфига
@@ -99,8 +97,7 @@ if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
     currentUser.photoUrl = u.photo_url;
   }
 } else {
-  console.warn("⚠ Не получили initDataUnsafe.user — используем заглушку");
-}
+  }
 
 // Устанавливаем window.currentUser и window.API_URL СРАЗУ (до DOMContentLoaded)
 // Это нужно для того, чтобы имя отображалось на главном экране и проверка регистрации работала
@@ -120,8 +117,7 @@ function updateWelcomeScreenName() {
   const welcomeUserName = document.querySelector('#screen-welcome .user-name');
   if (welcomeUserName && currentUser && currentUser.name && currentUser.name !== "Username") {
     welcomeUserName.textContent = currentUser.name;
-    console.log("  ✅ Имя пользователя обновлено на главном экране:", currentUser.name);
-  }
+      }
 }
 
 // Пытаемся обновить имя сразу
@@ -172,8 +168,7 @@ showScreenImpl = showScreen;
   // ВРЕМЕННАЯ функция showScreen (будет заменена настоящей позже)
   // Используем fallback для переключения экранов через классы
   function showScreenFallback(screenId) {
-    console.log(`🔵 [MAIN.JS] showScreenFallback вызвана с screenId: ${screenId}`);
-    const allScreens = document.querySelectorAll('.screen');
+        const allScreens = document.querySelectorAll('.screen');
     allScreens.forEach(screen => {
       screen.classList.remove('active');
       screen.style.display = 'none';
@@ -182,54 +177,43 @@ showScreenImpl = showScreen;
     if (targetScreen) {
       targetScreen.classList.add('active');
       targetScreen.style.display = 'flex';
-      console.log(`  ✅ Переключили на экран ${screenId} (fallback)`);
+      `);
   } else {
       console.error(`  ❌ Экран ${screenId} не найден!`);
   }
 }
 
   // Устанавливаем временную функцию в window (будет заменена позже)
-  console.log("🔵 [MAIN.JS] Устанавливаем временный window.showScreen (fallback)...");
+  ...");
   window.showScreen = showScreenFallback;
-  console.log("  ✅ window.showScreen установлен (временный):", typeof window.showScreen);
+  :", typeof window.showScreen);
 
   // window.currentUser и window.API_URL уже установлены выше (до DOMContentLoaded)
   // Обновляем их на случай, если что-то изменилось
-  console.log("🔵 [MAIN.JS] Обновляем window.currentUser и window.API_URL...");
-window.currentUser = currentUser;
+  window.currentUser = currentUser;
 window.API_URL = API_URL;
   window.API_BASE_URL = API_URL;
   window.WEB_APP_URL = WEB_APP_URL;
-  console.log("  ✅ window.currentUser обновлён:", window.currentUser);
-  console.log("  ✅ window.API_URL обновлён:", window.API_URL);
-  
+      
   // Обновляем экран приветствия сразу после установки currentUser
   // (если экран уже виден)
   setTimeout(() => {
     const welcomeScreen = document.getElementById('screen-welcome');
     if (welcomeScreen && welcomeScreen.classList.contains('active')) {
-      console.log("🔵 [MAIN.JS] Экран приветствия активен, обновляем имя...");
-      const welcomeUserName = document.querySelector('#screen-welcome .user-name');
+            const welcomeUserName = document.querySelector('#screen-welcome .user-name');
       if (welcomeUserName && currentUser && currentUser.name) {
         welcomeUserName.textContent = currentUser.name;
-        console.log("  ✅ Имя пользователя обновлено (вручную):", currentUser.name);
+        :", currentUser.name);
       } else {
-        console.warn("  ⚠️ Не удалось обновить имя:", {
-          welcomeUserName: !!welcomeUserName,
-          currentUser: !!currentUser,
-          userName: currentUser?.name
-        });
-      }
+              }
     }
   }, 100);
 
 // Импортируем handlePhotoAddition из user-actions.js
 import('./user-actions.js').then(module => {
   window.handlePhotoAddition = module.handlePhotoAddition;
-  console.log('✅ handlePhotoAddition загружен в глобальную область');
-}).catch(err => {
-  console.warn('⚠ Не удалось загрузить handlePhotoAddition:', err);
-});
+  }).catch(err => {
+  });
 
 function fillCard(cardEl, cand) {
   let validPhotos = (cand.photos || []).filter(u => u && u.trim() !== "");
@@ -267,8 +251,7 @@ function fillCard(cardEl, cand) {
 
   // Обработчик для регистрации (screen‑1)
   function setupJoinButton() {
-    console.log("🔵 [MAIN.JS] setupJoinButton вызвана");
-    console.log("  - document.readyState:", document.readyState);
+        console.log("  - document.readyState:", document.readyState);
     console.log("  - API_URL:", API_URL);
     console.log("  - typeof showScreen:", typeof showScreen);
     console.log("  - currentUser:", currentUser);
@@ -277,29 +260,24 @@ function fillCard(cardEl, cand) {
     
   const joinButton = document.getElementById("join-button");
   if (joinButton) {
-      console.log("✅ [MAIN.JS] Кнопка join-button найдена, добавляем обработчик");
-      console.log("  - joinButton:", joinButton);
+            console.log("  - joinButton:", joinButton);
       console.log("  - joinButton.onclick:", joinButton.onclick);
       
       // Проверяем, есть ли уже обработчик
       const hasExistingHandler = joinButton.getAttribute('data-main-handler') === 'true';
       if (hasExistingHandler) {
-        console.log("  ⚠️ [MAIN.JS] Обработчик уже установлен, пропускаем");
-        return;
+                return;
       }
       
       joinButton.setAttribute('data-main-handler', 'true');
-      console.log("  🔵 [MAIN.JS] Добавляем обработчик click...");
-      
+            
     joinButton.addEventListener("click", () => {
-        console.log("🔵 [MAIN.JS] Клик по join-button - начало обработки");
-      let tgUser = {};
+              let tgUser = {};
       if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
         tgUser = tg.initDataUnsafe.user;
           console.log("  - tgUser из initDataUnsafe:", tgUser);
         } else {
-          console.warn("  ⚠️ tg.initDataUnsafe.user не найден");
-      }
+                }
         
       const registrationData = {
         userId: String(tgUser.id || "UserID"),
@@ -311,8 +289,7 @@ function fillCard(cardEl, cand) {
         gender: "", // заполнится далее
         bio: ""
       };
-        console.log("🔵 [MAIN.JS] Отправка регистрации с данными:", registrationData);
-        console.log("  - URL:", `${API_URL}/join`);
+                console.log("  - URL:", `${API_URL}/join`);
         
         // Отправляем Telegram initData в заголовке для валидации на сервере
         const headers = { "Content-Type": "application/json" };
@@ -326,16 +303,13 @@ function fillCard(cardEl, cand) {
         body: JSON.stringify(registrationData)
       })
           .then(res => {
-            console.log("🔵 [MAIN.JS] Ответ от сервера:", res.status, res.statusText);
-            return res.json();
+                        return res.json();
           })
         .then(data => {
-            console.log("🔵 [MAIN.JS] Данные от сервера:", data);
-          if (!data.success) throw new Error(data.error || "Неизвестная ошибка");
-            console.log("✅ [MAIN.JS] Регистрация прошла успешно:", data);
-          currentUser.registered = true;
+                      if (!data.success) throw new Error(data.error || "Неизвестная ошибка");
+                      currentUser.registered = true;
             window.currentUser = currentUser; // Обновляем глобальную переменную
-            console.log("🔵 [MAIN.JS] Вызов showScreen('screen-gender')");
+            ");
             console.log("  - typeof showScreen:", typeof showScreen);
             console.log("  - typeof window.showScreen:", typeof window.showScreen);
             // Используем window.showScreen для надежности
@@ -350,8 +324,7 @@ function fillCard(cardEl, cand) {
               const genderScreen = document.getElementById('screen-gender');
               if (genderScreen) {
                 genderScreen.style.display = 'block';
-                console.log("✅ [MAIN.JS] Экран переключен вручную");
-              }
+                              }
             }
           // Инициализировать чат с ботом: сначала WebApp sendData, затем deep link
           if (tg && tg.sendData) {
@@ -369,20 +342,18 @@ function fillCard(cardEl, cand) {
           alert("Ошибка регистрации: " + err.message);
         });
     });
-      console.log("✅ [MAIN.JS] Обработчик join-button установлен");
-    } else {
+          } else {
       console.error("❌ [MAIN.JS] Кнопка join-button НЕ найдена!");
     }
   }
   
   // Вызываем setupJoinButton сразу, так как мы уже внутри DOMContentLoaded
-  console.log("🔵 [MAIN.JS] Вызываем setupJoinButton (DOM уже готов)...");
+  ...");
   setupJoinButton();
   
   // Также пробуем установить после небольшой задержки на случай, если кнопка появится позже
   setTimeout(() => {
-    console.log("  🔵 [MAIN.JS] Повторная попытка setupJoinButton через 500ms");
-    setupJoinButton();
+        setupJoinButton();
   }, 500);
 // Получаем элементы кнопок выбора пола
 const maleBtn = document.getElementById("maleBtn");
@@ -574,8 +545,7 @@ if (profileEditBackBtn) {
           })
         });
         const json = await resp.json();
-        console.log("✅ specialPush response:", json);
-        if (!json.success) console.error("Push error:", json.error);
+                if (!json.success) console.error("Push error:", json.error);
       } catch (err) {
         console.error("❌ Ошибка в запросе /api/specialPush:", err);
       }
@@ -839,11 +809,9 @@ function showScreen(screenId) {
     // КРИТИЧНО: Вызываем initSwipeScreen для полной инициализации экрана свайпов
     // Это загрузит кандидатов, likesReceived для PRO пользователей и покажет первого кандидата
     if (window.initSwipeScreen) {
-      console.log('[main.js] 🔵 showScreen: вызываем initSwipeScreen для screen-swipe');
-      window.initSwipeScreen();
+            window.initSwipeScreen();
     } else {
-      console.warn('[main.js] ⚠️ showScreen: window.initSwipeScreen не найден, используем fallback');
-      // Fallback: обновляем UI (аватар, имя, бейдж)
+            // Fallback: обновляем UI (аватар, имя, бейдж)
       updateSwipeScreen();
       updateMatchesCount();
       
@@ -918,8 +886,7 @@ function showScreen(screenId) {
 }
 
   function updateWelcomeScreen() {
-    console.log("🔵 [MAIN.JS] updateWelcomeScreen вызвана");
-    console.log("  - currentUser:", currentUser);
+        console.log("  - currentUser:", currentUser);
     console.log("  - currentUser.name:", currentUser?.name);
     
     // Используем глобальную функцию updateWelcomeScreenName
@@ -1284,8 +1251,7 @@ async function renderMatchesOld() {
         // Обновляем имя на главном экране
         updateWelcomeScreenName();
 
-        console.log("✅ checkIfRegistered: пользователь найден и данные загружены");
-        return true;
+                return true;
       } catch (err) {
         console.error("❌ checkIfRegistered:", err);
         return false;
@@ -1329,8 +1295,7 @@ async function renderMatchesOld() {
         return;
       }
       
-      console.log("✅ Пользователь зарегистрирован, загружаем данные");
-      await loadUserData();
+            await loadUserData();
       
       // Если пол ещё не задан — сначала экран выбора пола, иначе — свайпы
       // Проверяем, что gender не пустая строка и не null/undefined
@@ -1366,29 +1331,24 @@ async function renderMatchesOld() {
 showScreenImpl = showScreen;
 
   // КРИТИЧНО: Заменяем window.showScreen на настоящую реализацию
-  console.log("🔵 [MAIN.JS] Заменяем window.showScreen на настоящую реализацию...");
-  window.showScreen = showScreen;
-  console.log("  ✅ window.showScreen заменен на настоящую реализацию:", typeof window.showScreen);
-  console.log("  - showScreenImpl:", typeof showScreenImpl);
+    window.showScreen = showScreen;
+    console.log("  - showScreenImpl:", typeof showScreenImpl);
   
   // НЕ экспортируем showCandidate из main.js - используем версию из swipe.js
   // window.showCandidate должен быть установлен в swipe.js
   if (window.showCandidate) {
-    console.log("  ✅ window.showCandidate найден (из swipe.js):", typeof window.showCandidate);
+    :", typeof window.showCandidate);
   } else {
-    console.warn("  ⚠️ window.showCandidate не найден! Возможно, swipe.js еще не загружен.");
-  }
+      }
 }
 
 // Вызываем initMainJS в зависимости от состояния документа
 if (document.readyState === 'loading') {
   // DOM еще загружается, ждем DOMContentLoaded
   document.addEventListener("DOMContentLoaded", initMainJS);
-  console.log("🔵 [MAIN.JS] DOM еще загружается, ждем DOMContentLoaded...");
-} else {
+  } else {
   // DOM уже готов (interactive или complete), вызываем сразу
-  console.log("🔵 [MAIN.JS] DOM уже готов, вызываем initMainJS сразу...");
-  initMainJS();
+    initMainJS();
 }
 
   // Скрыть бейджи like/nope

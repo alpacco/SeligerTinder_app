@@ -182,8 +182,7 @@ export async function showCandidateProfile(match) {
   // Предотвращаем множественные вызовы для одного и того же кандидата
   // НО только если это действительно тот же кандидат И функция еще выполняется
   if (isShowingCandidateProfile && lastShownCandidateId === candidateId) {
-    console.log('[match.js] ⚠️ showCandidateProfile уже выполняется для этого кандидата, пропускаем');
-    return;
+        return;
   }
   
   // Если это другой кандидат, сбрасываем флаг и продолжаем
@@ -323,8 +322,7 @@ export async function showCandidateProfile(match) {
   });
   
   if (isProActive) {
-    console.log('[match.js] ✅ PRO активен, показываем last login');
-    const headerSelector = '#screen-profile .profile-header';
+        const headerSelector = '#screen-profile .profile-header';
     // Используем match.id или match.userId, так как match передается напрямую
     const userIdForLastLogin = match.id || match.userId || window.viewingCandidate?.id || window.viewingCandidate?.userId;
     console.log('[match.js] userIdForLastLogin:', userIdForLastLogin);
@@ -365,8 +363,7 @@ export async function showCandidateProfile(match) {
         let lastLoginElementRef = el;
         el.textContent = 'Загрузка...';
         subRow.appendChild(el);
-        console.log('[match.js] ✅ Элемент last login создан и добавлен в subRow');
-        console.log('[match.js] subRow.innerHTML длина:', subRow.innerHTML.length);
+                console.log('[match.js] subRow.innerHTML длина:', subRow.innerHTML.length);
         console.log('[match.js] subRow.children.length:', subRow.children.length);
         console.log('[match.js] Элемент в DOM:', document.getElementById('candidate-last-login-element'));
         console.log('[match.js] window.viewingCandidate установлен:', !!window.viewingCandidate);
@@ -382,17 +379,14 @@ export async function showCandidateProfile(match) {
             // Проверяем, что элемент все еще в DOM
             if (document.body.contains(targetEl)) {
               targetEl.textContent = text;
-              console.log('[match.js] ✅ Текст обновлен:', text);
-              return true;
+                            return true;
             } else {
-              console.warn('[match.js] ⚠️ Элемент не в DOM, но ссылка сохранена');
-              // Пытаемся найти элемент заново
+                            // Пытаемся найти элемент заново
               const found = document.getElementById('candidate-last-login-element');
               if (found) {
                 found.textContent = text;
                 lastLoginElementRef = found; // Обновляем ссылку
-                console.log('[match.js] ✅ Элемент найден заново, текст обновлен:', text);
-                return true;
+                                return true;
               }
             }
           }
@@ -574,8 +568,7 @@ export async function showCandidateProfile(match) {
         // КРИТИЧНО: Проверяем, что мы все еще смотрим на того же кандидата
         const currentCandidateId = String(window.viewingCandidate?.id || window.viewingCandidate?.userId || '');
         if (pic.dataset.candidateId !== currentCandidateId) {
-          console.warn('[match.js] ⚠️ Кандидат изменился, обновляем данные');
-          // Обновляем данные из window.viewingCandidate
+                    // Обновляем данные из window.viewingCandidate
           const currentMatch = window.viewingCandidate;
           if (currentMatch && currentMatch.photos && currentMatch.photos.length > 0) {
             pic.dataset.candidateId = currentCandidateId;
@@ -592,16 +585,14 @@ export async function showCandidateProfile(match) {
         // КРИТИЧНО: Получаем актуальные фото из window.viewingCandidate
         const currentMatch = window.viewingCandidate;
         if (!currentMatch || !currentMatch.photos || currentMatch.photos.length === 0) {
-          console.warn('[match.js] ⚠️ Нет актуальных данных кандидата для переключения фото');
-          return;
+                    return;
         }
         const currentPhotos = currentMatch.photos;
         
         // КРИТИЧНО: Получаем элемент заново, чтобы убедиться, что это правильный элемент
         const currentPic = document.getElementById("profileCard");
         if (!currentPic || currentPic.dataset.candidateId !== currentCandidateId) {
-          console.warn('[match.js] ⚠️ Элемент фото не найден или кандидат изменился');
-          return;
+                    return;
         }
         
         // Обновляем индекс
@@ -618,8 +609,7 @@ export async function showCandidateProfile(match) {
           customRenderPaginator(currentPaginator, currentPhotos.length, nextIndex);
         }
         
-        console.log('[match.js] ✅ Фото переключено на индекс', nextIndex, 'для кандидата', currentCandidateId);
-      };
+              };
     }
   } else {
     // Если фото одно, сбрасываем индекс

@@ -92,8 +92,7 @@ function updateForwardButton(likeBtn, shouldShowForward) {
     likeBtn.onclick = async (e) => {
       e.preventDefault();
       e.stopPropagation();
-      console.log('🔄 [forwardBtn] Кнопка "Вперед" нажата, swipeHistory.length:', window.swipeHistory.length, 'swipeHistoryIndex:', window.swipeHistoryIndex);
-      if (!window.singleCard) {
+            if (!window.singleCard) {
         console.error('🔄 [forwardBtn] singleCard не найден!');
         return;
       }
@@ -109,7 +108,6 @@ function updateForwardButton(likeBtn, shouldShowForward) {
         }
       }, 500);
     };
-    console.log('🔄 [updateForwardButton] Кнопка "Вперед" установлена');
   } else if (!shouldShowForward || !canGoForward() || window.inMutualMatch) {
     // Восстанавливаем кнопку "Лайк" если она была заменена на "Вперед"
     if (likeBtn.innerHTML.includes('forward-icon')) {
@@ -117,7 +115,6 @@ function updateForwardButton(likeBtn, shouldShowForward) {
       likeBtn.innerHTML = `<svg class="like-icon" width="36" height="36" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><path class="st0" d="M40.2,19.3c-5.1-0.5-7.5,2.5-8.2,3.5c-0.6-1-3.1-4-8.2-3.5c-5.4,0.6-10.8,7-5.7,15.6c4.2,6.9,13.6,11.9,13.9,12.1l0,0l0,0l0,0l0,0c0.2-0.1,9.7-5.1,13.9-12.1C51,26.3,45.6,19.9,40.2,19.3L40.2,19.3z"/></svg>`;
       likeBtn.onclick = null;
       window.attachLikeHandler && window.attachLikeHandler();
-      console.log('🔄 [updateForwardButton] Кнопка "Лайк" восстановлена');
     }
   }
 }
@@ -133,20 +130,17 @@ function updateBackButton(backBtn) {
     backBtn.style.pointerEvents = "auto";
     backBtn.style.opacity = "1";
     backBtn.disabled = false;
-    console.log('🔄 [updateBackButton] Кнопка "Назад" активна, canGoBack:', canGoBackValue);
   } else {
     backBtn.style.pointerEvents = "none";
     backBtn.style.opacity = "0.5";
     backBtn.disabled = true;
-    console.log('🔄 [updateBackButton] Кнопка "Назад" неактивна, canGoBack:', canGoBackValue);
   }
 }
 
 // ========== КОНЕЦ ВСПОМОГАТЕЛЬНЫХ ФУНКЦИЙ ==========
 
 export async function showPreviousCandidate() {
-  console.log('🔄 [showPreviousCandidate] ВЫЗВАНА, swipeHistory.length:', window.swipeHistory.length, 'swipeHistoryIndex:', window.swipeHistoryIndex);
-  
+    
   // Если мы не в истории, сохраняем текущего кандидата перед переходом назад
   if (window.swipeHistoryIndex === -1 && window.candidates[window.currentIndex]) {
     const currentCandidate = window.candidates[window.currentIndex];
@@ -155,8 +149,7 @@ export async function showPreviousCandidate() {
     const currentAction = getLastActionForCandidate(candidateId) || 'like'; // По умолчанию 'like', если не найдено
     window.swipeHistory.push({ candidate: currentCandidate, index: window.currentIndex, action: currentAction });
     window.swipeHistoryIndex = window.swipeHistory.length - 1;
-    console.log('🔄 [showPreviousCandidate] Сохранили текущего кандидата в историю перед переходом назад, action:', currentAction);
-  }
+      }
   
   // Переходим назад в истории
   // КРИТИЧНО: Проверяем, что есть элементы в истории
@@ -177,8 +170,7 @@ export async function showPreviousCandidate() {
     
     window._isBackAction = true;
     const historyItem = window.swipeHistory[window.swipeHistoryIndex];
-    console.log('🔄 [showPreviousCandidate] Извлекаем из истории по индексу', window.swipeHistoryIndex, ':', historyItem);
-    
+        
     // Обрабатываем как старый формат (просто кандидат), так и новый (объект с candidate и index)
     let candidate, index, action;
     if (historyItem && typeof historyItem === 'object' && historyItem.candidate) {
@@ -193,34 +185,29 @@ export async function showPreviousCandidate() {
       action = null; // Неизвестно, какое действие было
     }
     
-    console.log('🔄 [showPreviousCandidate] Восстанавливаем кандидата:', candidate.id || candidate.userId, 'на индекс:', index, 'действие:', action);
-    
+        
     // КРИТИЧНО: Отменяем действие (лайк или дизлайк) на бэкенде
     const candidateId = String(candidate.id || candidate.userId || '');
     if (action === 'like') {
-      console.log('🔄 [showPreviousCandidate] Отменяем лайк для кандидата:', candidateId);
-      try {
+            try {
         const { removeLike } = await import('./api.js');
         await removeLike(window.currentUser.userId, candidateId);
         // Удаляем из локального массива likes
         if (window.currentUser.likes && Array.isArray(window.currentUser.likes)) {
           window.currentUser.likes = window.currentUser.likes.filter(id => String(id) !== String(candidateId));
         }
-        console.log('🔄 [showPreviousCandidate] Лайк отменен');
-      } catch (err) {
+              } catch (err) {
         console.error('❌ [showPreviousCandidate] Ошибка отмены лайка:', err);
       }
     } else if (action === 'dislike') {
-      console.log('🔄 [showPreviousCandidate] Отменяем дизлайк для кандидата:', candidateId);
-      try {
+            try {
         const { removeDislike } = await import('./api.js');
         await removeDislike(window.currentUser.userId, candidateId);
         // Удаляем из локального массива dislikes
         if (window.currentUser.dislikes && Array.isArray(window.currentUser.dislikes)) {
           window.currentUser.dislikes = window.currentUser.dislikes.filter(id => String(id) !== String(candidateId));
         }
-        console.log('🔄 [showPreviousCandidate] Дизлайк отменен');
-      } catch (err) {
+              } catch (err) {
         console.error('❌ [showPreviousCandidate] Ошибка отмены дизлайка:', err);
       }
     }
@@ -237,8 +224,7 @@ export async function showPreviousCandidate() {
       new Date(window.currentUser.pro_end).getTime() > now;
     
     if (isPro) {
-      console.log('🔄 [showPreviousCandidate] Перезагружаем likesReceivedList для актуальных данных');
-      await loadLikesReceived();
+            await loadLikesReceived();
     }
     
     // Вставляем кандидата обратно в массив
@@ -276,8 +262,7 @@ export async function showPreviousCandidate() {
       if (likeBtn) {
         // Проверяем, не в режиме ли "Next"
         if (likeBtn.innerHTML.includes('next.svg') || likeBtn.classList.contains('nextMode')) {
-          console.log('🔄 [showPreviousCandidate] Сбрасываем кнопку лайка из режима Next');
-          likeBtn.innerHTML = `<svg class="like-icon" width="36" height="36" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><path class="st0" d="M40.2,19.3c-5.1-0.5-7.5,2.5-8.2,3.5c-0.6-1-3.1-4-8.2-3.5c-5.4,0.6-10.8,7-5.7,15.6c4.2,6.9,13.6,11.9,13.9,12.1l0,0l0,0l0,0l0,0c0.2-0.1,9.7-5.1,13.9-12.1C51,26.3,45.6,19.9,40.2,19.3L40.2,19.3z"/></svg>`;
+                    likeBtn.innerHTML = `<svg class="like-icon" width="36" height="36" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><path class="st0" d="M40.2,19.3c-5.1-0.5-7.5,2.5-8.2,3.5c-0.6-1-3.1-4-8.2-3.5c-5.4,0.6-10.8,7-5.7,15.6c4.2,6.9,13.6,11.9,13.9,12.1l0,0l0,0l0,0l0,0c0.2-0.1,9.7-5.1,13.9-12.1C51,26.3,45.6,19.9,40.2,19.3L40.2,19.3z"/></svg>`;
           likeBtn.className = 'like_d';
           likeBtn.onclick = null;
         }
@@ -287,8 +272,7 @@ export async function showPreviousCandidate() {
         // Проверяем, не в режиме ли "Помахать" или "Написать"
         if (dislikeBtn.classList.contains('wave-btn') || dislikeBtn.classList.contains('chat-btn') || 
             dislikeBtn.innerHTML.includes('wave.svg') || dislikeBtn.innerHTML.includes('chat.svg')) {
-          console.log('🔄 [showPreviousCandidate] Сбрасываем кнопку дизлайка из режима Wave/Chat');
-          dislikeBtn.innerHTML = `<svg class="dislike-icon" width="36" height="36" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><rect class="st0" x="29.5" y="14.61" width="5" height="34.78" rx="2.5" ry="2.5" transform="translate(-13.25 32) rotate(-45)"/><rect class="st0" x="14.61" y="29.5" width="34.78" height="5" rx="2.5" ry="2.5" transform="translate(-13.25 32) rotate(-45)"/></svg>`;
+                    dislikeBtn.innerHTML = `<svg class="dislike-icon" width="36" height="36" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><rect class="st0" x="29.5" y="14.61" width="5" height="34.78" rx="2.5" ry="2.5" transform="translate(-13.25 32) rotate(-45)"/><rect class="st0" x="14.61" y="29.5" width="34.78" height="5" rx="2.5" ry="2.5" transform="translate(-13.25 32) rotate(-45)"/></svg>`;
           dislikeBtn.className = 'dislike_d';
           dislikeBtn.classList.remove('wave-btn', 'chat-btn');
           dislikeBtn.style.backgroundColor = '';
@@ -314,8 +298,7 @@ export async function showPreviousCandidate() {
       if (likeBtn) {
         // Проверяем, не в режиме ли "Forward"
         if (likeBtn.innerHTML.includes('forward-icon') || likeBtn.querySelector('.forward-icon')) {
-          console.log('🔄 [showPreviousCandidate] Восстанавливаем кнопку "Лайк" из режима "Вперед"');
-          likeBtn.style.backgroundColor = 'var(--color-red)';
+                    likeBtn.style.backgroundColor = 'var(--color-red)';
           likeBtn.innerHTML = `<svg class="like-icon" width="36" height="36" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><path class="st0" d="M40.2,19.3c-5.1-0.5-7.5,2.5-8.2,3.5c-0.6-1-3.1-4-8.2-3.5c-5.4,0.6-10.8,7-5.7,15.6c4.2,6.9,13.6,11.9,13.9,12.1l0,0l0,0l0,0l0,0c0.2-0.1,9.7-5.1,13.9-12.1C51,26.3,45.6,19.9,40.2,19.3L40.2,19.3z"/></svg>`;
           likeBtn.onclick = null;
           window.attachLikeHandler && window.attachLikeHandler();
@@ -328,26 +311,22 @@ export async function showPreviousCandidate() {
       const backBtn = document.querySelector(".back-cnd-btn");
       updateBackButton(backBtn);
       
-      console.log('🔄 [showPreviousCandidate] Обработчики кнопок восстановлены');
-    }, 150);
+          }, 150);
     
     window.updateMatchesCount && window.updateMatchesCount();
-    console.log('🔄 [showPreviousCandidate] Кандидат восстановлен, currentIndex:', window.currentIndex, 'swipeHistoryIndex:', window.swipeHistoryIndex);
-  } else {
+      } else {
     console.warn('🔄 [showPreviousCandidate] Нельзя перейти назад, swipeHistoryIndex:', window.swipeHistoryIndex);
   }
 }
 
 export async function showNextCandidate() {
-  console.log('🔄 [showNextCandidate] ВЫЗВАНА, swipeHistory.length:', window.swipeHistory.length, 'swipeHistoryIndex:', window.swipeHistoryIndex);
-  
+    
   // Переходим вперед в истории
   if (window.swipeHistoryIndex >= 0 && window.swipeHistoryIndex < window.swipeHistory.length - 1) {
     window.swipeHistoryIndex++;
     window._isBackAction = true;
     const historyItem = window.swipeHistory[window.swipeHistoryIndex];
-    console.log('🔄 [showNextCandidate] Извлекаем из истории по индексу', window.swipeHistoryIndex, ':', historyItem);
-    
+        
     // Обрабатываем как старый формат (просто кандидат), так и новый (объект с candidate и index)
     let candidate, index, action;
     if (historyItem && typeof historyItem === 'object' && historyItem.candidate) {
@@ -362,34 +341,29 @@ export async function showNextCandidate() {
       action = null; // Неизвестно, какое действие было
     }
     
-    console.log('🔄 [showNextCandidate] Восстанавливаем кандидата:', candidate.id || candidate.userId, 'на индекс:', index, 'действие:', action);
-    
+        
     // КРИТИЧНО: Отменяем действие (лайк или дизлайк) на бэкенде
     const candidateId = String(candidate.id || candidate.userId || '');
     if (action === 'like') {
-      console.log('🔄 [showNextCandidate] Отменяем лайк для кандидата:', candidateId);
-      try {
+            try {
         const { removeLike } = await import('./api.js');
         await removeLike(window.currentUser.userId, candidateId);
         // Удаляем из локального массива likes
         if (window.currentUser.likes && Array.isArray(window.currentUser.likes)) {
           window.currentUser.likes = window.currentUser.likes.filter(id => String(id) !== String(candidateId));
         }
-        console.log('🔄 [showNextCandidate] Лайк отменен');
-      } catch (err) {
+              } catch (err) {
         console.error('❌ [showNextCandidate] Ошибка отмены лайка:', err);
       }
     } else if (action === 'dislike') {
-      console.log('🔄 [showNextCandidate] Отменяем дизлайк для кандидата:', candidateId);
-      try {
+            try {
         const { removeDislike } = await import('./api.js');
         await removeDislike(window.currentUser.userId, candidateId);
         // Удаляем из локального массива dislikes
         if (window.currentUser.dislikes && Array.isArray(window.currentUser.dislikes)) {
           window.currentUser.dislikes = window.currentUser.dislikes.filter(id => String(id) !== String(candidateId));
         }
-        console.log('🔄 [showNextCandidate] Дизлайк отменен');
-      } catch (err) {
+              } catch (err) {
         console.error('❌ [showNextCandidate] Ошибка отмены дизлайка:', err);
       }
     }
@@ -405,8 +379,7 @@ export async function showNextCandidate() {
       new Date(window.currentUser.pro_end).getTime() > now;
     
     if (isPro) {
-      console.log('🔄 [showNextCandidate] Перезагружаем likesReceivedList для актуальных данных');
-      await loadLikesReceived();
+            await loadLikesReceived();
     }
     
     // Вставляем кандидата обратно в массив
@@ -444,8 +417,7 @@ export async function showNextCandidate() {
       if (likeBtn) {
         // Проверяем, не в режиме ли "Next"
         if (likeBtn.innerHTML.includes('next.svg') || likeBtn.classList.contains('nextMode')) {
-          console.log('🔄 [showNextCandidate] Сбрасываем кнопку лайка из режима Next');
-          likeBtn.innerHTML = `<svg class="like-icon" width="36" height="36" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><path class="st0" d="M40.2,19.3c-5.1-0.5-7.5,2.5-8.2,3.5c-0.6-1-3.1-4-8.2-3.5c-5.4,0.6-10.8,7-5.7,15.6c4.2,6.9,13.6,11.9,13.9,12.1l0,0l0,0l0,0l0,0c0.2-0.1,9.7-5.1,13.9-12.1C51,26.3,45.6,19.9,40.2,19.3L40.2,19.3z"/></svg>`;
+                    likeBtn.innerHTML = `<svg class="like-icon" width="36" height="36" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><path class="st0" d="M40.2,19.3c-5.1-0.5-7.5,2.5-8.2,3.5c-0.6-1-3.1-4-8.2-3.5c-5.4,0.6-10.8,7-5.7,15.6c4.2,6.9,13.6,11.9,13.9,12.1l0,0l0,0l0,0l0,0c0.2-0.1,9.7-5.1,13.9-12.1C51,26.3,45.6,19.9,40.2,19.3L40.2,19.3z"/></svg>`;
           likeBtn.className = 'like_d';
           likeBtn.onclick = null;
         }
@@ -455,8 +427,7 @@ export async function showNextCandidate() {
         // Проверяем, не в режиме ли "Помахать" или "Написать"
         if (dislikeBtn.classList.contains('wave-btn') || dislikeBtn.classList.contains('chat-btn') || 
             dislikeBtn.innerHTML.includes('wave.svg') || dislikeBtn.innerHTML.includes('chat.svg')) {
-          console.log('🔄 [showNextCandidate] Сбрасываем кнопку дизлайка из режима Wave/Chat');
-          dislikeBtn.innerHTML = `<svg class="dislike-icon" width="36" height="36" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><rect class="st0" x="29.5" y="14.61" width="5" height="34.78" rx="2.5" ry="2.5" transform="translate(-13.25 32) rotate(-45)"/><rect class="st0" x="14.61" y="29.5" width="34.78" height="5" rx="2.5" ry="2.5" transform="translate(-13.25 32) rotate(-45)"/></svg>`;
+                    dislikeBtn.innerHTML = `<svg class="dislike-icon" width="36" height="36" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><rect class="st0" x="29.5" y="14.61" width="5" height="34.78" rx="2.5" ry="2.5" transform="translate(-13.25 32) rotate(-45)"/><rect class="st0" x="14.61" y="29.5" width="34.78" height="5" rx="2.5" ry="2.5" transform="translate(-13.25 32) rotate(-45)"/></svg>`;
           dislikeBtn.className = 'dislike_d';
           dislikeBtn.classList.remove('wave-btn', 'chat-btn');
           dislikeBtn.style.backgroundColor = '';
@@ -482,12 +453,10 @@ export async function showNextCandidate() {
       const backBtn = document.querySelector(".back-cnd-btn");
       updateBackButton(backBtn);
       
-      console.log('🔄 [showNextCandidate] Обработчики кнопок восстановлены');
-    }, 150);
+          }, 150);
     
     window.updateMatchesCount && window.updateMatchesCount();
-    console.log('🔄 [showNextCandidate] Кандидат восстановлен, currentIndex:', window.currentIndex, 'swipeHistoryIndex:', window.swipeHistoryIndex);
-  } else if (window.swipeHistoryIndex === window.swipeHistory.length - 1) {
+      } else if (window.swipeHistoryIndex === window.swipeHistory.length - 1) {
     // Если мы в конце истории, переходим к следующему новому кандидату
     window.swipeHistoryIndex = -1; // Выходим из истории
     window._isBackAction = false;
@@ -497,8 +466,7 @@ export async function showNextCandidate() {
         await window.showCandidate();
       }
     }
-    console.log('🔄 [showNextCandidate] Выходим из истории, переходим к следующему новому кандидату');
-  } else {
+      } else {
     console.warn('🔄 [showNextCandidate] Нельзя перейти вперед, swipeHistoryIndex:', window.swipeHistoryIndex);
   }
 }
@@ -554,8 +522,7 @@ export function setupSwipeControls(skipForwardButton = false) {
     backBtn.addEventListener("click", async (e) => {
       e.preventDefault();
       e.stopPropagation();
-      console.log('🔄 [backBtn] Кнопка "Назад" нажата, swipeHistory.length:', window.swipeHistory.length, 'swipeHistoryIndex:', window.swipeHistoryIndex);
-      if (!window.singleCard) {
+            if (!window.singleCard) {
         console.error('🔄 [backBtn] singleCard не найден!');
         return;
       }
@@ -683,12 +650,10 @@ export function setupSwipeControls(skipForwardButton = false) {
 }
 
 export async function showCandidate() {
-  console.log('🔄 [showCandidate] ВЫЗВАН, версия:', SWIPE_MODULE_VERSION);
-  
+    
   // Защита от множественных вызовов
   if (isShowingCandidate) {
-    console.log('🔄 [showCandidate] Уже выполняется, пропускаем повторный вызов');
-    return;
+        return;
   }
   
   isShowingCandidate = true;
@@ -702,26 +667,14 @@ export async function showCandidate() {
   const dislikeBtn = document.querySelector(".dislike_d");
   const likeBtn = document.querySelector(".like_d");
   
-  console.log('🔵 [showCandidate] Начало функции, кнопки найдены:', {
-    dislikeBtn: !!dislikeBtn,
-    likeBtn: !!likeBtn,
-    inMutualMatch: window.inMutualMatch
-  });
-  
+    
   // КРИТИЧНО: Проверяем кнопку ДО всех операций и логируем её состояние
   if (dislikeBtn) {
     const currentWaveBtn = dislikeBtn.classList.contains('wave-btn');
     const currentChatBtn = dislikeBtn.classList.contains('chat-btn');
     const currentWaveSvg = dislikeBtn.innerHTML.includes('wave.svg');
     const currentChatSvg = dislikeBtn.innerHTML.includes('chat.svg');
-    console.log('🔵 [showCandidate] ТЕКУЩЕЕ состояние кнопки:', {
-      currentWaveBtn,
-      currentChatBtn,
-      currentWaveSvg,
-      currentChatSvg,
-      className: dislikeBtn.className,
-      innerHTML: dislikeBtn.innerHTML.substring(0, 150)
-    });
+        });
   }
   
   if (dislikeBtn) {
@@ -748,8 +701,7 @@ export async function showCandidate() {
       dislikeBtn.style.fontSize = '';
       dislikeBtn.onclick = null;
       
-      console.log('✅ [showCandidate] Кнопка дизлайка сброшена в начале функции');
-    }
+          }
   }
   
   if (likeBtn) {
@@ -761,8 +713,7 @@ export async function showCandidate() {
       likeBtn.style.backgroundColor = '';
       likeBtn.style.fontSize = '';
       likeBtn.onclick = null;
-      console.log('✅ [showCandidate] Кнопка лайка сброшена в начале функции');
-    }
+          }
   }
   
   // Сбрасываем флаг mutual match если он установлен
@@ -833,8 +784,7 @@ export async function showCandidate() {
     return;
   }
   if (!window.candidates || window.candidates.length === 0 || window.currentIndex >= window.candidates.length) {
-    console.log('🔄 [showCandidate] Нет кандидатов, скрываем карточку и показываем кнопку "Пригласить"');
-    // КРИТИЧНО: Скрываем все элементы карточки
+        // КРИТИЧНО: Скрываем все элементы карточки
     const cardContainer = document.querySelector('.card-container');
     if (cardContainer) {
       cardContainer.style.display = 'none';
@@ -904,8 +854,7 @@ export async function showCandidate() {
   // Обычная карточка
   const currentCandidate = window.candidates[window.currentIndex];
   if (!currentCandidate) {
-    console.warn('[swipe.js] ⚠️ showCandidate: нет кандидата по индексу', window.currentIndex, 'candidates.length:', window.candidates.length);
-    // КРИТИЧНО: Если кандидата нет, скрываем карточку и показываем кнопку "Пригласить"
+        // КРИТИЧНО: Если кандидата нет, скрываем карточку и показываем кнопку "Пригласить"
     const cardContainer = document.querySelector('.card-container');
     if (cardContainer) {
       cardContainer.style.display = 'none';
@@ -997,8 +946,7 @@ export async function showCandidate() {
     new Date(window.currentUser.pro_end).getTime() > now;
   
   if (isPro && (!window.likesReceivedList || window.likesReceivedList.size === 0)) {
-    console.log('[swipe.js] 🔵 showCandidate: Загружаем likesReceivedList перед показом кандидата');
-    await loadLikesReceived();
+        await loadLikesReceived();
   }
   
   // КРИТИЧНО: Сохраняем плашку "Мэтч 💯" перед fillCard, если она есть
@@ -1022,8 +970,7 @@ export async function showCandidate() {
       badge.textContent = 'Мэтч 💯';
       badge.style.cssText = 'position: absolute !important; top: 20px !important; right: 20px !important; background-color: rgba(159, 114, 47, 0.6) !important; color: #ffffff !important; padding: 8px 16px !important; border-radius: 20px !important; font-size: 14px !important; font-weight: bold !important; z-index: 10000 !important; box-shadow: none !important; display: flex !important; align-items: center !important; justify-content: center !important; visibility: visible !important; opacity: 1 !important; pointer-events: none !important;';
       singleCard.appendChild(badge);
-      console.log('[swipe.js] ✅ Плашка "Мэтч 💯" добавлена СРАЗУ для кандидата:', candidateId);
-    }
+          }
   } else {
     // Данные еще не загружены - используем requestAnimationFrame (только если не выполняется)
     if (!isShowingMatchBadge) {
@@ -1061,8 +1008,7 @@ export async function showCandidate() {
       // Это нужно, так как кнопки могут быть удалены или скрыты
       window.setupSwipeControls && window.setupSwipeControls();
     } else {
-      console.log('🔵 [showCandidate] Пропускаем setupSwipeControls, так как в mutual match режиме');
-    }
+          }
   }, 0);
   
   // КРИТИЧНО: Принудительно сбрасываем кнопки к обычному состоянию для обычных кандидатов
@@ -1080,13 +1026,7 @@ export async function showCandidate() {
       const hadChatSvg = dislikeBtn.innerHTML.includes('chat.svg');
       
       if (hadWaveBtn || hadChatBtn || hadWaveSvg || hadChatSvg) {
-        console.log('⚠️ [showCandidate] Обнаружена кнопка "Помахать" на обычном кандидате! Сбрасываем...', {
-          hadWaveBtn,
-          hadChatBtn,
-          hadWaveSvg,
-          hadChatSvg
-        });
-      }
+              }
       
       // Удаляем все классы wave-btn и chat-btn
       dislikeBtn.classList.remove('wave-btn', 'chat-btn');
@@ -1205,15 +1145,12 @@ export async function moveToNextCandidate(direction = 'right') {
       // КРИТИЧНО: Если мы были в истории, удаляем все элементы после текущей позиции
       // Это нужно, чтобы при лайке после возврата история обновлялась правильно
       if (window.swipeHistoryIndex >= 0) {
-        console.log('🔄 [moveToNextCandidate] Обрезаем историю после индекса', window.swipeHistoryIndex, 'было элементов:', window.swipeHistory.length);
-        window.swipeHistory = window.swipeHistory.slice(0, window.swipeHistoryIndex + 1);
-        console.log('🔄 [moveToNextCandidate] После обрезки элементов:', window.swipeHistory.length);
-      }
+                window.swipeHistory = window.swipeHistory.slice(0, window.swipeHistoryIndex + 1);
+              }
       // Добавляем текущего кандидата в историю
       window.swipeHistory.push({ candidate: currentCandidate, index: window.currentIndex, action });
       window.swipeHistoryIndex = -1; // Выходим из истории, так как переходим к новому кандидату
-      console.log('🔄 [moveToNextCandidate] Добавили кандидата в историю, swipeHistory.length:', window.swipeHistory.length, 'swipeHistoryIndex:', window.swipeHistoryIndex);
-      window.candidates.splice(window.currentIndex, 1);
+            window.candidates.splice(window.currentIndex, 1);
       // КРИТИЧНО: Проверяем, остались ли кандидаты после удаления
       if (window.candidates.length === 0) {
         window.currentIndex = 0;
@@ -1299,7 +1236,7 @@ export async function moveToNextCandidate(direction = 'right') {
       likeBtn.addEventListener('click', async (e) => {
         e.preventDefault();
         e.stopPropagation();
-        console.log('🔄 [moveToNextCandidate] Кнопка лайка нажата (из moveToNextCandidate)');
+        ');
       if (!window.candidates || window.candidates.length === 0 || window.currentIndex >= window.candidates.length) {
           if (window.showCandidate) {
             await window.showCandidate();
@@ -1346,7 +1283,7 @@ export async function moveToNextCandidate(direction = 'right') {
       dislikeBtn.addEventListener('click', async (e) => {
         e.preventDefault();
         e.stopPropagation();
-        console.log('🔄 [moveToNextCandidate] Кнопка дизлайка нажата (из moveToNextCandidate)');
+        ');
       if (!window.candidates || window.candidates.length === 0 || window.currentIndex >= window.candidates.length) {
           if (window.showCandidate) {
             await window.showCandidate();
@@ -1376,12 +1313,10 @@ export async function moveToNextCandidate(direction = 'right') {
 }
 
 export function onMutualLike() {
-  console.log('🔄 [onMutualLike] ВЫЗВАН, версия:', SWIPE_MODULE_VERSION);
-  
+    
   // КРИТИЧНО: Сохраняем текущий индекс ДО любых изменений и вызовов других функций
   const savedIndex = window.currentIndex;
-  console.log('🔄 [onMutualLike] Сохраняем индекс:', savedIndex, 'текущий currentIndex:', window.currentIndex);
-
+  
   window.updateMatchesCount && window.updateMatchesCount();
   window.inMutualMatch = true;
   
@@ -1392,8 +1327,7 @@ export function onMutualLike() {
     return;
   }
   
-  console.log('🔄 [onMutualLike] Сохраняем кандидата:', currentCandidate.id || currentCandidate.userId);
-  
+    
   // Сохраняем кандидата в истории для кнопки Back
   window.swipeHistory.push({ candidate: currentCandidate, index: savedIndex });
   
@@ -1412,9 +1346,7 @@ export function onMutualLike() {
     // КРИТИЧНО: Восстанавливаем индекс, чтобы показать правильного кандидата
     // И блокируем изменение индекса до завершения восстановления
     window.currentIndex = savedIndex;
-    console.log('🔄 [onMutualLike] Восстановлен индекс:', window.currentIndex, 'savedIndex был:', savedIndex);
-    console.log('🔄 [onMutualLike] Проверка: кандидат по индексу', window.currentIndex, '=', window.candidates[window.currentIndex]?.id || window.candidates[window.currentIndex]?.userId);
-    
+            
     // КРИТИЧНО: Проверяем, что индекс не изменился перед fillCard
     if (window.currentIndex !== savedIndex) {
       console.error('🚨 [onMutualLike] КРИТИЧНО: currentIndex изменился! Было:', savedIndex, 'Стало:', window.currentIndex);
@@ -1428,8 +1360,7 @@ export function onMutualLike() {
       window.likesReceivedList.has(candidateId);
     
     // Обновляем карточку с данными текущего кандидата (чтобы убедиться, что данные актуальны)
-    console.log('🔄 [onMutualLike] Заполняем карточку для кандидата:', currentCandidate.id || currentCandidate.userId);
-    fillCard(window.singleCard, currentCandidate);
+        fillCard(window.singleCard, currentCandidate);
     
     // КРИТИЧНО: Еще раз проверяем индекс после fillCard
     if (window.currentIndex !== savedIndex) {
@@ -1444,8 +1375,7 @@ export function onMutualLike() {
       newBadge.textContent = 'Мэтч 💯';
       newBadge.style.cssText = 'position: absolute !important; top: 20px !important; right: 20px !important; background-color: rgba(159, 114, 47, 0.6) !important; color: #ffffff !important; padding: 8px 16px !important; border-radius: 20px !important; font-size: 14px !important; font-weight: bold !important; z-index: 10000 !important; box-shadow: none !important; display: flex !important; align-items: center !important; justify-content: center !important; visibility: visible !important; opacity: 1 !important; pointer-events: none !important;';
       window.singleCard.appendChild(newBadge);
-      console.log('[swipe.js] ✅ Плашка восстановлена после fillCard в onMutualLike для кандидата:', candidateId);
-    }
+          }
     
     // КРИТИЧНО: Показываем плашку "Мэтч 💯" СРАЗУ после fillCard
     // Плашка должна показываться ДО того, как пользователь взаимодействует с карточкой
@@ -1462,14 +1392,11 @@ export function onMutualLike() {
     // Элемент уже есть в HTML (index.html строка 273), но может быть скрыт
     let matchBadge = window.singleCard.querySelector(".badge-match");
     if (!matchBadge) {
-      console.warn('[swipe.js] ⚠️ Элемент .badge-match не найден в DOM, создаем его');
-      matchBadge = document.createElement('div');
+            matchBadge = document.createElement('div');
       matchBadge.className = 'badge-match';
       window.singleCard.appendChild(matchBadge);
-      console.log('[swipe.js] ✅ Создан элемент .badge-match для анимации');
-    } else {
-      console.log('[swipe.js] ✅ Элемент .badge-match найден в DOM:', matchBadge);
-    }
+          } else {
+          }
     
     // Убеждаемся, что элемент имеет правильные стили
     matchBadge.style.position = 'absolute';
@@ -1480,8 +1407,7 @@ export function onMutualLike() {
     matchBadge.style.fontSize = '64px';
     matchBadge.style.pointerEvents = 'none';
     if (matchBadge) {
-      console.log('🎬 [onMutualLike] Показываем эмодзи ❤️‍🔥 с анимацией');
-      matchBadge.innerHTML = "❤️‍🔥";
+            matchBadge.innerHTML = "❤️‍🔥";
       matchBadge.style.opacity = "1";
       matchBadge.style.display = "block";
       matchBadge.style.visibility = "visible";
@@ -1563,8 +1489,7 @@ export function onMutualLike() {
     }
     
     if (dislikeBtn) {
-      console.log('🔵 [onMutualLike setTimeout] Устанавливаем кнопку "Помахать" для mutual match, inMutualMatch:', window.inMutualMatch);
-      dislikeBtn.style.display = "flex";
+            dislikeBtn.style.display = "flex";
       if (currentCandidate && currentCandidate.id && currentCandidate.id.startsWith('VALID_') && currentCandidate.username) {
         dislikeBtn.classList.remove('wave-btn');
         dislikeBtn.classList.add('chat-btn');
@@ -1584,8 +1509,7 @@ export function onMutualLike() {
         dislikeBtn.style.display = "flex";
         dislikeBtn.style.alignItems = "center";
         dislikeBtn.style.justifyContent = "center";
-        console.log('🔵 [onMutualLike] Кнопка "Помахать" установлена, innerHTML:', dislikeBtn.innerHTML);
-        dislikeBtn.onclick = async () => {
+                dislikeBtn.onclick = async () => {
           const btn = dislikeBtn;
           try {
             sendPush({ senderId: window.currentUser.userId, senderUsername: window.currentUser.username || window.currentUser.name, receiverId: currentCandidate.id || currentCandidate.userId });
@@ -1832,54 +1756,42 @@ export async function handleLikeClick() {
 
 // Функция для навешивания обработчика на кнопку Like
 export function attachLikeHandler() {
-    console.log('🔄 [attachLikeHandler] ВЫЗВАН, версия:', SWIPE_MODULE_VERSION);
-    const likeBtn = document.querySelector('.like_d');
+        const likeBtn = document.querySelector('.like_d');
     if (likeBtn) {
         // Удаляем старые обработчики через клонирование
         const newLikeBtn = likeBtn.cloneNode(true);
         likeBtn.parentNode.replaceChild(newLikeBtn, likeBtn);
         // Добавляем новый обработчик
         newLikeBtn.addEventListener('click', (e) => {
-            console.log('🔄 [attachLikeHandler] Кнопка лайка нажата!');
-            e.preventDefault();
+                        e.preventDefault();
             e.stopPropagation();
             handleLikeClick();
         });
-        console.log('🔄 [attachLikeHandler] Обработчик лайка установлен');
-    } else {
+            } else {
         console.warn('🔄 [attachLikeHandler] Кнопка .like_d не найдена!');
     }
 }
 
 // Асинхронная функция doLike (добавлена первая часть логики)
 export async function doLike() {
-    console.log('🔄 [doLike] ВЫЗВАН, версия:', SWIPE_MODULE_VERSION);
-    console.log('🔄 [doLike] window.inMutualMatch:', window.inMutualMatch);
-
+        
     if (window.inMutualMatch) {
-        console.log('🔄 [doLike] В режиме mutual match, переходим к следующему кандидату');
-        window.moveToNextCandidate && window.moveToNextCandidate('right');
+                window.moveToNextCandidate && window.moveToNextCandidate('right');
         return;
     }
     const topUserId = window.singleCard?.dataset?.userId;
-    console.log('🔄 [doLike] topUserId:', topUserId);
-
+    
     const idx = window.candidates?.findIndex(c => String(c.id || c.userId) === String(topUserId));
-    console.log('🔄 [doLike] idx:', idx);
-
+    
     if (idx < 0) {
         console.warn('🔄 [doLike] Кандидат не найден в массиве');
         return;
     }
     const candidate = window.candidates[idx];
-    console.log('🔄 [doLike] candidate:', candidate);
-
+    
     try {
-        console.log('🔄 [doLike] Отправляем лайк...');
-        const json = await sendLike(window.currentUser.userId, topUserId);
-        console.log('🔄 [doLike] Ответ от сервера:', json);
-        console.log('🔄 [doLike] json.match:', json.match, 'json.isMatch:', json.isMatch, 'json.mutual:', json.mutual);
-
+                const json = await sendLike(window.currentUser.userId, topUserId);
+                
         
         if (json && json.success) {
             window.currentUser.likes = window.currentUser.likes || [];
@@ -1887,8 +1799,7 @@ export async function doLike() {
             
             // КРИТИЧНО: Сохраняем индекс ДО refreshCurrentUser, так как он может вызвать loadCandidates
             const savedIndexBeforeRefresh = window.currentIndex;
-            console.log('🔄 [doLike] Сохраняем индекс перед refreshCurrentUser:', savedIndexBeforeRefresh);
-            
+                        
             // Обновляем данные пользователя после лайка
             await refreshCurrentUser();
             
@@ -1900,24 +1811,19 @@ export async function doLike() {
             
             // Проверяем, есть ли взаимный лайк
             // ВАЖНО: бэкенд возвращает "match", а не "isMatch"
-            console.log('🔄 [doLike] Проверяем мэтч: json.match =', json.match, 'json.isMatch =', json.isMatch);
-            const isMatch = json.match === true || json.isMatch === true || ((candidate.id || candidate.userId) && (candidate.id || candidate.userId).startsWith('VALID_') && candidate.username);
+                        const isMatch = json.match === true || json.isMatch === true || ((candidate.id || candidate.userId) && (candidate.id || candidate.userId).startsWith('VALID_') && candidate.username);
             if (isMatch) {
-                console.log('🔄 [doLike] МЭТЧ! Вызываем onMutualLike, currentIndex:', window.currentIndex);
-                window.onMutualLike && window.onMutualLike();
+                                window.onMutualLike && window.onMutualLike();
             } else {
-                console.log('🔄 [doLike] Нет мэтча, улетаем вправо');
-                // Анимация улетающей карточки вправо
+                                // Анимация улетающей карточки вправо
                 window.singleCard.style.transition = "transform 0.5s ease";
                 window.singleCard.style.transform = `translate(1000px, 0) rotate(45deg)`;
                 setTimeout(() => {
                     // КРИТИЧНО: Если мы были в истории, удаляем все элементы после текущей позиции
                     // Это нужно, чтобы при лайке после возврата история обновлялась правильно
                     if (window.swipeHistoryIndex >= 0) {
-                        console.log('🔄 [doLike] Обрезаем историю после индекса', window.swipeHistoryIndex, 'было элементов:', window.swipeHistory.length);
-                        window.swipeHistory = window.swipeHistory.slice(0, window.swipeHistoryIndex + 1);
-                        console.log('🔄 [doLike] После обрезки элементов:', window.swipeHistory.length);
-                    }
+                                                window.swipeHistory = window.swipeHistory.slice(0, window.swipeHistoryIndex + 1);
+                                            }
                     
                     // КРИТИЧНО: Проверяем, есть ли уже этот кандидат в истории
                     // Если есть, перезаписываем его действие на 'like'
@@ -1929,17 +1835,14 @@ export async function doLike() {
                     
                     if (existingIndex >= 0) {
                         // Перезаписываем существующую запись
-                        console.log('🔄 [doLike] Перезаписываем существующую запись в истории для кандидата:', candidateId, 'на индекс:', existingIndex);
-                        window.swipeHistory[existingIndex] = { candidate: window.candidates[idx], index: idx, action: 'like' };
+                                                window.swipeHistory[existingIndex] = { candidate: window.candidates[idx], index: idx, action: 'like' };
                     } else {
                         // Добавляем новую запись
                         window.swipeHistory.push({ candidate: window.candidates[idx], index: idx, action: 'like' });
-                        console.log('🔄 [doLike] Добавили кандидата в историю, swipeHistory.length:', window.swipeHistory.length);
-                    }
+                                            }
                     
                     window.swipeHistoryIndex = -1; // Выходим из истории, так как переходим к новому кандидату
-                    console.log('🔄 [doLike] swipeHistoryIndex:', window.swipeHistoryIndex);
-                    // УБИРАЕМ удаление кандидата отсюда - оно будет в moveToNextCandidate
+                                        // УБИРАЕМ удаление кандидата отсюда - оно будет в moveToNextCandidate
                     // window.candidates.splice(idx, 1);
                     window.moveToNextCandidate && window.moveToNextCandidate('right');
                     window.updateMatchesCount && window.updateMatchesCount();
@@ -1968,21 +1871,18 @@ export async function handleDislikeClick() {
 
 // Функция для навешивания обработчика на кнопку Dislike
 export function attachDislikeHandler() {
-    console.log('🔄 [attachDislikeHandler] ВЫЗВАН, версия:', SWIPE_MODULE_VERSION);
-    const dislikeBtn = document.querySelector('.dislike_d');
+        const dislikeBtn = document.querySelector('.dislike_d');
     if (dislikeBtn) {
         // Удаляем старые обработчики через клонирование
         const newDislikeBtn = dislikeBtn.cloneNode(true);
         dislikeBtn.parentNode.replaceChild(newDislikeBtn, dislikeBtn);
         // Добавляем новый обработчик
         newDislikeBtn.addEventListener('click', async (e) => {
-            console.log('🔄 [attachDislikeHandler] Кнопка дизлайка нажата!');
-            e.preventDefault();
+                        e.preventDefault();
             e.stopPropagation();
             await handleDislikeClick();
         });
-        console.log('🔄 [attachDislikeHandler] Обработчик дизлайка установлен');
-    } else {
+            } else {
         console.warn('🔄 [attachDislikeHandler] Кнопка .dislike_d не найдена!');
     }
 }
@@ -2014,10 +1914,8 @@ export async function doDislike() {
         // КРИТИЧНО: Если мы были в истории, удаляем все элементы после текущей позиции
         // Это нужно, чтобы при дизлайке после возврата история обновлялась правильно
         if (window.swipeHistoryIndex >= 0) {
-            console.log('🔄 [doDislike] Обрезаем историю после индекса', window.swipeHistoryIndex, 'было элементов:', window.swipeHistory.length);
-            window.swipeHistory = window.swipeHistory.slice(0, window.swipeHistoryIndex + 1);
-            console.log('🔄 [doDislike] После обрезки элементов:', window.swipeHistory.length);
-        }
+                        window.swipeHistory = window.swipeHistory.slice(0, window.swipeHistoryIndex + 1);
+                    }
         // КРИТИЧНО: Проверяем, есть ли уже этот кандидат в истории
         // Если есть, перезаписываем его действие на 'dislike'
         const candidateId = String(candidate.id || candidate.userId || '');
@@ -2028,17 +1926,14 @@ export async function doDislike() {
         
         if (existingIndex >= 0) {
             // Перезаписываем существующую запись
-            console.log('🔄 [doDislike] Перезаписываем существующую запись в истории для кандидата:', candidateId, 'на индекс:', existingIndex);
-            window.swipeHistory[existingIndex] = { candidate: candidate, index: idx, action: 'dislike' };
+                        window.swipeHistory[existingIndex] = { candidate: candidate, index: idx, action: 'dislike' };
         } else {
             // Добавляем новую запись
             window.swipeHistory.push({ candidate: candidate, index: idx, action: 'dislike' });
-            console.log('🔄 [doDislike] Добавили кандидата в историю, swipeHistory.length:', window.swipeHistory.length);
-        }
+                    }
         
         window.swipeHistoryIndex = -1; // Выходим из истории, так как переходим к новому кандидату
-        console.log('🔄 [doDislike] swipeHistoryIndex:', window.swipeHistoryIndex);
-        
+                
         window.moveToNextCandidate && window.moveToNextCandidate('left');
     } catch (err) {
         console.error('❌ Ошибка дизлайка:', err);
@@ -2289,38 +2184,31 @@ window.likesReceivedList = new Set();
  */
 async function loadLikesReceived() {
   if (!window.currentUser?.userId) {
-    console.log('[swipe.js] ⚠️ loadLikesReceived: нет userId');
-    return;
+        return;
   }
   
   // Защита от параллельных вызовов
   if (isLoadingLikesReceived) {
-    console.log('[swipe.js] ⚠️ loadLikesReceived: уже выполняется, пропускаем');
-    return;
+        return;
   }
   
   // Если список уже загружен, не загружаем снова
   if (window.likesReceivedListLoaded && window.likesReceivedList) {
-    console.log('[swipe.js] ℹ️ loadLikesReceived: список уже загружен, пропускаем');
-    return;
+        return;
   }
   
   isLoadingLikesReceived = true;
   
   try {
-    console.log('[swipe.js] 🔵 Загружаем полученные лайки для userId:', window.currentUser.userId);
-    const response = await fetchLikesReceived(window.currentUser.userId);
-    console.log('[swipe.js] ✅ Ответ API для полученных лайков:', response);
-    if (response && response.success) {
+        const response = await fetchLikesReceived(window.currentUser.userId);
+        if (response && response.success) {
       // API возвращает массив пользователей в response.users
       const users = response.users || response.data || [];
       window.likesReceivedList = new Set(users.map(String));
       window.likesReceivedListLoaded = true; // Помечаем, что список загружен
-      console.log('[swipe.js] ✅ Загружен список полученных лайков:', Array.from(window.likesReceivedList));
-      console.log('[swipe.js] ✅ Количество полученных лайков:', window.likesReceivedList.size);
-    } else {
-      console.warn('[swipe.js] ⚠️ API вернул success=false или пустой ответ');
-      window.likesReceivedList = new Set();
+      );
+          } else {
+            window.likesReceivedList = new Set();
       window.likesReceivedListLoaded = true; // Помечаем, что список загружен (даже если пустой)
     }
   } catch (err) {
@@ -2336,17 +2224,14 @@ async function loadLikesReceived() {
  * Показывает плашку "Мэтч 💯" в правом верхнем углу карточки, если кандидат поставил лайк и пользователь PRO
  */
 async function showMatchBadgeIfLiked(cardEl, candidate) {
-  console.log('[swipe.js] 🔵 ========== showMatchBadgeIfLiked ВЫЗВАНА ==========');
-  
+    
   // Защита от множественных вызовов
   if (isShowingMatchBadge) {
-    console.log('[swipe.js] ⚠️ showMatchBadgeIfLiked: уже выполняется, пропускаем');
-    return;
+        return;
   }
   
   if (!cardEl || !candidate) {
-    console.log('[swipe.js] ⚠️ showMatchBadgeIfLiked: нет cardEl или candidate', { cardEl: !!cardEl, candidate: !!candidate });
-    return;
+        return;
   }
   
   isShowingMatchBadge = true;
@@ -2360,30 +2245,20 @@ async function showMatchBadgeIfLiked(cardEl, candidate) {
     window.currentUser.pro_end && 
     new Date(window.currentUser.pro_end).getTime() > now;
   
-  console.log('[swipe.js] 🔵 showMatchBadgeIfLiked: isPro =', isPro);
-  console.log('[swipe.js] 🔵 showMatchBadgeIfLiked: currentUser.is_pro =', window.currentUser?.is_pro);
-  console.log('[swipe.js] 🔵 showMatchBadgeIfLiked: currentUser.pro_end =', window.currentUser?.pro_end);
-  
+        
   if (!isPro) {
     // Удаляем плашку, если она есть, но пользователь не PRO
     const existingBadge = cardEl.querySelector('.match-badge-pro');
     if (existingBadge) existingBadge.remove();
-    console.log('[swipe.js] ⚠️ showMatchBadgeIfLiked: пользователь не PRO, удаляем плашку');
-    return;
+        return;
   }
   
   // Проверяем, поставил ли кандидат лайк
   const candidateId = String(candidate.id || candidate.userId || '');
-  console.log('[swipe.js] 🔵 showMatchBadgeIfLiked: candidateId =', candidateId);
-  console.log('[swipe.js] 🔵 showMatchBadgeIfLiked: candidate =', candidate);
-  console.log('[swipe.js] 🔵 showMatchBadgeIfLiked: likesReceivedList =', window.likesReceivedList);
-  console.log('[swipe.js] 🔵 showMatchBadgeIfLiked: likesReceivedList type =', typeof window.likesReceivedList);
-  console.log('[swipe.js] 🔵 showMatchBadgeIfLiked: likesReceivedList size =', window.likesReceivedList?.size);
-  
+            
   // Проверяем, загружен ли список (не проверяем size, так как список может быть пустым)
   if (!window.likesReceivedListLoaded || !window.likesReceivedList) {
-    console.warn('[swipe.js] ⚠️ showMatchBadgeIfLiked: likesReceivedList не загружен, пытаемся загрузить');
-    // Пытаемся загрузить, если еще не загружен
+        // Пытаемся загрузить, если еще не загружен
     const now = Date.now();
     const isProUser = window.currentUser && 
       (window.currentUser.is_pro === true || window.currentUser.is_pro === 'true' || window.currentUser.is_pro === 1) &&
@@ -2391,8 +2266,7 @@ async function showMatchBadgeIfLiked(cardEl, candidate) {
       new Date(window.currentUser.pro_end).getTime() > now;
     
     if (isProUser && window.currentUser?.userId) {
-      console.log('[swipe.js] 🔵 showMatchBadgeIfLiked: Загружаем likesReceivedList');
-      await loadLikesReceived();
+            await loadLikesReceived();
     } else {
       if (!window.likesReceivedList) {
         window.likesReceivedList = new Set();
@@ -2402,14 +2276,12 @@ async function showMatchBadgeIfLiked(cardEl, candidate) {
   }
   
   const hasLiked = window.likesReceivedList.has(candidateId);
-  console.log('[swipe.js] 🔵 showMatchBadgeIfLiked: hasLiked =', hasLiked, 'для candidateId', candidateId);
-  console.log('[swipe.js] 🔵 showMatchBadgeIfLiked: проверка Set.has:', window.likesReceivedList.has(candidateId));
+    );
   
   // Удаляем старую плашку, если она есть
   const existingBadge = cardEl.querySelector('.match-badge-pro');
   if (existingBadge) {
-    console.log('[swipe.js] 🔵 showMatchBadgeIfLiked: удаляем существующую плашку');
-    existingBadge.remove();
+        existingBadge.remove();
   }
   
   if (hasLiked) {
@@ -2420,27 +2292,13 @@ async function showMatchBadgeIfLiked(cardEl, candidate) {
     // Используем конкретные значения вместо CSS переменных для гарантированной видимости
     badge.style.cssText = 'position: absolute !important; top: 20px !important; right: 20px !important; background-color: #9f722f !important; color: #ffffff !important; padding: 8px 16px !important; border-radius: 20px !important; font-size: 14px !important; font-weight: bold !important; z-index: 10000 !important; box-shadow: none !important; display: flex !important; align-items: center !important; justify-content: center !important; visibility: visible !important; opacity: 0.9 !important; pointer-events: none !important;';
     cardEl.appendChild(badge);
-    console.log('[swipe.js] ✅ Плашка "Мэтч 💯" добавлена для кандидата:', candidateId);
-    console.log('[swipe.js] ✅ Плашка добавлена в DOM, элемент:', badge);
-    console.log('[swipe.js] ✅ Плашка стили:', badge.style.cssText);
-    // Проверяем computed styles
+                // Проверяем computed styles
     setTimeout(() => {
       const computed = window.getComputedStyle(badge);
-      console.log('[swipe.js] ✅ Плашка computed styles:', {
-        display: computed.display,
-        visibility: computed.visibility,
-        opacity: computed.opacity,
-        zIndex: computed.zIndex,
-        position: computed.position,
-        top: computed.top,
-        right: computed.right
-      });
-    }, 100);
+          }, 100);
   } else {
-    console.log('[swipe.js] ℹ️ showMatchBadgeIfLiked: кандидат', candidateId, 'не лайкнул, плашка не показывается');
-  }
-  console.log('[swipe.js] 🔵 ========== showMatchBadgeIfLiked ЗАВЕРШЕНА ==========');
-  } finally {
+      }
+    } finally {
     isShowingMatchBadge = false;
   }
 }
@@ -2577,8 +2435,7 @@ export async function loadCandidates() {
 }
 
 export async function initSwipeScreen() {
-  console.log('[swipe.js] 🔵 ========== initSwipeScreen ВЫЗВАНА ==========');
-  showSwipeSkeleton();
+    showSwipeSkeleton();
   // setTimeout(() => { hideSwipeSkeleton(); }, 2000); // УБРАНО: отладочный таймаут
   // КРИТИЧНО: Сбрасываем индекс истории при инициализации экрана свайпов
   window.swipeHistoryIndex = -1;
@@ -2586,10 +2443,8 @@ export async function initSwipeScreen() {
   // КРИТИЧНО: Обновляем данные пользователя перед показом экрана свайпов
   // Это нужно, чтобы получить актуальные данные (включая superLikesCount) после активации промокода
   if (window.loadUserData) {
-    console.log('[swipe.js] 🔵 initSwipeScreen: Обновляем данные пользователя');
-    await window.loadUserData();
-    console.log('[swipe.js] ✅ initSwipeScreen: Данные пользователя обновлены, superLikesCount:', window.currentUser?.superLikesCount);
-  }
+        await window.loadUserData();
+      }
   
   // Обновляем UI (аватар, имя, бейдж)
   window.updateSwipeScreen && window.updateSwipeScreen();
@@ -2597,20 +2452,15 @@ export async function initSwipeScreen() {
   
   // Загружаем список полученных лайков для PRO пользователей
   const now = Date.now();
-  console.log('[swipe.js] 🔵 initSwipeScreen: проверка PRO статуса');
-  console.log('[swipe.js] 🔵 initSwipeScreen: window.currentUser =', window.currentUser);
-  const isPro = window.currentUser && 
+      const isPro = window.currentUser && 
     (window.currentUser.is_pro === true || window.currentUser.is_pro === 'true' || window.currentUser.is_pro === 1) &&
     window.currentUser.pro_end && 
     new Date(window.currentUser.pro_end).getTime() > now;
-  console.log('[swipe.js] 🔵 initSwipeScreen: isPro =', isPro);
-  if (isPro) {
-    console.log('[swipe.js] 🔵 initSwipeScreen: PRO активен, загружаем likesReceived');
-    await loadLikesReceived();
-    console.log('[swipe.js] ✅ initSwipeScreen: likesReceived загружен, список:', Array.from(window.likesReceivedList || []));
+    if (isPro) {
+        await loadLikesReceived();
+    );
   } else {
-    console.log('[swipe.js] ⚠️ initSwipeScreen: пользователь не PRO, пропускаем загрузку likesReceived');
-  }
+      }
 
   // Навешиваем переход на профиль по клику на аватар
   const avatarFrame = document.querySelector("#screen-swipe .ava-frame");
@@ -2632,9 +2482,8 @@ export async function initSwipeScreen() {
   
   // ПОВТОРНО загружаем likesReceived после загрузки кандидатов (на случай если данные изменились)
   if (isPro) {
-    console.log('[swipe.js] 🔵 initSwipeScreen: повторная загрузка likesReceived после loadCandidates');
-    await loadLikesReceived();
-    console.log('[swipe.js] ✅ initSwipeScreen: likesReceived перезагружен, список:', Array.from(window.likesReceivedList || []));
+        await loadLikesReceived();
+    );
   }
   
   window.setupSwipeControls && window.setupSwipeControls();
@@ -2642,9 +2491,8 @@ export async function initSwipeScreen() {
   // КРИТИЧНО: Убеждаемся, что likesReceivedList загружен ПЕРЕД показом первого кандидата
   // Это нужно, чтобы плашка "Мэтч 💯" могла показаться сразу
   if (isPro && (!window.likesReceivedList || window.likesReceivedList.size === 0)) {
-    console.log('[swipe.js] 🔵 initSwipeScreen: Загружаем likesReceivedList перед показом первого кандидата');
-    await loadLikesReceived();
-    console.log('[swipe.js] ✅ initSwipeScreen: likesReceivedList загружен, список:', Array.from(window.likesReceivedList || []));
+        await loadLikesReceived();
+    );
   }
   
   // После загрузки кандидатов и лайков показываем первого кандидата с бейджем или экран "Пригласить"
@@ -2743,21 +2591,16 @@ function setupWaveButtonObserver() {
       attributes: true,
       attributeFilter: ['class', 'style']
     });
-    console.log('✅ [MutationObserver] Наблюдатель за кнопкой "Помахать" установлен');
-  }
+      }
 }
 
 // Устанавливаем наблюдатель после загрузки DOM
-console.log('🔵 [setupWaveButtonObserver] Инициализация, readyState:', document.readyState);
 if (document.readyState === 'loading') {
-  console.log('🔵 [setupWaveButtonObserver] DOM еще загружается, ждем DOMContentLoaded');
-  document.addEventListener('DOMContentLoaded', () => {
-    console.log('🔵 [setupWaveButtonObserver] DOMContentLoaded, устанавливаем наблюдатель');
-    setupWaveButtonObserver();
+    document.addEventListener('DOMContentLoaded', () => {
+        setupWaveButtonObserver();
   });
 } else {
-  console.log('🔵 [setupWaveButtonObserver] DOM уже готов, устанавливаем наблюдатель сразу');
-  setupWaveButtonObserver();
+    setupWaveButtonObserver();
 }
 
 // Также устанавливаем периодическую проверку на всякий случай
@@ -2774,8 +2617,7 @@ const intervalId = setInterval(() => {
     
     // Логируем каждые 50 проверок (5 секунд)
     if (checkCount % 50 === 0) {
-      console.log('🔵 [setInterval] Проверка #' + checkCount + ', кнопка найдена:', !!dislikeBtn, 'inMutualMatch:', inMutualMatch, 'hasWaveBtn:', hasWaveBtn, 'hasWaveSvg:', hasWaveSvg);
-    }
+          }
     
     if ((hasWaveBtn || hasChatBtn || hasWaveSvg || hasChatSvg) && !inMutualMatch) {
       console.error('🚨 [setInterval] КРИТИЧНО: Кнопка "Помахать" обнаружена в периодической проверке! Сбрасываем...', {
@@ -2797,7 +2639,6 @@ const intervalId = setInterval(() => {
     }
   }
 }, 100); // Проверяем каждые 100ms
-console.log('✅ [setInterval] Периодическая проверка установлена, intervalId:', intervalId);
 
 // Экспортируем все функции в window для глобального доступа
 window.showCandidate = showCandidate; 

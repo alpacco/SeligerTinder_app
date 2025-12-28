@@ -387,8 +387,7 @@ export function initProfileEditScreen() {
       e.preventDefault();
       e.stopPropagation();
       
-      console.log('🔵 [AGE TOGGLE][CLICK] Клик по иконке глаза!');
-      console.log('  - Элемент:', freshAgeToggleIcon);
+            console.log('  - Элемент:', freshAgeToggleIcon);
       console.log('  - ID:', freshAgeToggleIcon.id);
       console.log('  - Класс до:', freshAgeToggleIcon.className);
       console.log('  - backgroundImage до:', freshAgeToggleIcon.style.backgroundImage);
@@ -402,8 +401,7 @@ export function initProfileEditScreen() {
       
       if (isNowVisible) {
         // Активируем возраст
-        console.log('  ✅ [AGE TOGGLE] Активируем возраст');
-        freshAgeToggleIcon.style.backgroundImage = "url('/img/eye_open.svg')";
+                freshAgeToggleIcon.style.backgroundImage = "url('/img/eye_open.svg')";
         ageInput.disabled = false;
         ageInput.removeAttribute('disabled');
         ageInput.style.filter = "none";
@@ -415,8 +413,7 @@ export function initProfileEditScreen() {
         }
         currentUser.hideAge = false;
         window.currentUser.hideAge = false;
-        console.log('  ✅ [AGE TOGGLE] После активации: disabled=', ageInput.disabled, 'opacity=', ageInput.style.opacity);
-        // Сохраняем на сервер
+                // Сохраняем на сервер
         saveHideAgeToServer(false);
       } else {
         // Деактивируем возраст (бледнеет, но остается видимым)
@@ -438,16 +435,7 @@ export function initProfileEditScreen() {
         saveHideAgeToServer(true);
       }
       
-      console.log('🔵 [AGE TOGGLE][CLICK] Финальное состояние:', {
-        className: freshAgeToggleIcon.className,
-        backgroundImage: freshAgeToggleIcon.style.backgroundImage,
-        hideAge: currentUser.hideAge,
-        ageInputDisabled: ageInput.disabled,
-        ageInputOpacity: ageInput.style.opacity,
-        ageLabelOpacity: ageLabel ? ageLabel.style.opacity : 'не найден',
-        ageLabelColor: ageLabel ? ageLabel.style.color : 'не найден'
-      });
-    });
+          });
     
     console.log('[AGE TOGGLE][INIT] Обработчик клика установлен');
   } else {
@@ -624,8 +612,7 @@ export function initProfileEditScreen() {
       console.log("▶ Нажата кнопка 'Отмена'");
       console.log("🔍 Пытаемся вызвать exitProfileEditMode (Отмена)...");
       if (window.exitProfileEditMode) {
-        console.log("✅ Функция exitProfileEditMode найдена, вызываем...");
-        window.exitProfileEditMode();
+                window.exitProfileEditMode();
       } else {
         console.error("❌ Функция exitProfileEditMode не найдена");
         console.log("🔍 Доступные функции:", Object.keys(window).filter(k => k.includes('exit')));
@@ -700,8 +687,7 @@ export function initProfileEditScreen() {
           }
           console.log("🔍 Пытаемся вызвать exitProfileEditMode...");
           if (window.exitProfileEditMode) {
-            console.log("✅ Функция exitProfileEditMode найдена, вызываем...");
-            window.exitProfileEditMode();
+                        window.exitProfileEditMode();
           } else {
             console.error("❌ Функция exitProfileEditMode не найдена");
             console.log("🔍 Доступные функции:", Object.keys(window).filter(k => k.includes('exit')));
