@@ -149,9 +149,13 @@ async def activate_promo_code(data: ActivatePromoCodeRequest):
     )
     
     if not promo_row:
+        print(f"❌ [activatePromoCode] Промокод не найден: {promo_code}")
         return {"success": False, "error": "Промокод не найден"}
     
+    print(f"✅ [activatePromoCode] Промокод найден: id={promo_row.get('id')}, days={promo_row.get('days')}, is_active={promo_row.get('is_active')}")
+    
     if not promo_row.get("is_active"):
+        print(f"❌ [activatePromoCode] Промокод неактивен: {promo_code}")
         return {"success": False, "error": "Промокод неактивен"}
     
     # Проверяем срок действия промокода
