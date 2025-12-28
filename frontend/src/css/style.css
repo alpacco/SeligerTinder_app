@@ -218,7 +218,7 @@ flex: 1;
 }
 
 .match-write-btn {
-  background-color: var(--color-blue);
+  background-color: var(--color-red);
   color: var(--color-white);
   font-weight: bold;
 }
@@ -883,6 +883,7 @@ flex: 1;
   padding-top: 6px;
   padding-bottom: 6px;
   min-height: 36px;
+  font-size: var(--font-size-sm);
 }
 .match-user {
   display: flex;
@@ -1625,6 +1626,12 @@ flex: 1;
   pointer-events: auto;
 }
 
+/* Уменьшаем шрифт для кнопок в match-actions */
+.match-actions .match-write-btn,
+.match-actions .match-push-btn {
+  font-size: var(--font-size-sm);
+}
+
 .edit-save-button,
 .add-btn,
 .match-push-btn {
@@ -1643,7 +1650,13 @@ flex: 1;
   border: 1px solid var(--color-gray);
 }
 
-.match-write-btn,
+/* Кнопка "НАПИСАТЬ" в match-actions должна быть красной как "ПОМАХАТЬ" */
+.match-actions .match-write-btn {
+  background-color: var(--color-red);
+  color: var(--color-white);
+}
+
+/* Кнопка "Написать" на экране кандидата остается синей */
 #candidate-write-btn {
   background-color: var(--color-blue);
   color: var(--color-white);
