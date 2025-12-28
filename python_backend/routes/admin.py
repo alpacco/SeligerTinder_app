@@ -389,6 +389,18 @@ async def admin_help(
                 "description": "Массовая рассылка сообщений всем пользователям",
                 "usage": "/masssend <сообщение>",
                 "example": "/masssend Привет всем пользователям!"
+            },
+            {
+                "command": "/stats_users",
+                "description": "Получить статистику пользователей по полу",
+                "usage": "/stats_users",
+                "example": "/stats_users"
+            },
+            {
+                "command": "/sendto",
+                "description": "Отправить сообщение конкретному пользователю",
+                "usage": "/sendto <userId> <сообщение>",
+                "example": "/sendto 307954967 Привет! Это тестовое сообщение."
             }
         ],
         "api_endpoints": [

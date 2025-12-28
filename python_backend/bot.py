@@ -286,6 +286,119 @@ async def prostats_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("❌ Ошибка при получении статистики PRO.")
 
 
+async def stats_users_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Команда /stats_users - статистика пользователей по полу"""
+    user_id = update.effective_user.id if update.effective_user else None
+    username = update.effective_user.username if update.effective_user else None
+    print(f"🔵 [BOT] Команда /stats_users от пользователя {user_id} (@{username})")
+    
+    if DEV_CHAT_ID and update.effective_user.id != DEV_CHAT_ID:
+        await update.message.reply_text("❌ Команда /stats_users доступна только администратору.")
+        return
+    
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.get(f"{API_URL}/stats/users")
+            response.raise_for_status()
+            result = response.json()
+            
+            if result.get("success"):
+                data = result.get("data", [])
+                if not data:
+                    await update.message.reply_text("❌ Данные не найдены.")
+                    return
+                
+                message = "📊 **Статистика пользователей по полу:**\n\n"
+                total = 0
+                for item in data:
+                    gender = item.get("name", "Не указан")
+                    count = item.get("count", 0)
+                    total += count
+                    # Переводим пол на русский
+                    if gender == "male":
+                        gender_ru = "👨 Мужчины"
+                    elif gender == "female":
+                        gender_ru = "👩 Женщины"
+                    else:
+                        gender_ru = f"❓ {gender}"
+                    message += f"{gender_ru}: {count}\n"
+                
+                message += f"\n👥 **Всего пользователей:** {total}"
+                
+                await update.message.reply_text(
+                    message,
+                    parse_mode="Markdown",
+                    reply_markup=get_start_keyboard()
+                )
+            else:
+                await update.message.reply_text("❌ Не удалось получить статистику.")
+    except Exception as e:
+        print(f"❌ Ошибка /stats_users: {e}")
+        import traceback
+        traceback.print_exc()
+        await update.message.reply_text("❌ Ошибка при получении статистики.")
+
+
+async def sendto_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Команда /sendto - отправить сообщение конкретному пользователю"""
+    user_id = update.effective_user.id if update.effective_user else None
+    username = update.effective_user.username if update.effective_user else None
+    print(f"🔵 [BOT] Команда /sendto от пользователя {user_id} (@{username})")
+    
+    if DEV_CHAT_ID and update.effective_user.id != DEV_CHAT_ID:
+        await update.message.reply_text("❌ Команда /sendto доступна только администратору.")
+        return
+    
+    args = context.args
+    if len(args) < 2:
+        await update.message.reply_text(
+            "Использование: /sendto <userId> <сообщение>\n\n"
+            "Пример: /sendto 307954967 Привет! Это тестовое сообщение."
+        )
+        return
+    
+    target_user_id = args[0]
+    message_text = " ".join(args[1:])
+    
+    if not target_user_id or not target_user_id.isdigit():
+        await update.message.reply_text("❌ Неверный userId. Должно быть число.")
+        return
+    
+    if not message_text:
+        await update.message.reply_text("❌ Сообщение не может быть пустым.")
+        return
+    
+    if len(message_text) > 4096:
+        await update.message.reply_text("❌ Сообщение слишком длинное (максимум 4096 символов).")
+        return
+    
+    try:
+        target_user_id_int = int(target_user_id)
+        
+        # Отправляем сообщение напрямую через Telegram Bot API
+        await context.bot.send_message(
+            chat_id=target_user_id_int,
+            text=message_text
+        )
+        
+        await update.message.reply_text(
+            f"✅ Сообщение отправлено пользователю {target_user_id}",
+            reply_markup=get_start_keyboard()
+        )
+        print(f"✅ [BOT] Сообщение отправлено пользователю {target_user_id}")
+    except Exception as e:
+        error_msg = str(e).lower()
+        if "blocked" in error_msg or "chat not found" in error_msg:
+            await update.message.reply_text(
+                f"❌ Пользователь {target_user_id} заблокировал бота или чат не найден."
+            )
+        else:
+            print(f"❌ Ошибка /sendto: {e}")
+            import traceback
+            traceback.print_exc()
+            await update.message.reply_text(f"❌ Ошибка при отправке сообщения: {e}")
+
+
 async def admin_help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Команда /admin_help - список всех административных команд"""
     user_id = update.effective_user.id if update.effective_user else None
@@ -1097,6 +1210,14 @@ def create_bot_application():
         print("  - Регистрация /masssend...")
         application.add_handler(CommandHandler("masssend", masssend_command))
         print("✅ Команда /masssend зарегистрирована")
+        
+        print("  - Регистрация /stats_users...")
+        application.add_handler(CommandHandler("stats_users", stats_users_command))
+        print("✅ Команда /stats_users зарегистрирована")
+        
+        print("  - Регистрация /sendto...")
+        application.add_handler(CommandHandler("sendto", sendto_command))
+        print("✅ Команда /sendto зарегистрирована")
         
         # Регистрация callback handlers
         print("  - Регистрация CallbackQueryHandler...")
