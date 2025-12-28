@@ -136,19 +136,11 @@ function renderPaginator(paginatorEl, count, activeIndex) {
   }
 }
 
-console.log("  - window.API_BASE_URL:", window.API_BASE_URL);
 
 // Функция инициализации, которая будет вызвана когда DOM готов
 function initMainJS() {
-  console.log("▶ [MAIN.JS] initMainJS вызвана (DOM готов)...");
-  console.log("  - document.readyState:", document.readyState);
-  console.log("  - API_URL:", API_URL);
-  console.log("  - currentUser:", currentUser);
-  console.log("  - typeof showScreen:", typeof showScreen);
-  
   // Инициализируем showScreenImpl
 showScreenImpl = showScreen;
-  console.log("  - showScreenImpl установлен:", typeof showScreenImpl);
   
   let selectedCandidateId = null;
   const singleCard = document.getElementById("singleCard");
@@ -255,17 +247,9 @@ function fillCard(cardEl, cand) {
 
   // Обработчик для регистрации (screen‑1)
   function setupJoinButton() {
-        console.log("  - document.readyState:", document.readyState);
-    console.log("  - API_URL:", API_URL);
-    console.log("  - typeof showScreen:", typeof showScreen);
-    console.log("  - currentUser:", currentUser);
-    console.log("  - window.showScreen:", typeof window.showScreen);
-    console.log("  - window.currentUser:", window.currentUser);
     
   const joinButton = document.getElementById("join-button");
   if (joinButton) {
-            console.log("  - joinButton:", joinButton);
-      console.log("  - joinButton.onclick:", joinButton.onclick);
       
       // Проверяем, есть ли уже обработчик
       const hasExistingHandler = joinButton.getAttribute('data-main-handler') === 'true';
@@ -279,7 +263,6 @@ function fillCard(cardEl, cand) {
               let tgUser = {};
       if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
         tgUser = tg.initDataUnsafe.user;
-          console.log("  - tgUser из initDataUnsafe:", tgUser);
         } else {
                 }
         
@@ -368,13 +351,11 @@ function selectGender(genderValue) {
     }
     // Сохраняем выбранный пол в currentUser
     currentUser.gender = genderValue;
-    console.log("Пол выбран: " + currentUser.gender);
   }
 }
 const continueButton = document.getElementById("continue-button");
 if (continueButton) {
   continueButton.addEventListener("click", async () => {
-    console.log("Нажата кнопка 'ПРОДОЛЖИТЬ', currentUser.gender = '" + currentUser.gender + "'");
     // Проверяем, выбран ли пол
     if (!currentUser.gender || (currentUser.gender !== "male" && currentUser.gender !== "female")) {
       alert("Пожалуйста, выберите свой пол, нажав одну из кнопок 'МУЖЧИНА' или 'ЖЕНЩИНА'.");
@@ -442,7 +423,6 @@ if (femaleBtn) {
 const matchesBackBtn = document.getElementById("back-button");
 if (matchesBackBtn) {
   matchesBackBtn.addEventListener("click", () => {
-    console.log("▶ Back из Matches -> переход на screen-swipe");
     showScreen("screen-swipe");
   });
 }
@@ -459,14 +439,11 @@ if (profileBackBtn) {
     newBtn.addEventListener("click", (e) => {
       e.preventDefault();
       e.stopPropagation();
-      console.log("▶ Back из Profile нажата");
       // Используем window.viewingCandidate вместо локальной переменной
       if (window.viewingCandidate) {
-        console.log("▶ Back из Profile кандидата -> переход на screen-matches");
         window.viewingCandidate = null;
       showScreen("screen-matches");
       } else {
-      console.log("▶ Back из Profile -> переход на screen-swipe");
       showScreen("screen-swipe");
     }
   });
@@ -491,7 +468,6 @@ if (profileEditBackBtn) {
   profileEditBackBtn.style.padding = "24px";
   profileEditBackBtn.style.margin = "-24px"; // чтобы внешний вид не изменился
   profileEditBackBtn.addEventListener("click", () => {
-    console.log("▶ Back из Profile Edit -> выход из режима редактирования");
     exitProfileEditMode();
   });
 }
@@ -524,7 +500,6 @@ if (profileEditBackBtn) {
   }
   if (tgModalOk) {
     tgModalOk.addEventListener("click", async () => {
-      console.log("🌟 specialPush triggered, payload:", {
         userId: currentUser.userId,
         message:  "Чтобы продолжить пользоваться приложением и оценивать анкеты, загрузите 1–3 качественных фото одним сообщением. 📸✨\n" +
         "Это займет всего минуту!\n",
@@ -762,7 +737,6 @@ if (profileEditBackBtn) {
   
   // Обновление экрана «Матчи»
   function updateMatchesScreen() {
-    console.log("▶ updateMatchesScreen()");
   }
 
  // Универсальная функция переключения экранов
@@ -770,7 +744,6 @@ function showScreen(screenId) {
   // If we're showing a candidate's profile, skip default profile load
   // ВАЖНО: Используем window.viewingCandidate, а не локальную переменную viewingCandidate
   if (screenId === "screen-profile" && window.viewingCandidate) {
-    console.log('[main.js] showScreen: показываем профиль кандидата, window.viewingCandidate:', window.viewingCandidate);
     document.querySelectorAll(".screen").forEach(scr => scr.style.display = "none");
     document.getElementById("screen-profile").style.display = "block";
     // Используем импортированную функцию из match.js
@@ -786,7 +759,6 @@ function showScreen(screenId) {
     return;
   }
   el.style.display = "block";
-  console.log("▶ Переход на экран: " + screenId);
 
   // Обновляем PRO-информацию при переключении на экраны profile и matches
   if ((screenId === "screen-profile" || screenId === "screen-matches") && window.renderProInfo && window.currentUser) {
@@ -835,7 +807,6 @@ function showScreen(screenId) {
     
     // Если это профиль кандидата (window.viewingCandidate), показываем его профиль
     if (window.viewingCandidate) {
-      console.log('[main.js] showScreen: показываем профиль кандидата через window.viewingCandidate:', window.viewingCandidate);
       showCandidateProfileFromMatch(window.viewingCandidate); // Используем импортированную функцию из match.js
       // Переустанавливаем обработчик после показа профиля кандидата
       setTimeout(() => setupProfileBackButton(), 100);
@@ -866,7 +837,6 @@ function showScreen(screenId) {
         if (editBtn) {
           editBtn.style.cursor = "pointer";
           editBtn.addEventListener("click", () => {
-            console.log("▶ Нажата кнопка 'Редактировать' на экране профиля");
             enterProfileEditMode();
           });
         }
@@ -883,8 +853,6 @@ function showScreen(screenId) {
 }
 
   function updateWelcomeScreen() {
-        console.log("  - currentUser:", currentUser);
-    console.log("  - currentUser.name:", currentUser?.name);
     
     // Используем глобальную функцию updateWelcomeScreenName
     updateWelcomeScreenName();
@@ -1008,12 +976,10 @@ async function renderMatchesOld() {
       const matchUserEl = div.querySelector('.match-user');
       if (matchUserEl) {
         matchUserEl.addEventListener('click', () => {
-          console.log('[main.js] renderMatchesOld: клик на match-user для', m.name, 'm:', m);
         viewingCandidate = m;
           window.viewingCandidate = m;
           // Импортируем showCandidateProfile из match.js
           import('./match.js').then(module => {
-            console.log('[main.js] renderMatchesOld: импортирован модуль match.js, вызываем showCandidateProfile');
             module.showCandidateProfile(m);
           }).catch(err => {
             console.error('[main.js] renderMatchesOld: ошибка импорта match.js:', err);
@@ -1129,7 +1095,6 @@ async function renderMatchesOld() {
     profileScreen.querySelectorAll(".edit-button").forEach(btn => {
       btn.style.cursor = "pointer";
       btn.addEventListener("click", () => {
-        console.log("▶ Нажата кнопка 'Редактировать'");
         enterProfileEditMode();
       });
     });
@@ -1141,7 +1106,6 @@ async function renderMatchesOld() {
                   || document.getElementById("edit-save-button");
   if (cancelBtn) {
     cancelBtn.addEventListener("click", () => {
-      console.log("▶ Нажата кнопка 'Отмена'");
       exitProfileEditMode();
     });
   }
@@ -1197,7 +1161,6 @@ async function renderMatchesOld() {
       try {
         const resp = await fetch(`${API_URL}/users`);
         const result = await resp.json();
-        console.log("🔍 checkIfRegistered response:", result);
         
         if (!result.success || !Array.isArray(result.data)) {
           console.warn("❌ checkIfRegistered: неверный формат ответа");
@@ -1205,7 +1168,6 @@ async function renderMatchesOld() {
         }
         
         const found = result.data.find(u => String(u.userId) === currentUser.userId);
-        console.log("🔍 checkIfRegistered: ищем пользователя", currentUser.userId, "найден:", !!found);
         
         if (!found) return false;
 
@@ -1271,8 +1233,6 @@ async function renderMatchesOld() {
     /* ------------------- Поток инициализации ------------------- */
     // КРИТИЧНО: Проверяем регистрацию ДО показа любого экрана
     (async function initFlow() {
-      console.log("▶ initFlow()...");
-      console.log("🔍 currentUser.userId:", currentUser.userId);
       
       // Сначала скрываем все экраны (на случай, если какой-то был показан по умолчанию)
       const allScreens = document.querySelectorAll('.screen');
@@ -1283,10 +1243,8 @@ async function renderMatchesOld() {
       
       // Выполняем проверку регистрации
       const isReg = await checkIfRegistered();
-      console.log("🔍 checkIfRegistered результат:", isReg);
       
       if (!isReg) {
-        console.log("❌ Пользователь не зарегистрирован, показываем welcome");
         showScreen("screen-welcome");
         return;
       }
@@ -1296,10 +1254,8 @@ async function renderMatchesOld() {
       // Если пол ещё не задан — сначала экран выбора пола, иначе — свайпы
       // Проверяем, что gender не пустая строка и не null/undefined
       if (!currentUser.gender || currentUser.gender.trim() === "") {
-        console.log("🔍 Пол не задан, показываем экран выбора пола");
         showScreen("screen-gender");
       } else {
-        console.log("🔍 Пол задан, показываем экран свайпов");
         showScreen("screen-swipe");
         updateMatchesCount();
       }
@@ -1328,7 +1284,6 @@ showScreenImpl = showScreen;
 
   // КРИТИЧНО: Заменяем window.showScreen на настоящую реализацию
     window.showScreen = showScreen;
-    console.log("  - showScreenImpl:", typeof showScreenImpl);
   
   // НЕ экспортируем showCandidate из main.js - используем версию из swipe.js
   // window.showCandidate должен быть установлен в swipe.js

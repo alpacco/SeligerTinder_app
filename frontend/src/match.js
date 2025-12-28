@@ -247,7 +247,6 @@ export async function showCandidateProfile(match) {
   // ВАЖНО: Удаляем статистику лайков из header-sub-row, чтобы освободить место для last login
   const oldStats = document.querySelector('#screen-profile .profile-likes-stats');
   if (oldStats) {
-    console.log('[match.js] Удаляем статистику лайков из профиля');
     oldStats.remove();
   }
   // Также удаляем из header-sub-row, если есть
@@ -255,7 +254,6 @@ export async function showCandidateProfile(match) {
   if (headerSubRow) {
     const statsInSubRow = headerSubRow.querySelector('.profile-likes-stats');
     if (statsInSubRow) {
-      console.log('[match.js] Удаляем статистику лайков из header-sub-row');
       statsInSubRow.remove();
     }
   }
@@ -270,9 +268,7 @@ export async function showCandidateProfile(match) {
       const photoUrl = photosArr[0];
       const finalUrl = photoUrl.startsWith('data:') ? photoUrl : `${photoUrl}?cb=${Date.now()}`;
       pic.style.backgroundImage = `url('${finalUrl}')`;
-      console.log('[match.js] Установлено фоновое изображение:', finalUrl);
     } else {
-      console.warn('[match.js] Нет фото для кандидата, match.photos:', match.photos);
     }
     
     // Создаем контейнер для целей, если его нет
@@ -289,52 +285,30 @@ export async function showCandidateProfile(match) {
   if (paginatorEl) paginatorEl.innerHTML = '';
   if (headerTitle) headerTitle.textContent = 'Ваш Match';
   // ПОКАЗ LAST LOGIN для PRO-пользователей (с учетом срока действия)
-  console.log('[match.js] ========== НАЧАЛО ПРОВЕРКИ LAST LOGIN ==========');
-  console.log('[match.js] showCandidateProfile ВЫЗВАНА для match:', match);
-  console.log('[match.js] window.currentUser:', window.currentUser);
   const now = Date.now();
   const isProActive = window.currentUser && 
     (window.currentUser.is_pro === true || window.currentUser.is_pro === 'true' || window.currentUser.is_pro === 1) &&
     window.currentUser.pro_end && 
     new Date(window.currentUser.pro_end).getTime() > now;
   
-  console.log('[match.js] Проверка PRO для last login:', {
-    isProActive,
-    is_pro: window.currentUser?.is_pro,
-    is_pro_type: typeof window.currentUser?.is_pro,
-    pro_end: window.currentUser?.pro_end,
-    now: new Date(now).toISOString(),
-    pro_end_time: window.currentUser?.pro_end ? new Date(window.currentUser.pro_end).toISOString() : null,
-    pro_end_timestamp: window.currentUser?.pro_end ? new Date(window.currentUser.pro_end).getTime() : null,
-    now_timestamp: now,
-    comparison: window.currentUser?.pro_end ? new Date(window.currentUser.pro_end).getTime() > now : false,
-    currentUser: window.currentUser
-  });
   
   if (isProActive) {
         const headerSelector = '#screen-profile .profile-header';
     // Используем match.id или match.userId, так как match передается напрямую
     const userIdForLastLogin = match.id || match.userId || window.viewingCandidate?.id || window.viewingCandidate?.userId;
-    console.log('[match.js] userIdForLastLogin:', userIdForLastLogin);
-    console.log('[match.js] match объект для last login:', match);
     const header = document.querySelector(headerSelector);
-    console.log('[match.js] header найден:', !!header, 'selector:', headerSelector);
     if (header) {
       const subRow = header.querySelector('.header-sub-row');
-      console.log('[match.js] subRow найден:', !!subRow);
       if (subRow) {
         // Удаляем старую статистику лайков, если она есть (чтобы не конфликтовала с last login)
         // ВАЖНО: Удаляем ВСЕ элементы статистики лайков из subRow
         const allStats = subRow.querySelectorAll('.profile-likes-stats');
-        console.log('[match.js] Найдено элементов статистики лайков:', allStats.length);
         allStats.forEach((stat, index) => {
-          console.log(`[match.js] Удаляем статистику лайков #${index + 1}`);
           stat.remove();
         });
         
         const old = subRow.querySelector('.candidate-last-login');
         if (old) {
-          console.log('[match.js] Удаляем старый элемент last login');
           old.remove();
         }
         const el = document.createElement('div');
@@ -353,10 +327,6 @@ export async function showCandidateProfile(match) {
         let lastLoginElementRef = el;
         el.textContent = 'Загрузка...';
         subRow.appendChild(el);
-                console.log('[match.js] subRow.innerHTML длина:', subRow.innerHTML.length);
-        console.log('[match.js] subRow.children.length:', subRow.children.length);
-        console.log('[match.js] Элемент в DOM:', document.getElementById('candidate-last-login-element'));
-        console.log('[match.js] window.viewingCandidate установлен:', !!window.viewingCandidate);
         
         // Функция для безопасного обновления текста элемента
         const updateLastLoginText = (text) => {
@@ -388,7 +358,6 @@ export async function showCandidateProfile(match) {
           // Проверяем кэш - если уже знаем, что lastLogin = null, сразу показываем "Была/Был давно"
           if (lastLoginCache.has(userIdForLastLogin)) {
             const cachedValue = lastLoginCache.get(userIdForLastLogin);
-            console.log('[match.js] Используем кэшированное значение lastLogin для userId:', userIdForLastLogin, 'значение:', cachedValue);
             if (cachedValue === null) {
               let verb;
               if (window.currentUser.gender === 'male') verb = 'Была';
@@ -416,10 +385,8 @@ export async function showCandidateProfile(match) {
             }
           }
           
-          console.log('[match.js] Загружаем last login для userId:', userIdForLastLogin, 'URL:', `${window.API_URL}/last-login/${userIdForLastLogin}`);
           fetch(`${window.API_URL}/last-login/${userIdForLastLogin}`)
            .then(r => {
-             console.log('[match.js] Ответ от API:', r.status, r.ok);
              if (!r.ok) {
                console.error('[match.js] Ошибка загрузки last login:', r.status);
                throw new Error(`Status ${r.status}`);
@@ -427,10 +394,8 @@ export async function showCandidateProfile(match) {
              return r.json();
            })
            .then(js => {
-             console.log('[match.js] Получен ответ last login:', js);
              const lastLoginTime = js.lastLogin;
             if (lastLoginTime) {
-              console.log('[match.js] lastLoginTime найден:', lastLoginTime);
               // Кэшируем значение
               lastLoginCache.set(userIdForLastLogin, lastLoginTime);
               const dt = new Date(lastLoginTime);
@@ -448,9 +413,7 @@ export async function showCandidateProfile(match) {
               else verb = ((match.gender || window.viewingCandidate?.gender) === 'female' ? 'Была' : 'Был');
               const finalText = `${verb} ${timeText}`;
               updateLastLoginText(finalText);
-              console.log('[match.js] Текст установлен:', finalText);
             } else {
-              console.log('[match.js] lastLoginTime отсутствует в ответе (null или undefined), показываем "Была/Был давно"');
               // Кэшируем null, чтобы не делать повторные запросы
               lastLoginCache.set(userIdForLastLogin, null);
               // Определяем правильный глагол на основе пола кандидата
@@ -473,7 +436,6 @@ export async function showCandidateProfile(match) {
             updateLastLoginText(`${verb} давно`);
           });
         } else {
-          console.warn('[match.js] userIdForLastLogin отсутствует, match:', match);
           // Если userId отсутствует, тоже показываем "Была/Был давно"
           let verb;
           if (window.currentUser.gender === 'male') verb = 'Была';
@@ -483,18 +445,8 @@ export async function showCandidateProfile(match) {
           // Не кэшируем, так как userId отсутствует
         }
       } else {
-        console.warn('[match.js] header-sub-row не найден в header');
       }
-    } else {
-      console.warn('[match.js] header не найден, selector:', headerSelector);
     }
-  } else {
-    console.log('[match.js] Пользователь не PRO или срок истек, не показываем last login', {
-      is_pro: window.currentUser?.is_pro,
-      pro_end: window.currentUser?.pro_end,
-      now: new Date(now).toISOString(),
-      pro_end_time: window.currentUser?.pro_end ? new Date(window.currentUser.pro_end).toISOString() : null
-    });
   }
   if (nameEl) nameEl.textContent = match.name;
   if (ageEl) {
@@ -612,7 +564,6 @@ export async function showCandidateProfile(match) {
   // 4. ПОКАЗ ЭКРАНА
   // ВАЖНО: Устанавливаем window.viewingCandidate ПЕРЕД вызовом showScreen
   window.viewingCandidate = match;
-  console.log('[match.js] showCandidateProfile: window.viewingCandidate установлен перед showScreen:', window.viewingCandidate);
   
   window.showScreen && window.showScreen('screen-profile');
   
@@ -620,7 +571,6 @@ export async function showCandidateProfile(match) {
   if (window.setupProfileBackButton) {
     setTimeout(() => {
       window.setupProfileBackButton();
-      console.log('[match.js] Обработчик кнопки "Назад" переустановлен');
     }, 100);
   }
   
@@ -672,7 +622,6 @@ export async function showCandidateProfile(match) {
  * Обновление экрана Matches (заглушка, если потребуется логика — реализовать здесь)
  */
 export function updateMatchesScreen() {
-  console.log("▶ updateMatchesScreen() (from match.js)");
 }
 
 // Здесь будут появляться остальные функции по мере рефакторинга 
