@@ -765,10 +765,6 @@ export async function showCandidate() {
   // Экспортируем в глобальную область для использования в main.js
   window.showCandidateFromSwipe = showCandidate;
   
-  // Объявляем переменные для элементов DOM один раз
-  const singleCard = document.getElementById("singleCard");
-  const skeleton = document.getElementById('swipe-skeleton');
-  
   if (!singleCard) {
     console.error('[showCandidate] singleCard не найден!');
     return;
