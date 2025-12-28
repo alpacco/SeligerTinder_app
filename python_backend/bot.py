@@ -703,6 +703,11 @@ def create_bot_application():
                 print(f"⚠️ [BOT] promo_code_message_handler: нет сообщения или текста")
                 return
             
+            # Проверяем, что это не WebApp данные
+            if update.message.web_app_data:
+                print(f"⚠️ [BOT] promo_code_message_handler: это WebApp данные, пропускаем")
+                return
+            
             user_id = update.effective_user.id
             state = user_states.get(user_id)
             
