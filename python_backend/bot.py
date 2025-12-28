@@ -16,6 +16,7 @@ from telegram.ext import (
     filters,
     ContextTypes
 )
+from telegram.ext.filters import BaseFilter
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -689,8 +690,8 @@ def create_bot_application():
         
         # Регистрация обработчика данных от WebApp
         print("  - Регистрация MessageHandler для WebApp данных...")
-        # Используем стандартный фильтр для WebApp данных
-        application.add_handler(MessageHandler(filters.UpdateType.WEB_APP_DATA, web_app_data_handler))
+        # Используем кастомный фильтр для WebApp данных
+        application.add_handler(MessageHandler(web_app_data_filter, web_app_data_handler))
         print("✅ WebAppDataHandler зарегистрирован")
         
         # Регистрация обработчика текстовых сообщений для промокодов
@@ -751,7 +752,7 @@ def create_bot_application():
         
         # Используем стандартные фильтры: TEXT (текстовые сообщения) и не команды
         # Проверку состояния пользователя делаем в обработчике
-        promo_code_filter = filters.TEXT & ~filters.COMMAND & ~filters.UpdateType.WEB_APP_DATA
+        promo_code_filter = filters.TEXT & ~filters.COMMAND & ~web_app_data_filter
         
         # КРИТИЧНО: Регистрируем обработчик промокодов ПЕРЕД другими обработчиками текстовых сообщений
         # чтобы он имел приоритет при проверке состояния пользователя
