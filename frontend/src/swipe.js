@@ -307,10 +307,21 @@ export async function showPreviousCandidate() {
     // КРИТИЧНО: Увеличиваем задержку и вызываем обработчики еще раз, чтобы они точно установились
     setTimeout(() => {
       const likeBtn = document.querySelector(".like_d");
+      
       // КРИТИЧНО: НЕ показываем кнопку "Вперед" при возврате назад
       // Кнопка "Вперед" должна показываться только при навигации вперед через showNextCandidate
       // При возврате назад кнопка всегда должна быть в обычном состоянии "Лайк"
-      // Поэтому НЕ вызываем updateForwardButton здесь
+      // Поэтому явно восстанавливаем кнопку "Лайк", даже если setupSwipeControls изменил её на "Вперед"
+      if (likeBtn) {
+        // Проверяем, не в режиме ли "Forward"
+        if (likeBtn.innerHTML.includes('forward-icon') || likeBtn.querySelector('.forward-icon')) {
+          console.log('🔄 [showPreviousCandidate] Восстанавливаем кнопку "Лайк" из режима "Вперед"');
+          likeBtn.style.backgroundColor = 'var(--color-red)';
+          likeBtn.innerHTML = `<svg class="like-icon" width="36" height="36" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><path class="st0" d="M40.2,19.3c-5.1-0.5-7.5,2.5-8.2,3.5c-0.6-1-3.1-4-8.2-3.5c-5.4,0.6-10.8,7-5.7,15.6c4.2,6.9,13.6,11.9,13.9,12.1l0,0l0,0l0,0l0,0c0.2-0.1,9.7-5.1,13.9-12.1C51,26.3,45.6,19.9,40.2,19.3L40.2,19.3z"/></svg>`;
+          likeBtn.onclick = null;
+          window.attachLikeHandler && window.attachLikeHandler();
+        }
+      }
       
       window.attachDislikeHandler && window.attachDislikeHandler();
       
