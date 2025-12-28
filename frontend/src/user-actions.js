@@ -13,21 +13,19 @@ export async function loadUserData() {
     return;
   }
   
-  console.log("📥 [loadUserData] Начинаем загрузку данных для userId:", currentUser.userId);
   try {
-    console.log("📥 [loadUserData] Запрашиваем /api/getUser");
     const resp = await fetch(`${currentUser.API_URL || window.API_URL}/getUser?userId=${currentUser.userId}`);
     
     // Проверяем статус ответа
     if (!resp.ok) {
-      console.error(`❌ [loadUserData] HTTP ошибка: ${resp.status} ${resp.statusText}`);
+      console.error(`[loadUserData] HTTP ошибка: ${resp.status} ${resp.statusText}`);
       return;
     }
     
     // Читаем текст ответа
     const text = await resp.text();
     if (!text || text.trim().length === 0) {
-      console.error("❌ [loadUserData] Пустой ответ от сервера");
+      console.error("[loadUserData] Пустой ответ от сервера");
       return;
     }
     
@@ -36,24 +34,15 @@ export async function loadUserData() {
     try {
       json = JSON.parse(text);
     } catch (parseError) {
-      console.error("❌ [loadUserData] Ошибка парсинга JSON:", parseError);
-      console.error("❌ [loadUserData] Текст ответа:", text.substring(0, 200));
+      console.error("[loadUserData] Ошибка парсинга JSON:", parseError);
       return;
     }
     
-    console.log("📥 [loadUserData] Ответ сервера:", json);
-    console.log("📥 [loadUserData] json.success:", json?.success);
-    console.log("📥 [loadUserData] json.data:", json?.data);
-    console.log("📥 [loadUserData] json.data.super_likes_count:", json?.data?.super_likes_count);
     if (!json || !json.success) {
-      console.log("📥 [loadUserData] Неуспешный ответ, пропускаем");
       return;
     }
-
+    
     const d = json.data;
-    console.log("📥 [loadUserData] Данные пользователя:", d);
-    console.log("📥 [loadUserData] d.super_likes_count (прямой доступ):", d?.super_likes_count);
-    console.log("📥 [loadUserData] d.super_likes_count (тип):", typeof d?.super_likes_count);
     currentUser.name     = d.name     || currentUser.name;
     currentUser.username = d.username || currentUser.username;
     currentUser.gender   = d.gender;
@@ -91,7 +80,6 @@ export async function loadUserData() {
     // Устанавливаем photoUrl из первого фото или из d.photoUrl
     currentUser.photoUrl = currentUser.photos.length > 0 ? currentUser.photos[0] : (d.photoUrl || "/img/logo.svg");
     
-    console.log('✅ [loadUserData] photos загружены:', currentUser.photos, 'photoUrl:', currentUser.photoUrl);
     
     // Парсим likes и dislikes с проверкой типа
     try {
@@ -129,15 +117,7 @@ export async function loadUserData() {
     }
     
     // Загружаем superLikesCount из БД - используем значение напрямую, без автоматического выделения
-    console.log("🔵 [loadUserData] ========== ЗАГРУЗКА СУПЕРЛАЙКОВ ==========");
-    console.log("🔵 [loadUserData] json.data:", json.data);
-    console.log("🔵 [loadUserData] json.data.super_likes_count (raw):", json.data?.super_likes_count);
-    console.log("🔵 [loadUserData] json.data.super_likes_count (тип):", typeof json.data?.super_likes_count);
-    console.log("🔵 [loadUserData] d.super_likes_count:", d?.super_likes_count);
-    console.log("🔵 [loadUserData] d.super_likes_count (тип):", typeof d?.super_likes_count);
     const dbSuperLikes = Number(d?.super_likes_count || json.data?.super_likes_count || 0);
-    console.log("🔵 [loadUserData] dbSuperLikes (parsed):", dbSuperLikes);
-    console.log("🔵 [loadUserData] isNaN(dbSuperLikes):", isNaN(dbSuperLikes));
     
     currentUser.needPhoto = Number(d.needPhoto || 0);
     currentUser.is_pro = Number(d.is_pro) === 1;
@@ -151,63 +131,48 @@ export async function loadUserData() {
     
     // ВАЖНО: Суперлайки выделяются только при покупке/выдаче PRO в БД
     // Используем значение из БД напрямую, но проверяем localStorage для актуального значения после использования
-    console.log("🔵 [loadUserData] Проверяем localStorage для superLikesCount");
     const stored = localStorage.getItem('superLikesCount');
-    console.log("🔵 [loadUserData] localStorage superLikesCount:", stored);
     
     if (stored !== null) {
       const storedCount = parseInt(stored, 10);
-      console.log("🔵 [loadUserData] storedCount (parsed):", storedCount);
       if (!isNaN(storedCount) && storedCount >= 0) {
         // КРИТИЧНО: Если значение из БД больше, чем в localStorage, значит суперлайки были начислены
         // (например, при активации промокода или покупке PRO)
         // В этом случае используем значение из БД и обновляем localStorage
         if (dbSuperLikes > storedCount) {
-          console.log("✅ [loadUserData] БД значение больше localStorage (суперлайки начислены), используем БД:", dbSuperLikes);
           currentUser.superLikesCount = dbSuperLikes;
           localStorage.setItem('superLikesCount', String(dbSuperLikes));
         } else if (storedCount <= dbSuperLikes) {
           // Используем значение из localStorage, если оно не больше значения из БД
           // (защита от манипуляций, но только если БД не больше)
           currentUser.superLikesCount = storedCount;
-          console.log("✅ [loadUserData] SuperLikes из localStorage:", currentUser.superLikesCount);
         } else {
-          console.log("⚠️ [loadUserData] localStorage значение больше БД, используем БД:", dbSuperLikes);
           currentUser.superLikesCount = dbSuperLikes;
           // Синхронизируем localStorage с БД
           localStorage.setItem('superLikesCount', String(dbSuperLikes));
         }
       } else {
-        console.log("⚠️ [loadUserData] storedCount невалидный, используем БД:", dbSuperLikes);
         currentUser.superLikesCount = dbSuperLikes;
         localStorage.setItem('superLikesCount', String(dbSuperLikes));
       }
     } else {
       // Если localStorage пустой, используем значение из БД
-      console.log("✅ [loadUserData] localStorage пустой, используем БД:", dbSuperLikes);
       currentUser.superLikesCount = dbSuperLikes;
       // Синхронизируем localStorage с БД
       if (dbSuperLikes > 0) {
         localStorage.setItem('superLikesCount', String(dbSuperLikes));
-        console.log("✅ [loadUserData] Сохранили в localStorage:", dbSuperLikes);
       }
     }
-    
-    console.log("✅ [loadUserData] ФИНАЛЬНОЕ значение superLikesCount:", currentUser.superLikesCount);
-    console.log("🔵 [loadUserData] ========== КОНЕЦ ЗАГРУЗКИ СУПЕРЛАЙКОВ ==========");
     
     // Обновляем время последнего входа
     try {
       const { updateLastLogin } = await import('./api.js');
       await updateLastLogin(currentUser.userId);
-      console.log("✅ [loadUserData] lastLogin обновлён");
     } catch (err) {
-      console.warn("⚠️ [loadUserData] Ошибка обновления lastLogin:", err);
+      console.error("[loadUserData] Ошибка обновления lastLogin:", err);
     }
-    
-    console.log("✅ [loadUserData] currentUser обновлён:", currentUser);
   } catch (err) {
-    console.error("❌ [loadUserData] Ошибка:", err);
+    console.error("[loadUserData] Ошибка:", err);
   }
 }
 
@@ -258,7 +223,6 @@ export function handlePhotoAddition() {
     // Если photo1 пустой или photoUrl дефолтный, всегда загружаем в photo1
     if (currentPhotos.length === 0 || !currentPhotos[0] || isDefaultPhotoUrl) {
       photoIndex = '1';
-      console.log(`🔵 [handlePhotoAddition] photo1 пустой или photoUrl дефолтный, загружаем в photo1`);
     } else if (currentPhotos.length >= 1 && currentPhotos[0]) {
       photoIndex = '2';
       if (currentPhotos.length >= 2 && currentPhotos[1]) {
@@ -267,7 +231,6 @@ export function handlePhotoAddition() {
     }
     formData.append('photoIndex', photoIndex);
     
-    console.log(`🔵 [handlePhotoAddition] Загружаем фото: userId=${window.currentUser.userId}, photoIndex=${photoIndex}`);
     
     if (window.tg && window.tg.showProgressBar) window.tg.showProgressBar();
     try {
@@ -276,15 +239,12 @@ export function handlePhotoAddition() {
         body: formData
       });
       
-      console.log(`🔵 [handlePhotoAddition] Ответ от сервера: status=${response.status}`);
       const result = await response.json();
-      console.log(`🔵 [handlePhotoAddition] Результат:`, result);
       
       if (result.success && result.photoUrl) {
         window.currentUser.photos = window.currentUser.photos || [];
         const index = parseInt(photoIndex) - 1;
         
-        console.log(`🔵 [handlePhotoAddition] Обновляем photos: index=${index}, текущая длина=${window.currentUser.photos.length}`);
         
         // Правильно обновляем массив photos - заполняем до нужного индекса если нужно
         while (window.currentUser.photos.length <= index) {
@@ -301,22 +261,18 @@ export function handlePhotoAddition() {
         // Обновляем photoUrl если это photo1
         if (photoIndex === '1' && result.hasFace) {
           window.currentUser.photoUrl = result.photoUrl;
-          console.log(`🔵 [handlePhotoAddition] Обновлен photoUrl: ${result.photoUrl}`);
         }
         
         // Обновляем needPhoto из результата
         if (result.needPhoto !== undefined) {
           window.currentUser.needPhoto = result.needPhoto;
-          console.log(`🔵 [handlePhotoAddition] needPhoto обновлен: ${result.needPhoto}, hasFace: ${result.hasFace}`);
         }
         
-        console.log(`✅ [handlePhotoAddition] photos обновлен:`, window.currentUser.photos);
         
         // Обновляем UI сразу, не дожидаясь loadUserData
         if (isCard && window.initProfileEditScreen) {
           addEl.innerHTML = '';
           addEl.classList.remove('loading');
-          console.log(`🔵 [handlePhotoAddition] Вызываем initProfileEditScreen для обновления карусели`);
           window.initProfileEditScreen();
         } else if (!isCard && window.updateProfileScreen) {
         addEl.disabled = false;
