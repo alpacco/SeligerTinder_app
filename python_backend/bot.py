@@ -250,7 +250,7 @@ async def prostats_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         
         async with httpx.AsyncClient() as client:
             response = await client.get(
-                f"{API_URL}/admin/pro-stats",
+                f"{API_URL}/pro-stats",
                 headers={"X-Telegram-User-Id": telegram_id}
             )
             response.raise_for_status()
