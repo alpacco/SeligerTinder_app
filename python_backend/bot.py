@@ -478,16 +478,6 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             reply_markup=keyboard
         )
     
-    elif data == "enter_promo_code":
-        # Устанавливаем состояние ожидания промокода
-        user_states[user_id] = "waiting_for_promo_code"
-        await query.edit_message_text(
-            "🎁 Введите промокод:\n\n"
-            "Отправьте промокод текстовым сообщением.",
-            reply_markup=InlineKeyboardMarkup([
-                [InlineKeyboardButton("Отмена", callback_data="buy_pro_menu")]
-            ])
-        )
     
     elif data == "delete_user":
         keyboard = InlineKeyboardMarkup([
@@ -522,16 +512,6 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif data == "cancel_delete":
         await query.message.reply_text("Главное меню", reply_markup=get_start_keyboard())
     
-    elif data == "enter_promo_code":
-        # Устанавливаем состояние ожидания промокода
-        user_states[user_id] = "waiting_for_promo_code"
-        await query.edit_message_text(
-            "🎁 Введите промокод:\n\n"
-            "Отправьте промокод текстовым сообщением.",
-            reply_markup=InlineKeyboardMarkup([
-                [InlineKeyboardButton("Отмена", callback_data="buy_pro_menu")]
-            ])
-        )
     
     elif data.startswith("buy_pro_"):
         # Обработка покупки PRO: buy_pro_7, buy_pro_30, buy_pro_90
@@ -770,8 +750,10 @@ def create_bot_application():
             print(f"🔵 [BOT] text_message_filter: user_id={user_id}, state={state}, is_waiting={is_waiting}, text={update.message.text[:50]}")
             return is_waiting
         
-        application.add_handler(MessageHandler(text_message_filter, promo_code_message_handler))
-        print("✅ PromoCodeMessageHandler зарегистрирован")
+        # КРИТИЧНО: Регистрируем обработчик промокодов ПЕРЕД другими обработчиками текстовых сообщений
+        # чтобы он имел приоритет при проверке состояния пользователя
+        application.add_handler(MessageHandler(text_message_filter, promo_code_message_handler), group=1)
+        print("✅ PromoCodeMessageHandler зарегистрирован (group=1)")
         
         bot_application = application
         print("=" * 70)
