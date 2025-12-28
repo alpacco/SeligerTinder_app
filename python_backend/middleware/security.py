@@ -159,23 +159,63 @@ def validate_url(url: str) -> str:
     if not url.startswith(('http://', 'https://')):
         raise HTTPException(status_code=400, detail="URL должен начинаться с http:// или https://")
     
-    # Защита от SSRF: блокируем внутренние адреса
-    blocked_hosts = [
-        'localhost',
-        '127.0.0.1',
-        '0.0.0.0',
-        '::1',
-        '169.254.169.254',  # AWS metadata
-        '10.',
-        '172.16.',
-        '192.168.',
-    ]
-    
-    # Простая проверка (можно улучшить с помощью urllib.parse)
-    url_lower = url.lower()
-    for blocked in blocked_hosts:
-        if blocked in url_lower:
+    # Используем urllib.parse для правильной проверки
+    try:
+        from urllib.parse import urlparse
+        parsed = urlparse(url)
+        hostname = parsed.hostname
+        
+        if not hostname:
+            raise HTTPException(status_code=400, detail="Некорректный URL")
+        
+        hostname_lower = hostname.lower()
+        
+        # Защита от SSRF: блокируем внутренние адреса
+        blocked_hosts = [
+            'localhost',
+            '127.0.0.1',
+            '0.0.0.0',
+            '::1',
+            '169.254.169.254',  # AWS metadata
+            'metadata.google.internal',  # GCP metadata
+            '169.254.169.254',  # Azure metadata
+        ]
+        
+        # Проверяем точное совпадение
+        if hostname_lower in blocked_hosts:
             raise HTTPException(status_code=400, detail="Недопустимый URL")
+        
+        # Проверяем приватные IP диапазоны
+        if hostname_lower.startswith('10.') or \
+           hostname_lower.startswith('172.16.') or \
+           hostname_lower.startswith('172.17.') or \
+           hostname_lower.startswith('172.18.') or \
+           hostname_lower.startswith('172.19.') or \
+           hostname_lower.startswith('172.20.') or \
+           hostname_lower.startswith('172.21.') or \
+           hostname_lower.startswith('172.22.') or \
+           hostname_lower.startswith('172.23.') or \
+           hostname_lower.startswith('172.24.') or \
+           hostname_lower.startswith('172.25.') or \
+           hostname_lower.startswith('172.26.') or \
+           hostname_lower.startswith('172.27.') or \
+           hostname_lower.startswith('172.28.') or \
+           hostname_lower.startswith('172.29.') or \
+           hostname_lower.startswith('172.30.') or \
+           hostname_lower.startswith('172.31.') or \
+           hostname_lower.startswith('192.168.'):
+            raise HTTPException(status_code=400, detail="Недопустимый URL (приватный IP)")
+        
+        # Проверяем что это не IP адрес (дополнительная защита)
+        import re
+        ip_pattern = re.compile(r'^(\d{1,3}\.){3}\d{1,3}$')
+        if ip_pattern.match(hostname):
+            raise HTTPException(status_code=400, detail="IP адреса не разрешены, используйте доменное имя")
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Некорректный URL: {str(e)}")
     
     return url
 

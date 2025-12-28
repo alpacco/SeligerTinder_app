@@ -8,9 +8,16 @@ from pydantic import BaseModel, Field
 from db_utils import db_get, db_all, db_run, safe_json_parse
 from middleware.security import validate_user_id
 from middleware.auth import get_telegram_user_id
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 import json
 
 router = APIRouter()
+
+# Rate limiter для критичных эндпоинтов
+def get_limiter(request: Request) -> Limiter:
+    """Получает limiter из состояния приложения"""
+    return request.app.state.limiter
 
 
 class UserCreate(BaseModel):
@@ -162,7 +169,7 @@ async def get_user_frontend(userId: str = Query(..., description="ID польз�
 
 @router.post("/join")
 async def join_user(user: UserCreate, request: Request):
-    """Зарегистрировать нового пользователя по Telegram ID"""
+    """Зарегистрировать нового пользователя по Telegram ID (rate limited: 10/minute)"""
     try:
         # Получаем Telegram ID из запроса (основной идентификатор)
         telegram_id = get_telegram_user_id(request)

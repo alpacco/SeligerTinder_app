@@ -20,6 +20,8 @@ from middleware.security import (
     sanitize_path,
     validate_url
 )
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 
 # Поддержка HEIC формата
 try:

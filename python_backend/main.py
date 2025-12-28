@@ -108,18 +108,21 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         if request.url.scheme == "https":
             response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
         
-        # CSP (Content Security Policy) - базовая настройка
+        # CSP (Content Security Policy) - улучшенная настройка
+        # Примечание: 'unsafe-inline' необходим для Telegram Web App, но это снижает защиту
+        # В идеале нужно использовать nonce или hash для скриптов
         csp = (
             "default-src 'self'; "
-            "script-src 'self' 'unsafe-inline' https://telegram.org; "
+            "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://telegram.org; "
             "style-src 'self' 'unsafe-inline'; "
-            "img-src 'self' data: https:; "
+            "img-src 'self' data: https: blob:; "
             "font-src 'self' data:; "
             "connect-src 'self' https://api.telegram.org; "
             "frame-src https://web.telegram.org; "
             "object-src 'none'; "
             "base-uri 'self'; "
-            "form-action 'self';"
+            "form-action 'self'; "
+            "frame-ancestors 'none';"
         )
         response.headers["Content-Security-Policy"] = csp
         
