@@ -1029,7 +1029,9 @@ def create_bot_application():
                     try:
                         username = update.effective_user.username if update.effective_user else "N/A"
                         full_name = update.effective_user.full_name if update.effective_user else "N/A"
-                        await update.message.bot.send_message(
+                        print(f"🔵 [BOT] Отправка сообщения администратору (DEV_CHAT_ID={DEV_CHAT_ID})...")
+                        # Используем context.bot для надежности
+                        await context.bot.send_message(
                             DEV_CHAT_ID,
                             f"📝 Сообщение от пользователя:\n\n"
                             f"👤 ID: {user_id}\n"
@@ -1037,13 +1039,16 @@ def create_bot_application():
                             f"🔖 Username: @{username}\n\n"
                             f"💬 Сообщение:\n{message_text}"
                         )
+                        print(f"✅ [BOT] Сообщение администратору отправлено успешно")
                         await update.message.reply_text(
                             "✅ Ваше сообщение отправлено администратору.\n"
                             "Спасибо за обратную связь! 🙏"
                         )
                         print(f"✅ [BOT] Сообщение от пользователя {user_id} отправлено администратору")
                     except Exception as e:
-                        print(f"⚠️ [BOT] Не удалось отправить сообщение администратору: {e}")
+                        print(f"❌ [BOT] Не удалось отправить сообщение администратору: {e}")
+                        import traceback
+                        traceback.print_exc()
                         await update.message.reply_text(
                             "❌ Не удалось отправить сообщение. Попробуйте позже."
                         )
