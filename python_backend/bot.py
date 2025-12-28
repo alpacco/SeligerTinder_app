@@ -478,6 +478,18 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             reply_markup=keyboard
         )
     
+    elif data == "enter_promo_code":
+        # Устанавливаем состояние ожидания промокода
+        user_states[user_id] = "waiting_for_promo_code"
+        print(f"✅ [BOT] Состояние установлено: user_id={user_id}, state=waiting_for_promo_code")
+        print(f"🔵 [BOT] Текущие состояния пользователей: {list(user_states.keys())}")
+        await query.edit_message_text(
+            "🎁 Введите промокод:\n\n"
+            "Отправьте промокод текстовым сообщением.",
+            reply_markup=InlineKeyboardMarkup([
+                [InlineKeyboardButton("Отмена", callback_data="buy_pro_menu")]
+            ])
+        )
     
     elif data == "delete_user":
         keyboard = InlineKeyboardMarkup([
@@ -691,15 +703,20 @@ def create_bot_application():
         print("  - Регистрация MessageHandler для промокодов...")
         async def promo_code_message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             """Обработчик текстовых сообщений для ввода промокода"""
+            print(f"🔵 [BOT] promo_code_message_handler ВЫЗВАН")
+            
             if not update.message or not update.message.text:
+                print(f"⚠️ [BOT] promo_code_message_handler: нет сообщения или текста")
                 return
             
             user_id = update.effective_user.id
             state = user_states.get(user_id)
             
-            print(f"🔵 [BOT] promo_code_message_handler вызван: user_id={user_id}, state={state}, text={update.message.text}")
+            print(f"🔵 [BOT] promo_code_message_handler: user_id={user_id}, state={state}, text={update.message.text}")
+            print(f"🔵 [BOT] Все состояния: {dict(user_states)}")
             
             if state == "waiting_for_promo_code":
+                print(f"✅ [BOT] Состояние подтверждено, обрабатываем промокод...")
                 promo_code = update.message.text.strip()
                 
                 # Удаляем состояние
