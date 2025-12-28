@@ -200,10 +200,20 @@ async def activate_promo_code(data: ActivatePromoCodeRequest):
     # В БД колонка называется superLikesCount (camelCase)!
     user_row = await db_get('SELECT "superLikesCount" FROM users WHERE "userId" = ?', [data.userId])
     current_super_likes = user_row.get("superLikesCount", 0) if user_row else 0
-    print(f"🔵 [activatePromoCode] Текущее количество суперлайков: {current_super_likes}")
+    
+    # КРИТИЧНО: Преобразуем в int, так как значение из БД может быть строкой или None
+    if current_super_likes is None:
+        current_super_likes = 0
+    else:
+        try:
+            current_super_likes = int(current_super_likes)
+        except (ValueError, TypeError):
+            current_super_likes = 0
+    
+    print(f"🔵 [activatePromoCode] Текущее количество суперлайков: {current_super_likes} (тип: {type(current_super_likes)})")
     
     # Если суперлайков 0 или отсутствуют, выделяем 3 при активации PRO
-    if current_super_likes == 0 or current_super_likes is None:
+    if current_super_likes == 0:
         await db_run(
             'UPDATE users SET is_pro = 1, "pro_end" = ?, "superLikesCount" = 3 WHERE "userId" = ?',
             [new_end, data.userId]
