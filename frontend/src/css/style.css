@@ -854,7 +854,9 @@ flex: 1;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  display: block; /* Изменено с flex на block для работы text-overflow */
+  display: flex; /* Используем flex для вертикального выравнивания */
+  align-items: center; /* Выравнивание по вертикали */
+  text-align: left; /* Прижато к левому краю */
   line-height: 1.2; /* Для правильного выравнивания */
 }
 .match-info {
@@ -865,7 +867,9 @@ flex: 1;
   margin-bottom: 20px;
 }
 .match-name {
-  display: block; /* Изменено с flex на block для работы text-overflow */
+  display: flex; /* Используем flex для вертикального выравнивания */
+  align-items: center; /* Выравнивание по вертикали */
+  text-align: left; /* Прижато к левому краю */
   font-size: var(--font-size-lg);
   font-weight: bold;
   overflow: hidden;
@@ -2171,11 +2175,11 @@ flex: 1;
 }
 .match-name {
     display: flex;
-    align-items: center;
+    align-items: center; /* Выравнивание по вертикали */
+    text-align: left; /* Прижато к левому краю */
     font-size: var(--font-size-base);
     font-weight: bold;
     min-height: 56px;
-
 }
 .match-actions button {
   padding-top: 8px;
