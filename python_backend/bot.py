@@ -6,7 +6,7 @@ import os
 import asyncio
 import httpx
 from pathlib import Path
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, WebAppInfo, LabeledPrice
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, WebAppInfo, LabeledPrice, MenuButtonWebApp
 from telegram.ext import (
     Application,
     CommandHandler,
@@ -803,6 +803,29 @@ def create_bot_application():
         return None
 
 
+async def set_menu_button_url():
+    """Устанавливает URL кнопки меню бота программно через API"""
+    global bot_application
+    
+    if not bot_application or not WEB_APP_URL:
+        print("⚠️ [BOT] Не удалось установить menu button URL: бот не инициализирован или WEB_APP_URL не установлен")
+        return
+    
+    try:
+        from telegram import MenuButtonWebApp
+        print(f"🔵 [BOT] Установка menu button URL: {WEB_APP_URL}")
+        
+        # Устанавливаем menu button через bot API
+        await bot_application.bot.set_chat_menu_button(
+            menu_button=MenuButtonWebApp(text="Открыть приложение", web_app=WebAppInfo(url=WEB_APP_URL))
+        )
+        print(f"✅ [BOT] Menu button URL успешно установлен: {WEB_APP_URL}")
+    except Exception as e:
+        print(f"⚠️ [BOT] Ошибка при установке menu button URL: {e}")
+        import traceback
+        traceback.print_exc()
+
+
 async def start_bot():
     """Запуск бота (неблокирующий, для использования в FastAPI)"""
     global bot_application
@@ -836,6 +859,9 @@ async def start_bot():
             # КРИТИЧНО: Устанавливаем глобальную переменную ПЕРЕД start_polling()
             bot_application = application
             print("✅ Global bot_application установлен ПЕРЕД polling")
+            
+            # Устанавливаем menu button URL программно
+            await set_menu_button_url()
             
             # КРИТИЧНО: start_polling() - НЕБЛОКИРУЮЩИЙ через asyncio.create_task()
             # Если запустить с await, сервер FastAPI никогда не запустится
