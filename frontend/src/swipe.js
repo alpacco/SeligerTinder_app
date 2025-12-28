@@ -764,7 +764,11 @@ export async function showCandidate() {
   
   // Экспортируем в глобальную область для использования в main.js
   window.showCandidateFromSwipe = showCandidate;
+  
+  // Объявляем переменные для элементов DOM один раз
   const singleCard = document.getElementById("singleCard");
+  const skeleton = document.getElementById('swipe-skeleton');
+  
   if (!singleCard) {
     console.error('[showCandidate] singleCard не найден!');
     return;
@@ -803,11 +807,9 @@ export async function showCandidate() {
       cardContainer.style.display = 'none';
     }
     // Скрываем саму карточку и skeleton
-    const singleCard = document.getElementById('singleCard');
     if (singleCard) {
       singleCard.style.display = 'none';
     }
-    const skeleton = document.getElementById('swipe-skeleton');
     if (skeleton) {
       skeleton.style.display = 'none';
     }
@@ -877,11 +879,9 @@ export async function showCandidate() {
       cardContainer.style.display = 'none';
     }
     // Скрываем саму карточку и skeleton
-    const singleCard = document.getElementById('singleCard');
     if (singleCard) {
       singleCard.style.display = 'none';
     }
-    const skeleton = document.getElementById('swipe-skeleton');
     if (skeleton) {
       skeleton.style.display = 'none';
     }
