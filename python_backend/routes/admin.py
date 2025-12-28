@@ -484,6 +484,21 @@ async def admin_help(
                 "description": "Распаковать данные из архива",
                 "headers": "Authorization: Bearer <token> или X-Telegram-User-Id: <telegram_id>",
                 "note": "Ищет последний архив data-backup-*.tar.gz в /tmp и распаковывает его"
+            },
+            {
+                "method": "GET",
+                "endpoint": "/api/admin/pro-stats",
+                "description": "Получить статистику PRO пользователей",
+                "headers": "Authorization: Bearer <token> или X-Telegram-User-Id: <telegram_id>",
+                "returns": {
+                    "total_pro": "Общее количество пользователей с PRO",
+                    "active_pro": "Количество активных PRO (с неистекшим сроком)",
+                    "expired_pro": "Количество истекших PRO",
+                    "total_users": "Общее количество пользователей",
+                    "pro_percentage": "Процент PRO от общего числа",
+                    "active_pro_percentage": "Процент активных PRO от общего числа"
+                },
+                "example": "/api/admin/pro-stats"
             }
         ],
         "authorization": {
