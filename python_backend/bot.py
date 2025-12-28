@@ -470,9 +470,13 @@ async def masssend_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     try:
         async with httpx.AsyncClient() as client:
-            # Получаем список всех пользователей
-            print(f"🔵 [BOT] Запрос списка пользователей из API: {API_URL}/users")
-            response = await client.get(f"{API_URL}/users")
+            # Получаем список всех пользователей через админский эндпоинт
+            telegram_id = str(update.effective_user.id)
+            print(f"🔵 [BOT] Запрос списка пользователей из API: {API_URL}/get-all-users-for-admin")
+            response = await client.get(
+                f"{API_URL}/get-all-users-for-admin",
+                headers={"X-Telegram-User-Id": telegram_id}
+            )
             response.raise_for_status()
             users_result = response.json()
             
