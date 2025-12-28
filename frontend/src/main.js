@@ -229,7 +229,7 @@ function fillCard(cardEl, cand) {
     badgeName = badgeName.replace(/^.*\//, ''); // Убираем все до последнего слэша
     badgeName = badgeName.replace(/\.svg$/i, ''); // Убираем расширение .svg если есть
     badgeName = badgeName.replace(/[\/\\\.]+/g, ''); // Убираем лишние точки и слэши
-    badgeHtml = `<div class="badge-wrapper"><img src="/img/labels/${badgeName}.svg" class="badge-image"></div>`;
+    badgeHtml = '<div class="badge-wrapper"><img src="/img/labels/' + badgeName + '.svg" class="badge-image"></div>';
   }
   
   cardEl.innerHTML = `
