@@ -1902,10 +1902,27 @@ export async function doLike() {
                         window.swipeHistory = window.swipeHistory.slice(0, window.swipeHistoryIndex + 1);
                         console.log('🔄 [doLike] После обрезки элементов:', window.swipeHistory.length);
                     }
-                    // Сохраняем кандидата в истории в правильном формате с типом действия
-                    window.swipeHistory.push({ candidate: window.candidates[idx], index: idx, action: 'like' });
+                    
+                    // КРИТИЧНО: Проверяем, есть ли уже этот кандидат в истории
+                    // Если есть, перезаписываем его действие на 'like'
+                    const candidateId = String(window.candidates[idx].id || window.candidates[idx].userId || '');
+                    const existingIndex = window.swipeHistory.findIndex(item => {
+                        const itemCandidateId = String(item.candidate?.id || item.candidate?.userId || item?.id || item?.userId || '');
+                        return itemCandidateId === candidateId;
+                    });
+                    
+                    if (existingIndex >= 0) {
+                        // Перезаписываем существующую запись
+                        console.log('🔄 [doLike] Перезаписываем существующую запись в истории для кандидата:', candidateId, 'на индекс:', existingIndex);
+                        window.swipeHistory[existingIndex] = { candidate: window.candidates[idx], index: idx, action: 'like' };
+                    } else {
+                        // Добавляем новую запись
+                        window.swipeHistory.push({ candidate: window.candidates[idx], index: idx, action: 'like' });
+                        console.log('🔄 [doLike] Добавили кандидата в историю, swipeHistory.length:', window.swipeHistory.length);
+                    }
+                    
                     window.swipeHistoryIndex = -1; // Выходим из истории, так как переходим к новому кандидату
-                    console.log('🔄 [doLike] Добавили кандидата в историю, swipeHistory.length:', window.swipeHistory.length, 'swipeHistoryIndex:', window.swipeHistoryIndex);
+                    console.log('🔄 [doLike] swipeHistoryIndex:', window.swipeHistoryIndex);
                     // УБИРАЕМ удаление кандидата отсюда - оно будет в moveToNextCandidate
                     // window.candidates.splice(idx, 1);
                     window.moveToNextCandidate && window.moveToNextCandidate('right');
