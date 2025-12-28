@@ -220,18 +220,22 @@ function fillCard(cardEl, cand) {
   cardEl.dataset.photos = JSON.stringify(validPhotos);
   currentPhotoIndex = 0;
   cardEl.dataset.userId = cand.id;
+  
+  // Формируем HTML для badge
+  let badgeHtml = "";
+  if (cand.badge) {
+    // Нормализуем badge: убираем пути, слэши и расширения
+    let badgeName = String(cand.badge).trim();
+    badgeName = badgeName.replace(/^.*\//, ''); // Убираем все до последнего слэша
+    badgeName = badgeName.replace(/\.svg$/i, ''); // Убираем расширение .svg если есть
+    badgeName = badgeName.replace(/[\/\\\.]+/g, ''); // Убираем лишние точки и слэши
+    badgeHtml = `<div class="badge-wrapper"><img src="/img/labels/${badgeName}.svg" class="badge-image"></div>`;
+  }
+  
   cardEl.innerHTML = `
     <div class="gradient-card"></div>
     <div class="user-info">
-      ${(() => {
-        if (!cand.badge) return "";
-        // Нормализуем badge: убираем пути, слэши и расширения
-        let badgeName = String(cand.badge).trim();
-        badgeName = badgeName.replace(/^.*\//, ''); // Убираем все до последнего слэша
-        badgeName = badgeName.replace(/\.svg$/i, ''); // Убираем расширение .svg если есть
-        badgeName = badgeName.replace(/[\/\\\.]+/g, ''); // Убираем лишние точки и слэши
-        return `<div class="badge-wrapper"><img src="/img/labels/${badgeName}.svg" class="badge-image"></div>`;
-      })()}
+      ${badgeHtml}
       <div class="name-age-container">
         <span class="user-name">${cand.name}</span>
         ${(!currentUser.hideAge && cand.age) ? `<span class="user-age">${cand.age} лет</span>` : ""}
