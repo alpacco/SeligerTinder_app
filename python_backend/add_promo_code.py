@@ -23,7 +23,7 @@ async def add_promo_code():
         
         # Проверяем, существует ли уже промокод
         existing = await db_get(
-            'SELECT id, code, days, is_active FROM promo_codes WHERE code = %s',
+            'SELECT id, code, days, is_active FROM promo_codes WHERE code = ?',
             ['SECRETPARKING']
         )
         
@@ -35,21 +35,21 @@ async def add_promo_code():
             
             # Обновляем промокод
             await db_run(
-                'UPDATE promo_codes SET days = %s, is_active = true WHERE code = %s',
+                'UPDATE promo_codes SET days = ?, is_active = true WHERE code = ?',
                 [7, 'SECRETPARKING']
             )
             print("✅ Промокод обновлен: 7 дней, активен")
         else:
             # Создаем новый промокод
             await db_run(
-                'INSERT INTO promo_codes (code, days, is_active) VALUES (%s, %s, %s)',
+                'INSERT INTO promo_codes (code, days, is_active) VALUES (?, ?, ?)',
                 ['SECRETPARKING', 7, True]
             )
             print("✅ Промокод SECRETPARKING создан: 7 дней, активен")
         
         # Проверяем результат
         result = await db_get(
-            'SELECT id, code, days, is_active, created_at FROM promo_codes WHERE code = %s',
+            'SELECT id, code, days, is_active, created_at FROM promo_codes WHERE code = ?',
             ['SECRETPARKING']
         )
         
