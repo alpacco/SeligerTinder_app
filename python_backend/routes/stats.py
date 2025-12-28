@@ -89,9 +89,34 @@ async def get_stats_day():
 async def get_stats_users():
     """Получить распределение пользователей по полу"""
     try:
-        rows = await db_all("SELECT gender AS name, COUNT(*) AS count FROM users GROUP BY gender")
-        return {"success": True, "data": rows}
+        # Получаем общее количество пользователей
+        total_row = await db_get("SELECT COUNT(*) AS count FROM users")
+        total_users = total_row.get("count", 0) if total_row else 0
+        
+        # Получаем распределение по полу (обрабатываем NULL и пустые строки)
+        rows = await db_all("""
+            SELECT 
+                CASE 
+                    WHEN gender IS NULL OR gender = '' THEN 'Не указан'
+                    ELSE gender
+                END AS name,
+                COUNT(*) AS count 
+            FROM users 
+            GROUP BY 
+                CASE 
+                    WHEN gender IS NULL OR gender = '' THEN 'Не указан'
+                    ELSE gender
+                END
+        """)
+        
+        return {
+            "success": True,
+            "data": rows,
+            "total": total_users
+        }
     except Exception as e:
         print(f"/api/stats/users error: {e}")
+        import traceback
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
 

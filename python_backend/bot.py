@@ -304,26 +304,32 @@ async def stats_users_command(update: Update, context: ContextTypes.DEFAULT_TYPE
             
             if result.get("success"):
                 data = result.get("data", [])
+                total_users = result.get("total", 0)
+                
                 if not data:
                     await update.message.reply_text("❌ Данные не найдены.")
                     return
                 
                 message = "📊 **Статистика пользователей по полу:**\n\n"
-                total = 0
+                counted = 0
                 for item in data:
                     gender = item.get("name", "Не указан")
                     count = item.get("count", 0)
-                    total += count
+                    counted += count
                     # Переводим пол на русский
                     if gender == "male":
                         gender_ru = "👨 Мужчины"
                     elif gender == "female":
                         gender_ru = "👩 Женщины"
+                    elif gender == "Не указан":
+                        gender_ru = "❓ Не указан"
                     else:
                         gender_ru = f"❓ {gender}"
                     message += f"{gender_ru}: {count}\n"
                 
-                message += f"\n👥 **Всего пользователей:** {total}"
+                message += f"\n👥 **Всего пользователей:** {total_users}"
+                if counted != total_users:
+                    message += f"\n⚠️ **В группировке:** {counted} (разница: {total_users - counted})"
                 
                 await update.message.reply_text(
                     message,
