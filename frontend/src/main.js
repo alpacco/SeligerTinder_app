@@ -1305,7 +1305,8 @@ async function renderMatchesOld() {
       await loadUserData();
       
       // Если пол ещё не задан — сначала экран выбора пола, иначе — свайпы
-      if (!currentUser.gender) {
+      // Проверяем, что gender не пустая строка и не null/undefined
+      if (!currentUser.gender || currentUser.gender.trim() === "") {
         console.log("🔍 Пол не задан, показываем экран выбора пола");
         showScreen("screen-gender");
       } else {

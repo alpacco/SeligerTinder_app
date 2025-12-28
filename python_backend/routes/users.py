@@ -235,20 +235,75 @@ async def update_gender(data: UserUpdate):
 
 @router.post("/delete_user")
 async def delete_user(data: Dict[str, str] = Body(...)):
-    """Удалить пользователя"""
+    """Удалить пользователя и все связанные данные"""
     userId = data.get("userId")
     if not userId:
         raise HTTPException(status_code=400, detail="userId required")
     
     try:
-        result = await db_run("DELETE FROM users WHERE userId = ?", [userId])
+        from pathlib import Path
+        from config import IMAGES_DIR
+        import shutil
+        
+        # 1. Удаляем фотографии пользователя из файловой системы
+        user_photo_dir = Path(IMAGES_DIR) / str(userId)
+        if user_photo_dir.exists() and user_photo_dir.is_dir():
+            try:
+                shutil.rmtree(user_photo_dir)
+                print(f"[POST /api/delete_user] Удалена папка с фотографиями: {user_photo_dir}")
+            except Exception as e:
+                print(f"[POST /api/delete_user] Ошибка удаления папки с фотографиями: {e}")
+        
+        # 2. Удаляем записи из visits (где пользователь был посетителем или кого посетили)
+        await db_run('DELETE FROM visits WHERE "userId" = ? OR "visitorId" = ?', [userId, userId])
+        print(f"[POST /api/delete_user] Удалены записи из visits для userId={userId}")
+        
+        # 3. Удаляем записи из promo_code_usage
+        await db_run('DELETE FROM promo_code_usage WHERE user_id = ?', [userId])
+        print(f"[POST /api/delete_user] Удалены записи из promo_code_usage для userId={userId}")
+        
+        # 4. Удаляем пользователя из likes/dislikes/matches других пользователей
+        # Получаем всех пользователей, у которых есть этот userId в likes/dislikes/matches
+        all_users = await db_all('SELECT "userId", likes, dislikes, matches FROM users WHERE "userId" != ?', [userId])
+        
+        for user_row in all_users:
+            user_id = user_row.get("userId")
+            likes = safe_json_parse(user_row.get("likes", "[]"), [])
+            dislikes = safe_json_parse(user_row.get("dislikes", "[]"), [])
+            matches = safe_json_parse(user_row.get("matches", "[]"), [])
+            
+            updated = False
+            if userId in likes:
+                likes.remove(userId)
+                updated = True
+            if userId in dislikes:
+                dislikes.remove(userId)
+                updated = True
+            if userId in matches:
+                matches.remove(userId)
+                updated = True
+            
+            if updated:
+                await db_run(
+                    'UPDATE users SET likes = ?, dislikes = ?, matches = ? WHERE "userId" = ?',
+                    [json.dumps(likes), json.dumps(dislikes), json.dumps(matches), user_id]
+                )
+        
+        print(f"[POST /api/delete_user] Удален userId={userId} из likes/dislikes/matches других пользователей")
+        
+        # 5. Удаляем самого пользователя
+        result = await db_run('DELETE FROM users WHERE "userId" = ?', [userId])
         if result["changes"] == 0:
             raise HTTPException(status_code=404, detail="User not found")
+        
+        print(f"[POST /api/delete_user] Пользователь userId={userId} успешно удален")
         return {"success": True}
     except HTTPException:
         raise
     except Exception as e:
         print(f"[POST /api/delete_user] Ошибка: {e}")
+        import traceback
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
 
 
