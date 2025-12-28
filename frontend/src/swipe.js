@@ -2380,8 +2380,15 @@ export async function loadCandidates() {
       window.candidates = [];
       if (!window.inMutualMatch) {
         window.currentIndex = 0;
+        // Если ошибка загрузки и список пуст, показываем экран "Пригласить"
+        if (window.showCandidate) {
+          await window.showCandidate();
+        } else if (typeof updateSwipeScreen === 'function') {
+          updateSwipeScreen();
+        }
+      } else if (typeof updateSwipeScreen === 'function') {
+        updateSwipeScreen();
       }
-      if (typeof updateSwipeScreen === 'function') updateSwipeScreen();
       return;
     }
     // Бэкенд возвращает данные в json.data, а не json.candidates
@@ -2409,16 +2416,28 @@ export async function loadCandidates() {
         await window.showCandidate();
       }
     } else if (!window.inMutualMatch) {
-    window.currentIndex = 0;
-    if (typeof updateSwipeScreen === 'function') updateSwipeScreen();
+      // Если кандидатов нет, показываем экран "Пригласить"
+      window.currentIndex = 0;
+      if (window.showCandidate) {
+        await window.showCandidate();
+      } else if (typeof updateSwipeScreen === 'function') {
+        updateSwipeScreen();
+      }
     }
   } catch (e) {
     console.error('[loadCandidates] error:', e);
     window.candidates = [];
     if (!window.inMutualMatch) {
       window.currentIndex = 0;
+      // Если произошла ошибка и список пуст, показываем экран "Пригласить"
+      if (window.showCandidate) {
+        await window.showCandidate();
+      } else if (typeof updateSwipeScreen === 'function') {
+        updateSwipeScreen();
+      }
+    } else if (typeof updateSwipeScreen === 'function') {
+      updateSwipeScreen();
     }
-    if (typeof updateSwipeScreen === 'function') updateSwipeScreen();
   }
 }
 
@@ -2484,11 +2503,9 @@ export async function initSwipeScreen() {
     console.log('[swipe.js] ✅ initSwipeScreen: likesReceivedList загружен, список:', Array.from(window.likesReceivedList || []));
   }
   
-  // После загрузки кандидатов и лайков показываем первого кандидата с бейджем
-  if (window.candidates && window.candidates.length > 0) {
-    if (window.showCandidate) {
-      await window.showCandidate();
-    }
+  // После загрузки кандидатов и лайков показываем первого кандидата с бейджем или экран "Пригласить"
+  if (window.showCandidate) {
+    await window.showCandidate();
   }
   // КРИТИЧНО: Удаляем вызов sendPush с только userId - это вызывает ошибку
   // sendPush требует senderId и receiverId, а не только userId
