@@ -836,7 +836,7 @@ export async function showCandidate() {
       : "Нет новых пользователей";
     
     inviteContainer.innerHTML = `
-      <h3 style="margin-bottom: 20px; font-size: 18px; color: var(--color-text, #333);">${titleText}</h3>
+      <h3>${titleText}</h3>
       <button id="${buttonId}" class="invite-button">${buttonText}</button>
     `;
     
@@ -889,7 +889,6 @@ export async function showCandidate() {
     if (!inviteContainer) {
       inviteContainer = document.createElement('div');
       inviteContainer.className = 'invite-container';
-      inviteContainer.style.cssText = 'display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 20px; text-align: center;';
       const cardContainerEl = swipeScreen.querySelector('.card-container');
       if (cardContainerEl) {
         cardContainerEl.parentNode.insertBefore(inviteContainer, cardContainerEl);
@@ -906,7 +905,7 @@ export async function showCandidate() {
       : "Нет новых пользователей";
     
     inviteContainer.innerHTML = `
-      <h3 style="margin-bottom: 20px; font-size: 18px; color: var(--color-text, #333);">${titleText}</h3>
+      <h3>${titleText}</h3>
       <button id="${buttonId}" class="invite-button">${buttonText}</button>
     `;
     
