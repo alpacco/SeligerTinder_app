@@ -500,11 +500,6 @@ if (profileEditBackBtn) {
   }
   if (tgModalOk) {
     tgModalOk.addEventListener("click", async () => {
-        userId: currentUser.userId,
-        message:  "Чтобы продолжить пользоваться приложением и оценивать анкеты, загрузите 1–3 качественных фото одним сообщением. 📸✨\n" +
-        "Это займет всего минуту!\n",
-        keyboard: getInlineKeyboard()
-      });
       try {
         const resp = await fetch(`${API_URL}/specialPush`, {
           method: "POST",
