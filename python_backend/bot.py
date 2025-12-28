@@ -224,7 +224,7 @@ async def stats_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
             if result.get("success"):
                 visits_24h = result.get("visits24h", 0)
                 await update.message.reply_text(
-                    f"За последние 24 часа зашли {visits_24h} пользователей (по userID).",
+                    f"За последние 24 часа зашли {visits_24h} пользователей (по telegramID).",
                     reply_markup=get_start_keyboard()
                 )
             else:

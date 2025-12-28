@@ -48,9 +48,9 @@ async def get_stats():
         top5.sort(key=lambda x: x["count"], reverse=True)
         top5 = top5[:5]
         
-        # Визиты за сегодня
+        # Визиты за сегодня - считаем уникальных посетителей по visitorId (telegramID)
         visits_row = await db_get(
-            "SELECT COUNT(DISTINCT userId) AS dayCount FROM visits WHERE DATE(timestamp) = ?",
+            'SELECT COUNT(DISTINCT "visitorId") AS dayCount FROM visits WHERE DATE(timestamp) = ?',
             [day]
         )
         day_visits = visits_row.get("dayCount", 0) if visits_row else 0
@@ -71,12 +71,12 @@ async def get_stats():
 
 @router.get("/day")
 async def get_stats_day():
-    """Получить статистику за день (визиты за 24 часа)"""
+    """Получить статистику за день (визиты за 24 часа) - считаем уникальных посетителей по visitorId (telegramID)"""
     try:
-        day = datetime.now().isoformat()[:10]
+        # Используем интервал 24 часа вместо DATE для более точного подсчета
         row = await db_get(
-            'SELECT COUNT(DISTINCT "userId") AS "dayCount" FROM visits WHERE DATE(timestamp) = ?',
-            [day]
+            'SELECT COUNT(DISTINCT "visitorId") AS "dayCount" FROM visits WHERE timestamp >= NOW() - INTERVAL \'24 hours\'',
+            []
         )
         visits_24h = row.get("dayCount", 0) if row else 0
         return {"success": True, "visits24h": visits_24h}
