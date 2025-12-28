@@ -19,17 +19,31 @@ export function fillCard(cardEl, data, options = {}) {
   
   // Нормализуем ВСЕ фотографии в массиве для правильного переключения
   const normalizedPhotos = validPhotos.map(rawPhoto => {
-  if (rawPhoto.startsWith('http') || rawPhoto.startsWith('data:')) {
+    // Если это старый домен amvera, извлекаем относительный путь
+    if (rawPhoto.includes('sta-alpacco.amvera.io') || rawPhoto.includes('amvera.io')) {
+      const pathStart = rawPhoto.indexOf('/data/img/');
+      if (pathStart >= 0) {
+        return rawPhoto.substring(pathStart);
+      }
+    }
+    // Если это полный URL с новым доменом, извлекаем относительный путь
+    if (rawPhoto.startsWith('http') && !rawPhoto.startsWith('data:')) {
+      const pathStart = rawPhoto.indexOf('/', rawPhoto.indexOf('//') + 2);
+      if (pathStart >= 0) {
+        return rawPhoto.substring(pathStart);
+      }
+    }
+    if (rawPhoto.startsWith('data:')) {
       return rawPhoto;
-  } else if (rawPhoto.startsWith('/data/img/')) {
+    } else if (rawPhoto.startsWith('/data/img/')) {
       return rawPhoto;
-  } else if (rawPhoto === '/img/photo.svg') {
+    } else if (rawPhoto === '/img/photo.svg') {
       return rawPhoto;
-  } else {
+    } else {
       // Если это только имя файла, формируем полный путь
-    const filename = rawPhoto.split('/').pop();
+      const filename = rawPhoto.split('/').pop();
       return `/data/img/${data.userId || data.id}/${filename}`;
-  }
+    }
   });
   
   const finalPhotoUrl = normalizedPhotos[0];
