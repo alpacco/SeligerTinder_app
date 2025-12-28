@@ -510,6 +510,9 @@ function setupProfileBackButton() {
   }
 }
 
+// Делаем функцию доступной глобально для использования в других модулях
+window.setupProfileBackButton = setupProfileBackButton;
+
 // Для экрана Profile (screen5) - устанавливаем обработчик при инициализации
 setupProfileBackButton();
 

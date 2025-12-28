@@ -636,6 +636,14 @@ export async function showCandidateProfile(match) {
   
   window.showScreen && window.showScreen('screen-profile');
   
+  // Переустанавливаем обработчик кнопки "Назад" после показа экрана профиля
+  if (window.setupProfileBackButton) {
+    setTimeout(() => {
+      window.setupProfileBackButton();
+      console.log('[match.js] Обработчик кнопки "Назад" переустановлен');
+    }, 100);
+  }
+  
   // Сбрасываем флаг сразу после показа экрана (флаг уже сброшен выше через 100мс)
 
   // 5. ИНТЕРАКТИВНОСТЬ: КНОПКИ
