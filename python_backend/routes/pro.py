@@ -222,12 +222,16 @@ async def activate_promo_code(data: ActivatePromoCodeRequest):
         [promo_code_id, data.userId]
     )
     
-    print(f"✅ Промокод активирован: user_id={data.userId}, promo_code={promo_code}, days={days}, pro_end={new_end}")
+    # Проверяем, что суперлайки действительно начислены
+    verify_row = await db_get('SELECT "superLikesCount" FROM users WHERE "userId" = ?', [data.userId])
+    final_super_likes = verify_row.get("superLikesCount", 0) if verify_row else 0
+    print(f"✅ [activatePromoCode] Промокод активирован: user_id={data.userId}, promo_code={promo_code}, days={days}, pro_end={new_end}, final_superLikesCount={final_super_likes}")
     
     return {
         "success": True,
         "days": days,
         "pro_end": new_end,
+        "superLikesCount": final_super_likes,
         "message": f"✅ Промокод активирован! PRO подписка продлена на {days} дней."
     }
 
