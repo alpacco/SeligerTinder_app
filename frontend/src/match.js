@@ -43,7 +43,50 @@ export async function renderMatches() {
   if (!matchesListEl) {
     return;
   }
+  
+  // Удаляем старые обработчики делегирования, если они есть
+  const oldHandler = matchesListEl._matchUserClickHandler;
+  if (oldHandler) {
+    matchesListEl.removeEventListener('click', oldHandler);
+  }
+  
   matchesListEl.innerHTML = '';
+  
+  // Создаем новый обработчик делегирования событий
+  const matchUserClickHandler = (e) => {
+    // Проверяем, что клик был на элементе .match-user или его дочерних элементах
+    const userSection = e.target.closest('.match-user');
+    if (!userSection) return;
+    
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // Получаем данные мэтча из data-атрибута
+    let matchData = null;
+    try {
+      const storedData = userSection.dataset.matchData;
+      if (storedData) {
+        matchData = JSON.parse(storedData);
+      }
+    } catch (err) {
+      console.error('Ошибка при парсинге данных мэтча:', err);
+      return;
+    }
+    
+    if (!matchData) {
+      console.error('Данные мэтча не найдены');
+      return;
+    }
+    
+    // Устанавливаем viewingCandidate перед вызовом
+    window.viewingCandidate = matchData;
+    showCandidateProfile(matchData);
+  };
+  
+  // Сохраняем обработчик для последующего удаления
+  matchesListEl._matchUserClickHandler = matchUserClickHandler;
+  // Добавляем обработчик делегирования на контейнер
+  matchesListEl.addEventListener('click', matchUserClickHandler);
   try {
     const resp = await getMatches(window.currentUser.userId);
     const json = await resp;
@@ -136,15 +179,14 @@ export async function renderMatches() {
           if (msg) msg.remove();
         })
       );
-      // Добавляем обработчик клика на карточку пользователя для перехода в профиль
+      // Сохраняем данные мэтча в data-атрибуте для делегирования событий
       const userSection = card.querySelector('.match-user');
       if (userSection) {
         userSection.style.cursor = 'pointer';
-        userSection.addEventListener('click', () => {
-          // Устанавливаем viewingCandidate перед вызовом
-          window.viewingCandidate = m;
-          showCandidateProfile(m);
-        });
+        // Сохраняем данные мэтча в data-атрибуте для надежности
+        userSection.dataset.matchId = String(m.userId || m.id || '');
+        userSection.dataset.matchData = JSON.stringify(m);
+        // Обработчик клика будет обрабатываться через делегирование событий на контейнере
       }
       matchesListEl.appendChild(card);
     });

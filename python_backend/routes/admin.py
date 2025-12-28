@@ -209,12 +209,23 @@ async def update_badge(
         # Валидация
         userId = validate_user_id(data.userId)
         
-        # Валидация badge (только разрешенные значения)
-        allowed_badges = {"", "L", "P", "S", "DN", "LV", "verified", "premium", "admin"}
-        if data.badge not in allowed_badges:
-            raise HTTPException(status_code=400, detail="Недопустимый бейдж")
+        # Извлекаем букву бейджа из URL, если передан URL (например, "/label/S.svg" -> "S")
+        badge_value = data.badge
+        if badge_value.startswith("/label/") and badge_value.endswith(".svg"):
+            # Извлекаем букву из пути: "/label/S.svg" -> "S"
+            badge_value = badge_value.replace("/label/", "").replace(".svg", "").upper()
+        elif "/" in badge_value or "." in badge_value:
+            # Если это похоже на путь, но не стандартный формат, пытаемся извлечь последнюю часть
+            badge_value = badge_value.split("/")[-1].replace(".svg", "").upper()
         
-        result = await db_run('UPDATE users SET badge = ? WHERE "userId" = ?', [data.badge, userId])
+        # Валидация badge (только разрешенные значения)
+        allowed_badges = {"", "L", "P", "S", "DN", "LV", "VERIFIED", "PREMIUM", "ADMIN"}
+        badge_value_upper = badge_value.upper()
+        if badge_value_upper not in allowed_badges:
+            raise HTTPException(status_code=400, detail=f"Недопустимый бейдж: {badge_value}. Разрешенные значения: {', '.join(allowed_badges)}")
+        
+        # Сохраняем в верхнем регистре для консистентности
+        result = await db_run('UPDATE users SET badge = ? WHERE "userId" = ?', [badge_value_upper, userId])
         if result.get("changes", 0) == 0:
             raise HTTPException(status_code=404, detail="Пользователь не найден")
         return {"success": True, "message": f"Бейдж для пользователя {userId} обновлен."}

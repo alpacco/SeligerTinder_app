@@ -580,23 +580,146 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
     
     elif data == "request_badge":
+        # Показываем меню выбора бейджа
+        keyboard = InlineKeyboardMarkup([
+            [
+                InlineKeyboardButton("🏛️ Seliger City (S)", callback_data="req_badge_S"),
+                InlineKeyboardButton("⛰️ Пик (P)", callback_data="req_badge_P")
+            ],
+            [
+                InlineKeyboardButton("💕 Любовь и голуби (L)", callback_data="req_badge_L")
+            ],
+            [
+                InlineKeyboardButton("Назад", callback_data="show_menu")
+            ]
+        ])
         await query.edit_message_text(
             "🏅 Запрос бейджа:\n\n"
-            "Отправьте запрос на получение бейджа администратору.\n"
-            "Ваш запрос будет рассмотрен в ближайшее время.",
-            reply_markup=InlineKeyboardMarkup([
-                [InlineKeyboardButton("Назад", callback_data="show_menu")]
-            ])
+            "Выберите бейдж, который вы хотите получить:\n\n"
+            "🏛️ Seliger City (S)\n"
+            "⛰️ Пик (P)\n"
+            "💕 Любовь и голуби (L)",
+            reply_markup=keyboard
         )
-        # Можно добавить отправку уведомления администратору
+    
+    elif data.startswith("req_badge_"):
+        # Пользователь выбрал конкретный бейдж
+        badge_letter = data.split("_")[-1]
+        names = {"S": "Seliger City", "P": "Пик", "L": "Любовь и голуби", "DN": "DN", "LV": "LV"}
+        badge_name = names.get(badge_letter, badge_letter)
+        username = update.effective_user.username if update.effective_user else "N/A"
+        full_name = update.effective_user.full_name if update.effective_user else "N/A"
+        
+        # Отправляем запрос администратору с кнопками для одобрения/отклонения
         if DEV_CHAT_ID:
             try:
+                admin_keyboard = InlineKeyboardMarkup([
+                    [
+                        InlineKeyboardButton("✅ Выдать бейдж", callback_data=f"grant_badge_{user_id}_{badge_letter}"),
+                        InlineKeyboardButton("❌ Отклонить", callback_data=f"reject_badge_{user_id}_{badge_letter}")
+                    ],
+                    [
+                        InlineKeyboardButton("Отмена", callback_data="cancel_action")
+                    ]
+                ])
                 await query.message.bot.send_message(
                     DEV_CHAT_ID,
-                    f"🏅 Запрос бейджа от пользователя {user_id} (@{update.effective_user.username if update.effective_user else 'N/A'})"
+                    f"🏅 Запрос бейджа «{badge_name}» ({badge_letter})\n\n"
+                    f"👤 Пользователь: {full_name}\n"
+                    f"🔖 Username: @{username}\n"
+                    f"🆔 ID: {user_id}",
+                    reply_markup=admin_keyboard
+                )
+                await query.answer(f"✅ Ваш запрос на бейдж «{badge_name}» отправлен администратору", show_alert=False)
+                await query.edit_message_text(
+                    f"✅ Запрос на бейдж «{badge_name}» отправлен администратору.\n\n"
+                    f"Ваш запрос будет рассмотрен в ближайшее время.",
+                    reply_markup=InlineKeyboardMarkup([
+                        [InlineKeyboardButton("Назад", callback_data="show_menu")]
+                    ])
                 )
             except Exception as e:
-                print(f"⚠️ [BOT] Не удалось отправить уведомление администратору: {e}")
+                print(f"⚠️ [BOT] Не удалось отправить запрос администратору: {e}")
+                await query.answer("❌ Ошибка при отправке запроса. Попробуйте позже.", show_alert=True)
+        else:
+            await query.answer("⚠️ Администратор не настроен. Запрос не может быть отправлен.", show_alert=True)
+    
+    elif data.startswith("grant_badge_"):
+        # Администратор одобрил запрос на бейдж
+        if DEV_CHAT_ID and user_id != DEV_CHAT_ID:
+            await query.answer("❌ Только администратор может выдавать бейджи", show_alert=True)
+            return
+        
+        parts = data.split("_")
+        if len(parts) < 4:
+            await query.answer("❌ Неверный формат команды", show_alert=True)
+            return
+        
+        target_user_id = parts[2]
+        badge_letter = parts[3]
+        names = {"S": "Seliger City", "P": "Пик", "L": "Любовь и голуби", "DN": "DN", "LV": "LV"}
+        badge_name = names.get(badge_letter, badge_letter)
+        badge_url = f"/label/{badge_letter}.svg"
+        
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await client.post(
+                    f"{API_URL}/updateBadge",
+                    json={"userId": target_user_id, "badge": badge_url}
+                )
+                response.raise_for_status()
+                result = response.json()
+                
+                if result.get("success"):
+                    await query.edit_message_text(
+                        f"✅ Бейдж «{badge_name}» успешно выдан пользователю {target_user_id}"
+                    )
+                    # Уведомляем пользователя
+                    try:
+                        await query.message.bot.send_message(
+                            int(target_user_id),
+                            f"🎉 Бейдж «{badge_name}» успешно добавлен!"
+                        )
+                    except Exception as e:
+                        print(f"⚠️ [BOT] Не удалось уведомить пользователя: {e}")
+                else:
+                    await query.answer(f"❌ Ошибка: {result.get('error')}", show_alert=True)
+        except Exception as e:
+            print(f"❌ Ошибка при выдаче бейджа: {e}")
+            await query.answer("❌ Ошибка при выдаче бейджа", show_alert=True)
+    
+    elif data.startswith("reject_badge_"):
+        # Администратор отклонил запрос на бейдж
+        if DEV_CHAT_ID and user_id != DEV_CHAT_ID:
+            await query.answer("❌ Только администратор может отклонять запросы", show_alert=True)
+            return
+        
+        parts = data.split("_")
+        if len(parts) < 4:
+            await query.answer("❌ Неверный формат команды", show_alert=True)
+            return
+        
+        target_user_id = parts[2]
+        badge_letter = parts[3]
+        names = {"S": "Seliger City", "P": "Пик", "L": "Любовь и голуби", "DN": "DN", "LV": "LV"}
+        badge_name = names.get(badge_letter, badge_letter)
+        
+        await query.edit_message_text(
+            f"❌ Запрос на бейдж «{badge_name}» от пользователя {target_user_id} отклонен"
+        )
+        # Уведомляем пользователя
+        try:
+            await query.message.bot.send_message(
+                int(target_user_id),
+                f"❌ Ваш запрос на бейдж «{badge_name}» был отклонен администратором."
+            )
+        except Exception as e:
+            print(f"⚠️ [BOT] Не удалось уведомить пользователя: {e}")
+    
+    elif data == "cancel_action":
+        # Отмена действия администратором
+        await query.answer("Действие отменено", show_alert=False)
+        await query.delete_message()
     
     elif data == "dev_message":
         # Устанавливаем состояние ожидания сообщения от пользователя
