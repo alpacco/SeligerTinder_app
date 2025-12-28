@@ -689,15 +689,9 @@ def create_bot_application():
         
         # Регистрация обработчика данных от WebApp
         print("  - Регистрация MessageHandler для WebApp данных...")
-        # Используем кастомный фильтр для большей надежности
-        def web_app_data_filter(update: Update) -> bool:
-            has_data = bool(update.message and update.message.web_app_data)
-            if has_data:
-                print(f"🔵 [BOT] web_app_data_filter: найдены данные от WebApp, user_id={update.effective_user.id if update.effective_user else None}")
-            return has_data
-        
-        application.add_handler(MessageHandler(web_app_data_filter, web_app_data_handler))
-        print("✅ WebAppDataHandler зарегистрирован с кастомным фильтром")
+        # Используем стандартный фильтр для WebApp данных
+        application.add_handler(MessageHandler(filters.UpdateType.WEB_APP_DATA, web_app_data_handler))
+        print("✅ WebAppDataHandler зарегистрирован")
         
         # Регистрация обработчика текстовых сообщений для промокодов
         print("  - Регистрация MessageHandler для промокодов...")
