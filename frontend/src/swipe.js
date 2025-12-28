@@ -307,9 +307,11 @@ export async function showPreviousCandidate() {
     // КРИТИЧНО: Увеличиваем задержку и вызываем обработчики еще раз, чтобы они точно установились
     setTimeout(() => {
       const likeBtn = document.querySelector(".like_d");
-      // КРИТИЧНО: Показываем кнопку "Вперед" только если действительно можно перейти вперед
-      const shouldShowForward = canGoForward() && !window.inMutualMatch;
-      updateForwardButton(likeBtn, shouldShowForward);
+      // КРИТИЧНО: НЕ показываем кнопку "Вперед" при возврате назад
+      // Кнопка "Вперед" должна показываться только при навигации вперед через showNextCandidate
+      // При возврате назад кнопка всегда должна быть в обычном состоянии "Лайк"
+      // Поэтому НЕ вызываем updateForwardButton здесь
+      
       window.attachDislikeHandler && window.attachDislikeHandler();
       
       // Обновляем видимость кнопки "Назад"
@@ -2002,10 +2004,26 @@ export async function doDislike() {
             window.swipeHistory = window.swipeHistory.slice(0, window.swipeHistoryIndex + 1);
             console.log('🔄 [doDislike] После обрезки элементов:', window.swipeHistory.length);
         }
-        // Сохраняем кандидата в истории с типом действия
-        window.swipeHistory.push({ candidate: window.candidates[idx], index: idx, action: 'dislike' });
+        // КРИТИЧНО: Проверяем, есть ли уже этот кандидат в истории
+        // Если есть, перезаписываем его действие на 'dislike'
+        const candidateId = String(candidate.id || candidate.userId || '');
+        const existingIndex = window.swipeHistory.findIndex(item => {
+            const itemCandidateId = String(item.candidate?.id || item.candidate?.userId || item?.id || item?.userId || '');
+            return itemCandidateId === candidateId;
+        });
+        
+        if (existingIndex >= 0) {
+            // Перезаписываем существующую запись
+            console.log('🔄 [doDislike] Перезаписываем существующую запись в истории для кандидата:', candidateId, 'на индекс:', existingIndex);
+            window.swipeHistory[existingIndex] = { candidate: candidate, index: idx, action: 'dislike' };
+        } else {
+            // Добавляем новую запись
+            window.swipeHistory.push({ candidate: candidate, index: idx, action: 'dislike' });
+            console.log('🔄 [doDislike] Добавили кандидата в историю, swipeHistory.length:', window.swipeHistory.length);
+        }
+        
         window.swipeHistoryIndex = -1; // Выходим из истории, так как переходим к новому кандидату
-        console.log('🔄 [doDislike] Добавили кандидата в историю, swipeHistory.length:', window.swipeHistory.length, 'swipeHistoryIndex:', window.swipeHistoryIndex);
+        console.log('🔄 [doDislike] swipeHistoryIndex:', window.swipeHistoryIndex);
         
         window.moveToNextCandidate && window.moveToNextCandidate('left');
     } catch (err) {
