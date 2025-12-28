@@ -234,6 +234,58 @@ async def stats_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("❌ Ошибка при получении статистики.")
 
 
+async def prostats_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Команда /prostats - статистика PRO пользователей"""
+    user_id = update.effective_user.id if update.effective_user else None
+    username = update.effective_user.username if update.effective_user else None
+    print(f"🔵 [BOT] Команда /prostats от пользователя {user_id} (@{username})")
+    
+    if DEV_CHAT_ID and update.effective_user.id != DEV_CHAT_ID:
+        await update.message.reply_text("❌ Команда /prostats доступна только администратору.")
+        return
+    
+    try:
+        # Получаем Telegram ID для авторизации
+        telegram_id = str(update.effective_user.id)
+        
+        async with httpx.AsyncClient() as client:
+            response = await client.get(
+                f"{API_URL}/admin/pro-stats",
+                headers={"X-Telegram-User-Id": telegram_id}
+            )
+            response.raise_for_status()
+            result = response.json()
+            
+            if result.get("success"):
+                stats = result.get("stats", {})
+                total_pro = stats.get("total_pro", 0)
+                active_pro = stats.get("active_pro", 0)
+                expired_pro = stats.get("expired_pro", 0)
+                total_users = stats.get("total_users", 0)
+                pro_percentage = stats.get("pro_percentage", 0)
+                active_pro_percentage = stats.get("active_pro_percentage", 0)
+                
+                message = (
+                    f"📊 Статистика PRO пользователей:\n\n"
+                    f"👥 Всего пользователей: {total_users}\n"
+                    f"⭐ Всего PRO: {total_pro} ({pro_percentage}%)\n"
+                    f"✅ Активных PRO: {active_pro} ({active_pro_percentage}%)\n"
+                    f"❌ Истекших PRO: {expired_pro}"
+                )
+                
+                await update.message.reply_text(
+                    message,
+                    reply_markup=get_start_keyboard()
+                )
+            else:
+                await update.message.reply_text("❌ Не удалось получить статистику PRO.")
+    except Exception as e:
+        print(f"❌ Ошибка /prostats: {e}")
+        import traceback
+        traceback.print_exc()
+        await update.message.reply_text("❌ Ошибка при получении статистики PRO.")
+
+
 async def delete_user_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Команда /delete_user - удаление профиля пользователя"""
     user_id = update.effective_user.id if update.effective_user else None
@@ -934,6 +986,10 @@ def create_bot_application():
         print("  - Регистрация /stats...")
         application.add_handler(CommandHandler("stats", stats_command))
         print("✅ Команда /stats зарегистрирована")
+        
+        print("  - Регистрация /prostats...")
+        application.add_handler(CommandHandler("prostats", prostats_command))
+        print("✅ Команда /prostats зарегистрирована")
         
         print("  - Регистрация /delete_user...")
         application.add_handler(CommandHandler("delete_user", delete_user_command))

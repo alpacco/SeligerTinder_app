@@ -277,6 +277,57 @@ async def extract_data(
         raise HTTPException(status_code=500, detail=f"Ошибка распаковки данных: {str(e)}")
 
 
+@router.get("/pro-stats")
+async def get_pro_stats(
+    request: Request,
+    authorization: Optional[str] = Header(None)
+):
+    """Получить статистику PRO пользователей (админ, требует авторизации)"""
+    verify_admin(request, authorization)
+    try:
+        from datetime import datetime
+        
+        # Всего пользователей с is_pro = 1
+        total_pro_row = await db_get('SELECT COUNT(*) AS count FROM users WHERE is_pro = 1')
+        total_pro = total_pro_row.get("count", 0) if total_pro_row else 0
+        
+        # Активные PRO (с неистекшим сроком)
+        now = datetime.now().isoformat()
+        active_pro_row = await db_get(
+            'SELECT COUNT(*) AS count FROM users WHERE is_pro = 1 AND "pro_end" > ?',
+            [now]
+        )
+        active_pro = active_pro_row.get("count", 0) if active_pro_row else 0
+        
+        # Истекшие PRO
+        expired_pro = total_pro - active_pro
+        
+        # Всего пользователей
+        total_users_row = await db_get('SELECT COUNT(*) AS count FROM users')
+        total_users = total_users_row.get("count", 0) if total_users_row else 0
+        
+        # Процент PRO от общего числа
+        pro_percentage = round((total_pro / total_users * 100) if total_users > 0 else 0, 2)
+        active_pro_percentage = round((active_pro / total_users * 100) if total_users > 0 else 0, 2)
+        
+        return {
+            "success": True,
+            "stats": {
+                "total_pro": total_pro,
+                "active_pro": active_pro,
+                "expired_pro": expired_pro,
+                "total_users": total_users,
+                "pro_percentage": pro_percentage,
+                "active_pro_percentage": active_pro_percentage
+            }
+        }
+    except Exception as e:
+        print(f"[pro-stats] Ошибка: {e}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Ошибка получения статистики PRO: {str(e)}")
+
+
 @router.get("/admin_help")
 async def admin_help(
     request: Request,
