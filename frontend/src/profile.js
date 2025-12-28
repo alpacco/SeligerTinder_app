@@ -679,6 +679,8 @@ export function initProfileEditScreen() {
           // First update profile fields in memory
           currentUser.bio = newBio;
           currentUser.age = newAge;
+          // КРИТИЧНО: Обновляем photos в памяти (они уже были изменены при удалении)
+          // currentUser.photos уже обновлен при удалении фото, просто сохраняем его
           // Then save goals
           return fetch(`${window.API_URL}/goals`, {
             method: "POST",
@@ -697,9 +699,13 @@ export function initProfileEditScreen() {
             alert("Ошибка сохранения целей: " + goalsResult.error);
             return;
           }
+          // КРИТИЧНО: Обновляем currentUser с сервера после сохранения
+          return refreshCurrentUser();
+        })
+        .then(() => {
           console.log("🔍 Пытаемся вызвать exitProfileEditMode...");
           if (window.exitProfileEditMode) {
-                        window.exitProfileEditMode();
+            window.exitProfileEditMode();
           } else {
             console.error("❌ Функция exitProfileEditMode не найдена");
             console.log("🔍 Доступные функции:", Object.keys(window).filter(k => k.includes('exit')));

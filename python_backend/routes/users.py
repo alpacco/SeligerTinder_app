@@ -589,17 +589,24 @@ async def update_profile(data: Dict[str, Any] = Body(...)):
         params.append(1 if data["hideAge"] else 0)
     if "photos" in data:
         # Обновляем photo1, photo2, photo3 из массива photos
+        # КРИТИЧНО: Обновляем ВСЕ три поля, даже если они пустые (для удаления фото)
         photos = data["photos"]
         if isinstance(photos, list):
-            if len(photos) > 0:
-                updates.append("photo1 = ?")
+            # Всегда обновляем все три поля
+            updates.append("photo1 = ?")
+            params.append(photos[0] if len(photos) > 0 else "")
+            updates.append("photo2 = ?")
+            params.append(photos[1] if len(photos) > 1 else "")
+            updates.append("photo3 = ?")
+            params.append(photos[2] if len(photos) > 2 else "")
+            # Обновляем photoUrl если есть хотя бы одно фото
+            if len(photos) > 0 and photos[0]:
+                updates.append('"photoUrl" = ?')
                 params.append(photos[0])
-            if len(photos) > 1:
-                updates.append("photo2 = ?")
-                params.append(photos[1])
-            if len(photos) > 2:
-                updates.append("photo3 = ?")
-                params.append(photos[2])
+            elif len(photos) == 0:
+                # Если фото нет, устанавливаем дефолтный логотип
+                updates.append('"photoUrl" = ?')
+                params.append("/img/logo.svg")
     
     if not updates:
         raise HTTPException(status_code=400, detail="Нет полей для обновления")
