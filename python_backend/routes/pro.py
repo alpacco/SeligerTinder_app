@@ -134,10 +134,13 @@ class ActivatePromoCodeRequest(BaseModel):
 @router.post("/activatePromoCode")
 async def activate_promo_code(data: ActivatePromoCodeRequest):
     """Активировать промокод для пользователя"""
+    print(f"🔵 [activatePromoCode] Запрос: userId={data.userId}, promoCode={data.promoCode}")
+    
     if not data.userId or not data.promoCode:
         raise HTTPException(status_code=400, detail="userId and promoCode are required")
     
     promo_code = data.promoCode.strip().upper()
+    print(f"🔵 [activatePromoCode] Обработанный промокод: {promo_code}")
     
     # Проверяем существование промокода и его активность
     promo_row = await db_get(
