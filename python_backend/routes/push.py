@@ -88,6 +88,7 @@ async def show_pro_menu(data: Dict = Body(...)):
             [InlineKeyboardButton("7 дней - 100 ⭐", callback_data="buy_pro_7")],
             [InlineKeyboardButton("30 дней - 350 ⭐", callback_data="buy_pro_30")],
             [InlineKeyboardButton("90 дней - 900 ⭐", callback_data="buy_pro_90")],
+            [InlineKeyboardButton("🎁 Ввести промокод", callback_data="enter_promo_code")],
             [InlineKeyboardButton("Назад", callback_data="show_menu")]
         ])
         

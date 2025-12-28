@@ -54,6 +54,7 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
             [InlineKeyboardButton("7 дней - 100 ⭐", callback_data="buy_pro_7")],
             [InlineKeyboardButton("30 дней - 350 ⭐", callback_data="buy_pro_30")],
             [InlineKeyboardButton("90 дней - 900 ⭐", callback_data="buy_pro_90")],
+            [InlineKeyboardButton("🎁 Ввести промокод", callback_data="enter_promo_code")],
             [InlineKeyboardButton("Назад", callback_data="show_menu")]
         ])
         await update.message.reply_text(
@@ -464,6 +465,7 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             [InlineKeyboardButton("7 дней - 100 ⭐", callback_data="buy_pro_7")],
             [InlineKeyboardButton("30 дней - 350 ⭐", callback_data="buy_pro_30")],
             [InlineKeyboardButton("90 дней - 900 ⭐", callback_data="buy_pro_90")],
+            [InlineKeyboardButton("🎁 Ввести промокод", callback_data="enter_promo_code")],
             [InlineKeyboardButton("Назад", callback_data="show_menu")]
         ])
         await query.edit_message_text(
@@ -474,6 +476,17 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "• Суперлайки\n"
             "• Расширенная статистика",
             reply_markup=keyboard
+        )
+    
+    elif data == "enter_promo_code":
+        # Устанавливаем состояние ожидания промокода
+        user_states[user_id] = "waiting_for_promo_code"
+        await query.edit_message_text(
+            "🎁 Введите промокод:\n\n"
+            "Отправьте промокод текстовым сообщением.",
+            reply_markup=InlineKeyboardMarkup([
+                [InlineKeyboardButton("Отмена", callback_data="buy_pro_menu")]
+            ])
         )
     
     elif data == "delete_user":
@@ -508,6 +521,17 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     elif data == "cancel_delete":
         await query.message.reply_text("Главное меню", reply_markup=get_start_keyboard())
+    
+    elif data == "enter_promo_code":
+        # Устанавливаем состояние ожидания промокода
+        user_states[user_id] = "waiting_for_promo_code"
+        await query.edit_message_text(
+            "🎁 Введите промокод:\n\n"
+            "Отправьте промокод текстовым сообщением.",
+            reply_markup=InlineKeyboardMarkup([
+                [InlineKeyboardButton("Отмена", callback_data="buy_pro_menu")]
+            ])
+        )
     
     elif data.startswith("buy_pro_"):
         # Обработка покупки PRO: buy_pro_7, buy_pro_30, buy_pro_90
@@ -548,6 +572,7 @@ async def web_app_data_handler(update: Update, context: ContextTypes.DEFAULT_TYP
                 [InlineKeyboardButton("7 дней - 100 ⭐", callback_data="buy_pro_7")],
                 [InlineKeyboardButton("30 дней - 350 ⭐", callback_data="buy_pro_30")],
                 [InlineKeyboardButton("90 дней - 900 ⭐", callback_data="buy_pro_90")],
+                [InlineKeyboardButton("🎁 Ввести промокод", callback_data="enter_promo_code")],
                 [InlineKeyboardButton("Назад", callback_data="show_menu")]
             ])
             await update.message.reply_text(
@@ -681,6 +706,69 @@ def create_bot_application():
         
         application.add_handler(MessageHandler(web_app_data_filter, web_app_data_handler))
         print("✅ WebAppDataHandler зарегистрирован с кастомным фильтром")
+        
+        # Регистрация обработчика текстовых сообщений для промокодов
+        print("  - Регистрация MessageHandler для промокодов...")
+        async def promo_code_message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+            """Обработчик текстовых сообщений для ввода промокода"""
+            if not update.message or not update.message.text:
+                return
+            
+            user_id = update.effective_user.id
+            state = user_states.get(user_id)
+            
+            if state == "waiting_for_promo_code":
+                promo_code = update.message.text.strip()
+                
+                # Удаляем состояние
+                user_states.pop(user_id, None)
+                
+                # Вызываем API для активации промокода
+                try:
+                    async with httpx.AsyncClient() as client:
+                        response = await client.post(
+                            f"{API_URL}/activatePromoCode",
+                            json={"userId": str(user_id), "promoCode": promo_code}
+                        )
+                        response.raise_for_status()
+                        result = response.json()
+                        
+                        if result.get("success"):
+                            days = result.get("days", 0)
+                            pro_end = result.get("pro_end", "")
+                            message = result.get("message", f"✅ Промокод активирован! PRO подписка продлена на {days} дней.")
+                            await update.message.reply_text(
+                                f"{message}\n\n"
+                                f"📅 Подписка активна до: {pro_end}\n\n"
+                                f"✨ Откройте приложение, чтобы использовать PRO функции!"
+                            )
+                            print(f"✅ [BOT] Промокод активирован: user_id={user_id}, promo_code={promo_code}, days={days}")
+                        else:
+                            error = result.get("error", "Неизвестная ошибка")
+                            await update.message.reply_text(f"❌ {error}")
+                            print(f"❌ [BOT] Ошибка активации промокода: user_id={user_id}, promo_code={promo_code}, error={error}")
+                except Exception as e:
+                    print(f"❌ [BOT] Ошибка при активации промокода: {e}")
+                    await update.message.reply_text("❌ Ошибка при активации промокода. Попробуйте позже.")
+        
+        # Фильтр для текстовых сообщений (не команды, не WebApp данные)
+        def text_message_filter(update: Update) -> bool:
+            if not update.message or not update.message.text:
+                return False
+            # Проверяем, что это не команда
+            if update.message.text.startswith('/'):
+                return False
+            # Проверяем, что это не WebApp данные
+            if update.message.web_app_data:
+                return False
+            # Проверяем состояние пользователя
+            user_id = update.effective_user.id if update.effective_user else None
+            if user_id and user_states.get(user_id) == "waiting_for_promo_code":
+                return True
+            return False
+        
+        application.add_handler(MessageHandler(text_message_filter, promo_code_message_handler))
+        print("✅ PromoCodeMessageHandler зарегистрирован")
         
         bot_application = application
         print("=" * 70)

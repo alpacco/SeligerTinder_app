@@ -164,6 +164,40 @@ async def create_postgres_tables():
             CREATE INDEX IF NOT EXISTS idx_payments_user_id ON payments(user_id);
         """)
         
+        # Таблица промокодов
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS promo_codes (
+                id SERIAL PRIMARY KEY,
+                code TEXT UNIQUE NOT NULL,
+                days INTEGER NOT NULL CHECK(days > 0),
+                is_active BOOLEAN DEFAULT TRUE,
+                created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+                expires_at TIMESTAMP WITH TIME ZONE
+            );
+        """)
+        
+        # Таблица использования промокодов (для отслеживания, кто использовал какой промокод)
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS promo_code_usage (
+                id SERIAL PRIMARY KEY,
+                promo_code_id INTEGER NOT NULL REFERENCES promo_codes(id) ON DELETE CASCADE,
+                user_id TEXT NOT NULL,
+                used_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+                UNIQUE(promo_code_id, user_id)
+            );
+        """)
+        
+        # Индексы для промокодов
+        cur.execute("""
+            CREATE INDEX IF NOT EXISTS idx_promo_codes_code ON promo_codes(code);
+        """)
+        cur.execute("""
+            CREATE INDEX IF NOT EXISTS idx_promo_code_usage_user_id ON promo_code_usage(user_id);
+        """)
+        cur.execute("""
+            CREATE INDEX IF NOT EXISTS idx_promo_code_usage_promo_code_id ON promo_code_usage(promo_code_id);
+        """)
+        
         conn.commit()
         print("✅ Все таблицы PostgreSQL созданы или уже существуют")
     except Exception as e:
