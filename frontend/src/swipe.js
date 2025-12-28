@@ -36,6 +36,11 @@ window.swipeHistoryIndex = -1; // -1 означает, что мы не в ис�
 
 window.currentIndex = 0;
 
+// Флаги для предотвращения множественных вызовов
+let isShowingCandidate = false;
+let isLoadingLikesReceived = false;
+window.likesReceivedListLoaded = false; // Флаг, что список уже загружен (даже если пустой)
+
 // ========== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ДЛЯ КНОПОК НАЗАД/ВПЕРЕД ==========
 
 // Вспомогательная функция для проверки, можно ли перейти назад
@@ -657,9 +662,18 @@ export function setupSwipeControls() {
 export async function showCandidate() {
   console.log('🔄 [showCandidate] ВЫЗВАН, версия:', SWIPE_MODULE_VERSION);
   
-  // Объявляем переменные для элементов DOM один раз
-  const singleCard = document.getElementById('singleCard');
-  const skeleton = document.getElementById('swipe-skeleton');
+  // Защита от множественных вызовов
+  if (isShowingCandidate) {
+    console.log('🔄 [showCandidate] Уже выполняется, пропускаем повторный вызов');
+    return;
+  }
+  
+  isShowingCandidate = true;
+  
+  try {
+    // Объявляем переменные для элементов DOM один раз
+    const singleCard = document.getElementById('singleCard');
+    const skeleton = document.getElementById('swipe-skeleton');
   
   // КРИТИЧНО: Сбрасываем кнопки ПЕРЕД всеми проверками
   const dislikeBtn = document.querySelector(".dislike_d");
@@ -2218,6 +2232,20 @@ async function loadLikesReceived() {
     return;
   }
   
+  // Защита от параллельных вызовов
+  if (isLoadingLikesReceived) {
+    console.log('[swipe.js] ⚠️ loadLikesReceived: уже выполняется, пропускаем');
+    return;
+  }
+  
+  // Если список уже загружен, не загружаем снова
+  if (window.likesReceivedListLoaded && window.likesReceivedList) {
+    console.log('[swipe.js] ℹ️ loadLikesReceived: список уже загружен, пропускаем');
+    return;
+  }
+  
+  isLoadingLikesReceived = true;
+  
   try {
     console.log('[swipe.js] 🔵 Загружаем полученные лайки для userId:', window.currentUser.userId);
     const response = await fetchLikesReceived(window.currentUser.userId);
@@ -2226,15 +2254,20 @@ async function loadLikesReceived() {
       // API возвращает массив пользователей в response.users
       const users = response.users || response.data || [];
       window.likesReceivedList = new Set(users.map(String));
+      window.likesReceivedListLoaded = true; // Помечаем, что список загружен
       console.log('[swipe.js] ✅ Загружен список полученных лайков:', Array.from(window.likesReceivedList));
       console.log('[swipe.js] ✅ Количество полученных лайков:', window.likesReceivedList.size);
     } else {
       console.warn('[swipe.js] ⚠️ API вернул success=false или пустой ответ');
       window.likesReceivedList = new Set();
+      window.likesReceivedListLoaded = true; // Помечаем, что список загружен (даже если пустой)
     }
   } catch (err) {
     console.error('[swipe.js] ❌ Ошибка загрузки полученных лайков:', err);
     window.likesReceivedList = new Set();
+    window.likesReceivedListLoaded = true; // Помечаем, что список загружен (даже если пустой)
+  } finally {
+    isLoadingLikesReceived = false;
   }
 }
 
@@ -2275,7 +2308,8 @@ async function showMatchBadgeIfLiked(cardEl, candidate) {
   console.log('[swipe.js] 🔵 showMatchBadgeIfLiked: likesReceivedList type =', typeof window.likesReceivedList);
   console.log('[swipe.js] 🔵 showMatchBadgeIfLiked: likesReceivedList size =', window.likesReceivedList?.size);
   
-  if (!window.likesReceivedList || window.likesReceivedList.size === 0) {
+  // Проверяем, загружен ли список (не проверяем size, так как список может быть пустым)
+  if (!window.likesReceivedListLoaded || !window.likesReceivedList) {
     console.warn('[swipe.js] ⚠️ showMatchBadgeIfLiked: likesReceivedList не загружен, пытаемся загрузить');
     // Пытаемся загрузить, если еще не загружен
     const now = Date.now();
@@ -2290,6 +2324,7 @@ async function showMatchBadgeIfLiked(cardEl, candidate) {
     } else {
       if (!window.likesReceivedList) {
         window.likesReceivedList = new Set();
+        window.likesReceivedListLoaded = true; // Помечаем, что список инициализирован
       }
     }
   }

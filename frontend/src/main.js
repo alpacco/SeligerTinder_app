@@ -481,8 +481,8 @@ if (matchesBackBtn) {
 
 // Функция для установки обработчика кнопки "Назад" в профиле
 function setupProfileBackButton() {
-  const profileBackBtn = document.getElementById("profile-back-button");
-  if (profileBackBtn) {
+const profileBackBtn = document.getElementById("profile-back-button");
+if (profileBackBtn) {
     // Удаляем старые обработчики, чтобы избежать дублирования
     const newBtn = profileBackBtn.cloneNode(true);
     profileBackBtn.parentNode.replaceChild(newBtn, profileBackBtn);
@@ -496,12 +496,12 @@ function setupProfileBackButton() {
       if (window.viewingCandidate) {
         console.log("▶ Back из Profile кандидата -> переход на screen-matches");
         window.viewingCandidate = null;
-        showScreen("screen-matches");
+      showScreen("screen-matches");
       } else {
-        console.log("▶ Back из Profile -> переход на screen-swipe");
-        showScreen("screen-swipe");
-      }
-    });
+      console.log("▶ Back из Profile -> переход на screen-swipe");
+      showScreen("screen-swipe");
+    }
+  });
     
     // Убеждаемся, что кнопка кликабельна
     newBtn.style.pointerEvents = "auto";
@@ -835,7 +835,7 @@ function showScreen(screenId) {
     updateGenderScreen();
   }
 
-  if (screenId === "screen-swipe") {
+    if (screenId === "screen-swipe") {
     // КРИТИЧНО: Вызываем initSwipeScreen для полной инициализации экрана свайпов
     // Это загрузит кандидатов, likesReceived для PRO пользователей и покажет первого кандидата
     if (window.initSwipeScreen) {
@@ -857,7 +857,7 @@ function showScreen(screenId) {
         });
       }
     }
-  }
+    }
 
   if (screenId === "screen-matches") {
     updateMatchesCount();
@@ -1046,7 +1046,7 @@ async function renderMatchesOld() {
       if (matchUserEl) {
         matchUserEl.addEventListener('click', () => {
           console.log('[main.js] renderMatchesOld: клик на match-user для', m.name, 'm:', m);
-          viewingCandidate = m;
+        viewingCandidate = m;
           window.viewingCandidate = m;
           // Импортируем showCandidateProfile из match.js
           import('./match.js').then(module => {
@@ -1055,7 +1055,7 @@ async function renderMatchesOld() {
           }).catch(err => {
             console.error('[main.js] renderMatchesOld: ошибка импорта match.js:', err);
           });
-        });
+      });
       }
     });
 
