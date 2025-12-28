@@ -50,8 +50,6 @@ if (window.Telegram && window.Telegram.WebApp) {
   tg.expand();
   tg.setHeaderColor("#ffffff");
   tg.setBackgroundColor("#f4f4f4");
-  } else {
-  ");
 }
 
 // API_URL будет установлен из window.API_URL или конфига
