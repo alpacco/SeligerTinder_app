@@ -920,6 +920,12 @@ export async function showCandidate() {
   if (inviteContainer) {
     inviteContainer.style.display = 'none';
   }
+  // Показываем кнопки лайк/дизлайк, если они были скрыты
+  document.querySelectorAll(".like_d, .dislike_d").forEach(b => {
+    if (b && !window.inMutualMatch) {
+      b.style.display = 'flex';
+    }
+  });
   
   // КРИТИЧНО: Загружаем likesReceivedList перед fillCard, если пользователь PRO
   const now = Date.now();
