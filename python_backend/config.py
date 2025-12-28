@@ -38,6 +38,15 @@ else:
     # Убеждаемся что URL начинается с https://
     if not WEB_APP_URL.startswith(("http://", "https://")):
         WEB_APP_URL = f"https://{WEB_APP_URL}"
+    
+    # Проверяем, что URL не указывает на старый домен Amvera
+    old_domains = ["sta-alpacco.amvera.io", "amvera.io"]
+    for old_domain in old_domains:
+        if old_domain in WEB_APP_URL:
+            print(f"❌ КРИТИЧЕСКАЯ ОШИБКА: WEB_APP_URL указывает на старый домен: {WEB_APP_URL}")
+            print(f"❌ Пожалуйста, обновите переменную окружения WEB_APP_URL в Railway на новый домен Railway!")
+            print(f"❌ Ожидаемый формат: https://web-production-XXXXX.up.railway.app")
+            break
 
 # ========== БЕЗОПАСНОСТЬ ==========
 

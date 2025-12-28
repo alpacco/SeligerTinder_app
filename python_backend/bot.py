@@ -56,6 +56,14 @@ def get_start_keyboard():
     if not web_app_url.startswith(("http://", "https://")):
         web_app_url = f"https://{web_app_url}"
     
+    # Проверяем, что URL не указывает на старый домен
+    old_domains = ["sta-alpacco.amvera.io", "amvera.io"]
+    for old_domain in old_domains:
+        if old_domain in web_app_url:
+            print(f"❌ [BOT] КРИТИЧЕСКАЯ ОШИБКА: WEB_APP_URL указывает на старый домен: {web_app_url}")
+            print(f"❌ [BOT] Пожалуйста, обновите переменную окружения WEB_APP_URL в Railway!")
+            break
+    
     print(f"🔵 [BOT] Создание инлайн кнопки с URL: {web_app_url}")
     
     return InlineKeyboardMarkup([

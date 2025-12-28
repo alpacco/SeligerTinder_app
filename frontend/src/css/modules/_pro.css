@@ -125,8 +125,8 @@ body.is-pro .match-push-btn {
 
 body.is-pro .match-write-btn,
 body.is-pro .chat-btn {
-  background-color: transparent !important;
-  color: var(--color-blue) !important;
+  background-color: var(--color-blue) !important;
+  color: var(--color-white) !important;
   border: 1px solid var(--color-blue) !important;
   border-radius: 60px !important;
   box-shadow: 0 0 10px #101010;
