@@ -47,8 +47,22 @@ web_app_data_filter = WebAppDataFilter()
 
 def get_start_keyboard():
     """Клавиатура для команды /start"""
+    # Проверяем, что WEB_APP_URL установлен
+    if not WEB_APP_URL:
+        print("⚠️ [BOT] WEB_APP_URL не установлен! Инлайн кнопка не будет работать!")
+        return InlineKeyboardMarkup([
+            [InlineKeyboardButton("Меню", callback_data="show_menu")]
+        ])
+    
+    # Убеждаемся, что URL правильный
+    web_app_url = WEB_APP_URL
+    if not web_app_url.startswith(("http://", "https://")):
+        web_app_url = f"https://{web_app_url}"
+    
+    print(f"🔵 [BOT] Создание инлайн кнопки с URL: {web_app_url}")
+    
     return InlineKeyboardMarkup([
-        [InlineKeyboardButton("✨Открыть Seliger Tinder✨", web_app=WebAppInfo(url=WEB_APP_URL))],
+        [InlineKeyboardButton("✨Открыть Seliger Tinder✨", web_app=WebAppInfo(url=web_app_url))],
         [InlineKeyboardButton("Меню", callback_data="show_menu")]
     ])
 
@@ -462,8 +476,18 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     
     if data == "show_menu":
+        # Проверяем, что WEB_APP_URL установлен
+        if not WEB_APP_URL:
+            print("⚠️ [BOT] WEB_APP_URL не установлен! Инлайн кнопка не будет работать!")
+            web_app_url = ""
+        else:
+            web_app_url = WEB_APP_URL
+            if not web_app_url.startswith(("http://", "https://")):
+                web_app_url = f"https://{web_app_url}"
+            print(f"🔵 [BOT] Создание инлайн кнопки в меню с URL: {web_app_url}")
+        
         keyboard = InlineKeyboardMarkup([
-            [InlineKeyboardButton("✨Открыть Seliger Tinder✨", web_app=WebAppInfo(url=WEB_APP_URL))],
+            [InlineKeyboardButton("✨Открыть Seliger Tinder✨", web_app=WebAppInfo(url=web_app_url)) if web_app_url else InlineKeyboardButton("❌ Приложение недоступно", callback_data="app_unavailable")],
             [InlineKeyboardButton("⭐ Купить PRO", callback_data="buy_pro_menu")],
             [InlineKeyboardButton("Удалить профиль", callback_data="delete_user")],
             [
