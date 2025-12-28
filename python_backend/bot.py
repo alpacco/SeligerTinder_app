@@ -701,13 +701,8 @@ def create_bot_application():
         application.add_handler(MessageHandler(filters.SUCCESSFUL_PAYMENT, successful_payment_handler))
         print("✅ SuccessfulPaymentHandler зарегистрирован")
         
-        # Регистрация обработчика данных от WebApp
-        print("  - Регистрация MessageHandler для WebApp данных...")
-        # Используем кастомный фильтр для WebApp данных
-        application.add_handler(MessageHandler(web_app_data_filter, web_app_data_handler))
-        print("✅ WebAppDataHandler зарегистрирован")
-        
         # Регистрация обработчика текстовых сообщений для промокодов
+        # КРИТИЧНО: Регистрируем ПЕРВЫМ, чтобы он обрабатывался до WebApp handler
         print("  - Регистрация MessageHandler для промокодов...")
         async def promo_code_message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             """Обработчик текстовых сообщений для ввода промокода"""
