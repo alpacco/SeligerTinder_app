@@ -259,13 +259,16 @@ export async function showPreviousCandidate() {
     // КРИТИЧНО: Показываем плашку "Мэтч 💯" СРАЗУ после fillCard
     // Плашка должна показываться ДО того, как пользователь взаимодействует с карточкой
     // Используем двойной requestAnimationFrame для гарантии, что DOM полностью обновлен
-    requestAnimationFrame(() => {
-      requestAnimationFrame(async () => {
-        if (window.showMatchBadgeIfLiked) {
-          await window.showMatchBadgeIfLiked(singleCard, candidate);
-        }
+    // Но только если функция еще не выполняется
+    if (!isShowingMatchBadge) {
+      requestAnimationFrame(() => {
+        requestAnimationFrame(async () => {
+          if (window.showMatchBadgeIfLiked) {
+            await window.showMatchBadgeIfLiked(singleCard, candidate);
+          }
+        });
       });
-    });
+    }
     
     // КРИТИЧНО: Сбрасываем флаг mutual match, если мы не в mutual match режиме
     // Это нужно, чтобы кнопки не оставались в режиме "Next" или "Помахать"
