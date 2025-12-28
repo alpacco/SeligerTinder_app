@@ -750,26 +750,13 @@ def create_bot_application():
                     print(f"❌ [BOT] Ошибка при активации промокода: {e}")
                     await update.message.reply_text("❌ Ошибка при активации промокода. Попробуйте позже.")
         
-        # Фильтр для текстовых сообщений (не команды, не WebApp данные)
-        def text_message_filter(update: Update) -> bool:
-            if not update.message or not update.message.text:
-                return False
-            # Проверяем, что это не команда
-            if update.message.text.startswith('/'):
-                return False
-            # Проверяем, что это не WebApp данные
-            if update.message.web_app_data:
-                return False
-            # Проверяем состояние пользователя
-            user_id = update.effective_user.id if update.effective_user else None
-            state = user_states.get(user_id) if user_id else None
-            is_waiting = state == "waiting_for_promo_code"
-            print(f"🔵 [BOT] text_message_filter: user_id={user_id}, state={state}, is_waiting={is_waiting}, text={update.message.text[:50]}")
-            return is_waiting
+        # Используем стандартные фильтры: TEXT (текстовые сообщения) и не команды
+        # Проверку состояния пользователя делаем в обработчике
+        promo_code_filter = filters.TEXT & ~filters.COMMAND & ~filters.UpdateType.WEB_APP_DATA
         
         # КРИТИЧНО: Регистрируем обработчик промокодов ПЕРЕД другими обработчиками текстовых сообщений
         # чтобы он имел приоритет при проверке состояния пользователя
-        application.add_handler(MessageHandler(text_message_filter, promo_code_message_handler), group=1)
+        application.add_handler(MessageHandler(promo_code_filter, promo_code_message_handler), group=1)
         print("✅ PromoCodeMessageHandler зарегистрирован (group=1)")
         
         bot_application = application
