@@ -286,6 +286,93 @@ async def prostats_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("❌ Ошибка при получении статистики PRO.")
 
 
+async def admin_help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Команда /admin_help - список всех административных команд"""
+    user_id = update.effective_user.id if update.effective_user else None
+    username = update.effective_user.username if update.effective_user else None
+    print(f"🔵 [BOT] Команда /admin_help от пользователя {user_id} (@{username})")
+    
+    if DEV_CHAT_ID and update.effective_user.id != DEV_CHAT_ID:
+        await update.message.reply_text("❌ Команда /admin_help доступна только администратору.")
+        return
+    
+    try:
+        # Получаем Telegram ID для авторизации
+        telegram_id = str(update.effective_user.id)
+        
+        async with httpx.AsyncClient() as client:
+            response = await client.get(
+                f"{API_URL}/admin/admin_help",
+                headers={"X-Telegram-User-Id": telegram_id}
+            )
+            response.raise_for_status()
+            result = response.json()
+            
+            if result.get("success"):
+                help_data = result.get("help", {})
+                bot_commands = help_data.get("bot_commands", [])
+                api_endpoints = help_data.get("api_endpoints", [])
+                
+                # Формируем сообщение с командами бота
+                message = "📋 **Команды бота для администратора:**\n\n"
+                
+                for cmd in bot_commands:
+                    command = cmd.get("command", "")
+                    description = cmd.get("description", "")
+                    usage = cmd.get("usage", "")
+                    example = cmd.get("example", "")
+                    note = cmd.get("note", "")
+                    
+                    message += f"**{command}**\n"
+                    message += f"_{description}_\n"
+                    if usage:
+                        message += f"Использование: `{usage}`\n"
+                    if example:
+                        message += f"Пример: `{example}`\n"
+                    if note:
+                        message += f"ℹ️ {note}\n"
+                    message += "\n"
+                
+                # Добавляем информацию об API эндпоинтах
+                message += "\n📡 **API эндпоинты:**\n"
+                message += f"Всего эндпоинтов: {len(api_endpoints)}\n"
+                message += "Для получения полной информации используйте:\n"
+                message += f"`GET {API_URL}/admin/admin_help`\n\n"
+                message += "Основные эндпоинты:\n"
+                for endpoint in api_endpoints[:5]:  # Показываем первые 5
+                    method = endpoint.get("method", "")
+                    ep = endpoint.get("endpoint", "")
+                    desc = endpoint.get("description", "")
+                    message += f"• `{method} {ep}`\n  {desc}\n"
+                
+                # Разбиваем на части, если сообщение слишком длинное (Telegram лимит 4096 символов)
+                if len(message) > 4000:
+                    # Отправляем первую часть
+                    await update.message.reply_text(
+                        message[:4000],
+                        parse_mode="Markdown",
+                        reply_markup=get_start_keyboard()
+                    )
+                    # Отправляем остальное
+                    await update.message.reply_text(
+                        message[4000:],
+                        parse_mode="Markdown"
+                    )
+                else:
+                    await update.message.reply_text(
+                        message,
+                        parse_mode="Markdown",
+                        reply_markup=get_start_keyboard()
+                    )
+            else:
+                await update.message.reply_text("❌ Не удалось получить список команд.")
+    except Exception as e:
+        print(f"❌ Ошибка /admin_help: {e}")
+        import traceback
+        traceback.print_exc()
+        await update.message.reply_text("❌ Ошибка при получении списка команд.")
+
+
 async def delete_user_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Команда /delete_user - удаление профиля пользователя"""
     user_id = update.effective_user.id if update.effective_user else None
@@ -990,6 +1077,10 @@ def create_bot_application():
         print("  - Регистрация /prostats...")
         application.add_handler(CommandHandler("prostats", prostats_command))
         print("✅ Команда /prostats зарегистрирована")
+        
+        print("  - Регистрация /admin_help...")
+        application.add_handler(CommandHandler("admin_help", admin_help_command))
+        print("✅ Команда /admin_help зарегистрирована")
         
         print("  - Регистрация /delete_user...")
         application.add_handler(CommandHandler("delete_user", delete_user_command))
