@@ -36,7 +36,10 @@ user_states = {}
 class WebAppDataFilter(BaseFilter):
     """Фильтр для сообщений с данными от WebApp"""
     def filter(self, message):
-        return bool(message and message.web_app_data)
+        # Проверяем, что сообщение существует и имеет web_app_data
+        if not message:
+            return False
+        return bool(message.web_app_data)
 
 
 web_app_data_filter = WebAppDataFilter()
