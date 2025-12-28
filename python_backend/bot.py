@@ -746,13 +746,15 @@ def create_bot_application():
                         if result.get("success"):
                             days = result.get("days", 0)
                             pro_end = result.get("pro_end", "")
+                            super_likes = result.get("superLikesCount", 0)
                             message = result.get("message", f"✅ Промокод активирован! PRO подписка продлена на {days} дней.")
-                            await update.message.reply_text(
-                                f"{message}\n\n"
-                                f"📅 Подписка активна до: {pro_end}\n\n"
-                                f"✨ Откройте приложение, чтобы использовать PRO функции!"
-                            )
-                            print(f"✅ [BOT] Промокод активирован: user_id={user_id}, promo_code={promo_code}, days={days}")
+                            reply_text = f"{message}\n\n"
+                            reply_text += f"📅 Подписка активна до: {pro_end}\n"
+                            if super_likes > 0:
+                                reply_text += f"⭐ Вам начислено {super_likes} суперлайков!\n"
+                            reply_text += f"\n✨ Откройте приложение, чтобы использовать PRO функции!"
+                            await update.message.reply_text(reply_text)
+                            print(f"✅ [BOT] Промокод активирован: user_id={user_id}, promo_code={promo_code}, days={days}, superLikesCount={super_likes}")
                         else:
                             error = result.get("error", "Неизвестная ошибка")
                             await update.message.reply_text(f"❌ {error}")
