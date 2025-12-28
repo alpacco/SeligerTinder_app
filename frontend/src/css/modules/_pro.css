@@ -384,12 +384,7 @@ body.is-pro .candidate-last-login {
   margin-top: 5px;
 }
 
-/* PRO стили для инпутов редактирования профиля */
-/* PRO стили для инпутов редактирования профиля */
-body.is-pro #edit-bio-input,
-body.is-pro #edit-age-input {
-  color: var(--color-white) !important;
-}
+/* PRO стили для инпутов редактирования профиля - placeholder */
 
 body.is-pro #edit-bio-input::placeholder {
   color: rgba(255, 255, 255, 0.6) !important;
