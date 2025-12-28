@@ -59,9 +59,10 @@ body.is-pro .profile-button {
 }
 
 /* Кнопка "Написать" должна быть синей даже в PRO режиме */
-body.is-pro #candidate-write-btn {
+body.is-pro #candidate-write-btn.profile-button {
   background-color: var(--color-blue) !important;
   color: var(--color-white) !important;
+  border-color: var(--color-blue) !important;
 }
 
 body.is-pro .invite-button {
@@ -108,7 +109,7 @@ body.is-pro .edit-photo-card.add-photo::before {
 
 body.is-pro #edit-bio-input,
 body.is-pro #edit-age-input {
-  color: var(--color-white) !important;
+  color: var(--color-black) !important;
   background-color: var(--color-gray-dark-tr);
   border-color: var(--color-gray-dark-tr);
 }
@@ -383,12 +384,7 @@ body.is-pro .candidate-last-login {
   margin-top: 5px;
 }
 
-/* PRO стили для инпутов редактирования профиля */
-/* PRO стили для инпутов редактирования профиля */
-body.is-pro #edit-bio-input,
-body.is-pro #edit-age-input {
-  color: var(--color-white) !important;
-}
+/* PRO стили для инпутов редактирования профиля - placeholder */
 
 body.is-pro #edit-bio-input::placeholder {
   color: rgba(255, 255, 255, 0.6) !important;
