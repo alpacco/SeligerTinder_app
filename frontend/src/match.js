@@ -37,7 +37,6 @@ function getAvatarUrl(match) {
  * Отрисовка экрана Matches
  */
 export async function renderMatches() {
-  console.log('[match.js] renderMatches called');
   // Сбрасываем флаг при перерисовке списка мэтчей
   resetCandidateProfileFlag();
   const matchesListEl = document.getElementById('matches-list');
@@ -73,12 +72,9 @@ export async function renderMatches() {
       // Кнопка подарков удалена
       if (superLikeStatus !== 'pending') {
         // Кнопка НАПИСАТЬ если есть username (без проверки на VALID_)
-        console.log('[match.js] renderMatches: проверка кнопки для', name, 'username:', username, 'candidateId:', candidateId);
         if (username && username.trim()) {
-          console.log('[match.js] renderMatches: показываем НАПИСАТЬ для', name);
           actionsHTML += `<button class="match-write-btn">НАПИСАТЬ</button>`;
         } else {
-          console.log('[match.js] renderMatches: показываем ПОМАХАТЬ для', name, 'username отсутствует');
           if (pushSent) {
             actionsHTML += `<button class="match-push-btn" disabled>ВЫ ПОМАХАЛИ</button>`;
           } else {
@@ -145,7 +141,6 @@ export async function renderMatches() {
       if (userSection) {
         userSection.style.cursor = 'pointer';
         userSection.addEventListener('click', () => {
-          console.log('[match.js] renderMatches: клик на match-user для', m.name, 'm:', m);
           // Устанавливаем viewingCandidate перед вызовом
           window.viewingCandidate = m;
           showCandidateProfile(m);
@@ -173,7 +168,6 @@ const lastLoginCache = new Map();
 export function resetCandidateProfileFlag() {
   isShowingCandidateProfile = false;
   lastShownCandidateId = null;
-  console.log('[match.js] Флаг isShowingCandidateProfile сброшен');
 }
 
 export async function showCandidateProfile(match) {
@@ -193,10 +187,6 @@ export async function showCandidateProfile(match) {
   isShowingCandidateProfile = true;
   lastShownCandidateId = candidateId;
   
-  console.log('[match.js] ========== showCandidateProfile ВЫЗВАН ==========');
-  console.log('[match.js] match объект:', match);
-  console.log('[match.js] match.id:', match?.id);
-  console.log('[match.js] match.userId:', match?.userId);
   // ВАЖНО: Устанавливаем viewingCandidate ДО любых других операций, чтобы renderProLikesStats не удалял header-sub-row
   window.viewingCandidate = match; // Устанавливаем состояние: сейчас смотрим кандидата
   

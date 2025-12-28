@@ -570,14 +570,7 @@ export function setupSwipeControls(skipForwardButton = false) {
     const superBtn = document.createElement("button");
     superBtn.className = "superlike_d";
     // Убеждаемся, что значение superLikesCount актуально
-    console.log('[setupSwipeControls] ========== ПРОВЕРКА СУПЕРЛАЙКОВ ==========');
-    console.log('[setupSwipeControls] window.currentUser:', window.currentUser);
-    console.log('[setupSwipeControls] window.currentUser?.superLikesCount:', window.currentUser?.superLikesCount);
-    console.log('[setupSwipeControls] typeof window.currentUser?.superLikesCount:', typeof window.currentUser?.superLikesCount);
     const superLikesCount = window.currentUser?.superLikesCount ?? 0;
-    console.log('[setupSwipeControls] SuperLikes count для кнопки:', superLikesCount);
-    console.log('[setupSwipeControls] superLikesCount === 0:', superLikesCount === 0);
-    console.log('[setupSwipeControls] ========== КОНЕЦ ПРОВЕРКИ СУПЕРЛАЙКОВ ==========');
     superBtn.innerHTML = `<svg class="superlike-icon" width="36" height="36" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><g><path class="st0" d="M36.7,48.8c0-0.2,0.2-0.4,0.3-0.6c2.6-2.3,2.7-6.5,0.7-9.3c-0.8-1.2-1.9-2.1-3-3c-1.6-1.5-2.4-3.4-2.5-5.6c0-0.2,0-0.4-0.2-0.5c-0.2-0.1-0.3,0.1-0.4,0.3c-2,2.1-3.1,4.6-3.3,7.5c-0.1,0.8-0.1,1.6,0,2.4c0,0.3,0,0.3-0.3,0.2c-0.8-0.3-1.2-0.9-1.5-1.7c-0.1-0.2-0.1-0.6-0.4-0.7c-0.3,0-0.4,0.3-0.6,0.6c-0.5,0.9-0.8,2-0.9,3c-0.1,1.5,0,3,0.6,4.4c0.5,1.1,1.3,1.9,2.2,2.7c0.1,0.1,0.4,0.2,0.3,0.4c-0.1,0.3-0.4,0.1-0.6,0c-2.3-0.7-4.1-2-5.6-3.8c-1.9-2.4-2.7-5.1-2.5-8.2c0.2-1.7,0.7-3.2,1.6-4.7c1.6-2.5,3.4-4.9,5.5-7.1c1.3-1.4,2.3-2.9,2.9-4.7c0.6-2,0.5-4,0-6c-0.1-0.3-0.2-0.6-0.1-1c0.6,0.2,1.1,0.6,1.7,0.9c3.1,1.9,5.4,4.4,6.5,7.9c0.7,2,0.8,4,0.5,6.1C37.6,29,37.6,29,38,29c0.7-0.2,1.1-0.5,1.5-1.1c0.3-0.5,0.5-1,0.7-1.6c0.1-0.4,0.2-0.4,0.5-0.2c1.3,0.9,2.2,2.2,2.9,3.6c1.3,2.7,1.9,5.6,1.6,8.6c-0.4,4.3-2.5,7.5-6.1,9.8C38.3,48.6,37.5,48.9,36.7,48.8z"/></g></svg> <span id='superlike-count' class='superlike-count'>${superLikesCount}</span>`;
     superBtn.disabled = superLikesCount <= 0;
     superBtn.style.display = "flex"; // Явно показываем кнопку
@@ -1070,23 +1063,19 @@ export async function showCandidate() {
     // Показываем PRO-кнопки для активных PRO пользователей
     const backBtns = document.querySelectorAll(".back-cnd-btn");
     const superBtns = document.querySelectorAll(".superlike_d");
-    console.log('[showCandidate] Найдено PRO-кнопок:', { backBtns: backBtns.length, superBtns: superBtns.length });
     backBtns.forEach(b => {
       if (b) {
         b.style.display = "flex";
-        console.log('[showCandidate] Показываем кнопку Back');
       }
     });
     superBtns.forEach(b => {
       if (b) {
         b.style.display = "flex";
-        console.log('[showCandidate] Показываем кнопку SuperLike');
       }
     });
-    
+
     // Если кнопок нет, вызываем setupSwipeControls для их создания
     if (backBtns.length === 0 || superBtns.length === 0) {
-      console.log('[showCandidate] PRO-кнопки не найдены, вызываем setupSwipeControls');
       window.setupSwipeControls && window.setupSwipeControls();
     }
     
@@ -1412,9 +1401,7 @@ export function onMutualLike() {
       // Принудительно перерисовываем для запуска анимации
       matchBadge.offsetWidth; // trigger reflow
       matchBadge.classList.add("match-animation");
-      console.log('🎬 [onMutualLike] Класс match-animation добавлен, элемент:', matchBadge);
       matchBadge.addEventListener("animationend", () => {
-        console.log('🎬 [onMutualLike] Анимация эмодзи завершена');
         matchBadge.classList.remove("match-animation");
         matchBadge.style.opacity = "0";
       }, { once: true });
@@ -1422,7 +1409,6 @@ export function onMutualLike() {
       console.error('[swipe.js] ❌ [onMutualLike] Элемент .badge-match не найден после создания!');
     }
     if ("vibrate" in navigator) {
-      console.log('📳 [onMutualLike] Вибрация');
       navigator.vibrate([50,30,80,30,110,30,150]);
     }
 
@@ -2007,11 +1993,6 @@ export function cyclePhoto() {
   window.currentPhotoIndex = (window.currentPhotoIndex + 1) % rawPhotos.length;
   const nextPhotoUrl = rawPhotos[window.currentPhotoIndex];
   
-  console.log('[cyclePhoto] Переключение фото:', {
-    index: window.currentPhotoIndex,
-    total: rawPhotos.length,
-    url: nextPhotoUrl
-  });
   
   if (!nextPhotoUrl) {
     console.error('[cyclePhoto] Пустой URL для фото:', window.currentPhotoIndex);
@@ -2307,7 +2288,6 @@ export async function refreshCurrentUser() {
     // КРИТИЧНО: Сохраняем currentIndex перед обновлением, чтобы не потерять его
     const savedIndex = window.currentIndex;
     const wasInMutualMatch = window.inMutualMatch;
-    console.log('[refreshCurrentUser] Сохраняем currentIndex перед обновлением:', savedIndex, 'inMutualMatch:', wasInMutualMatch);
     
     const updated = await window.getUser(userId);
     if (updated && updated.success && updated.data) {
@@ -2323,7 +2303,6 @@ export async function refreshCurrentUser() {
       if (wasInMutualMatch) {
         // В режиме mutual match НЕ перезагружаем кандидатов и сохраняем индекс
         window.currentIndex = savedIndex;
-        console.log('[refreshCurrentUser] Сохраняем currentIndex в mutual match режиме:', window.currentIndex, '(не вызываем loadCandidates)');
       } else if (window.candidates.length === 0) {
         // Перезагружаем кандидатов только если список пуст и мы НЕ в mutual match
         await loadCandidates();
@@ -2331,7 +2310,6 @@ export async function refreshCurrentUser() {
       } else {
         // Если не в mutual match и список не пуст, восстанавливаем индекс
         window.currentIndex = savedIndex;
-        console.log('[refreshCurrentUser] Восстановлен currentIndex:', window.currentIndex, '(не вызываем loadCandidates, список не пуст)');
       }
     }
   } catch (e) {
@@ -2345,7 +2323,6 @@ export async function loadCandidates() {
   
   // КРИТИЧНО: Сохраняем индекс перед загрузкой, если мы в mutual match режиме
   const savedIndex = window.inMutualMatch ? window.currentIndex : null;
-  console.log('[loadCandidates] Начало загрузки, inMutualMatch:', window.inMutualMatch, 'savedIndex:', savedIndex);
   
   if (!userId || !gender) {
     console.warn('[loadCandidates] Недостаточно данных: userId или gender отсутствует');
@@ -2395,7 +2372,6 @@ export async function loadCandidates() {
     // КРИТИЧНО: Восстанавливаем индекс, если мы в mutual match режиме
     if (window.inMutualMatch && savedIndex !== null && savedIndex < window.candidates.length) {
       window.currentIndex = savedIndex;
-      console.log('[loadCandidates] Восстановлен индекс в mutual match режиме:', window.currentIndex);
       // НЕ вызываем showCandidate, так как карточка уже заполнена в onMutualLike
     } else if (!window.inMutualMatch && window.candidates.length > 0) {
       // Показываем первого кандидата только если НЕ в mutual match режиме

@@ -123,19 +123,10 @@ body.is-pro .match-push-btn {
   box-shadow: 0 0 10px #101010;
 }
 
-/* Кнопка "НАПИСАТЬ" в match-actions должна быть красной как "ПОМАХАТЬ" */
-body.is-pro .match-actions .match-write-btn {
-  background-color: #471615 !important;
-  border: 1px solid var(--color-red) !important;
-  border-radius: 60px !important;
-  box-shadow: 0 0 10px #101010;
-}
-
-/* Кнопка "Написать" на экране кандидата остается синей */
 body.is-pro .match-write-btn,
-body.is-pro .chat-btn,
-body.is-pro #candidate-write-btn {
-  background-color: #2c485e !important;
+body.is-pro .chat-btn {
+  background-color: transparent !important;
+  color: var(--color-blue) !important;
   border: 1px solid var(--color-blue) !important;
   border-radius: 60px !important;
   box-shadow: 0 0 10px #101010;

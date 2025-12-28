@@ -174,7 +174,6 @@ flex: 1;
 .btn-matches,
 .superlike-count,
 .button-footer-base,
-.match-write-btn,
 .match-push-btn {
   border: none;
   outline: none;
@@ -218,9 +217,12 @@ flex: 1;
 }
 
 .match-write-btn {
-  background-color: var(--color-red);
-  color: var(--color-white);
+  background-color: transparent;
+  color: var(--color-blue);
+  border: 1px solid var(--color-blue);
   font-weight: bold;
+  font-size: var(--font-size-sm);
+  padding: 8px 16px;
 }
 .match-push-btn {
   background-color: var(--color-red);
@@ -883,7 +885,6 @@ flex: 1;
   padding-top: 6px;
   padding-bottom: 6px;
   min-height: 36px;
-  font-size: var(--font-size-sm);
 }
 .match-user {
   display: flex;
@@ -1626,12 +1627,6 @@ flex: 1;
   pointer-events: auto;
 }
 
-/* Уменьшаем шрифт для кнопок в match-actions */
-.match-actions .match-write-btn,
-.match-actions .match-push-btn {
-  font-size: var(--font-size-sm);
-}
-
 .edit-save-button,
 .add-btn,
 .match-push-btn {
@@ -1650,13 +1645,14 @@ flex: 1;
   border: 1px solid var(--color-gray);
 }
 
-/* Кнопка "НАПИСАТЬ" в match-actions должна быть красной как "ПОМАХАТЬ" */
-.match-actions .match-write-btn {
-  background-color: var(--color-red);
-  color: var(--color-white);
+.match-write-btn {
+  background-color: transparent;
+  color: var(--color-blue);
+  border: 1px solid var(--color-blue);
+  font-size: var(--font-size-sm);
+  padding: 8px 16px;
 }
 
-/* Кнопка "Написать" на экране кандидата остается синей */
 #candidate-write-btn {
   background-color: var(--color-blue);
   color: var(--color-white);
