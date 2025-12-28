@@ -479,21 +479,39 @@ if (matchesBackBtn) {
   });
 }
 
-// Для экрана Profile (screen5)
-const profileBackBtn = document.getElementById("profile-back-button");
-if (profileBackBtn) {
-  profileBackBtn.addEventListener("click", () => {
-    // Используем window.viewingCandidate вместо локальной переменной
-    if (window.viewingCandidate) {
-      console.log("▶ Back из Profile кандидата -> переход на screen-matches");
-      window.viewingCandidate = null;
-      showScreen("screen-matches");
-    } else {
-      console.log("▶ Back из Profile -> переход на screen-swipe");
-      showScreen("screen-swipe");
-    }
-  });
+// Функция для установки обработчика кнопки "Назад" в профиле
+function setupProfileBackButton() {
+  const profileBackBtn = document.getElementById("profile-back-button");
+  if (profileBackBtn) {
+    // Удаляем старые обработчики, чтобы избежать дублирования
+    const newBtn = profileBackBtn.cloneNode(true);
+    profileBackBtn.parentNode.replaceChild(newBtn, profileBackBtn);
+    
+    // Устанавливаем новый обработчик
+    newBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      console.log("▶ Back из Profile нажата");
+      // Используем window.viewingCandidate вместо локальной переменной
+      if (window.viewingCandidate) {
+        console.log("▶ Back из Profile кандидата -> переход на screen-matches");
+        window.viewingCandidate = null;
+        showScreen("screen-matches");
+      } else {
+        console.log("▶ Back из Profile -> переход на screen-swipe");
+        showScreen("screen-swipe");
+      }
+    });
+    
+    // Убеждаемся, что кнопка кликабельна
+    newBtn.style.pointerEvents = "auto";
+    newBtn.style.cursor = "pointer";
+    newBtn.disabled = false;
+  }
 }
+
+// Для экрана Profile (screen5) - устанавливаем обработчик при инициализации
+setupProfileBackButton();
 
 // Для экрана Profile Edit (screen6)
 const profileEditBackBtn = document.getElementById("profile-edit-back-button");
@@ -844,10 +862,15 @@ function showScreen(screenId) {
   }
 
   if (screenId === "screen-profile") {
+    // Переустанавливаем обработчик кнопки "Назад" при показе экрана профиля
+    setupProfileBackButton();
+    
     // Если это профиль кандидата (window.viewingCandidate), показываем его профиль
     if (window.viewingCandidate) {
       console.log('[main.js] showScreen: показываем профиль кандидата через window.viewingCandidate:', window.viewingCandidate);
       showCandidateProfileFromMatch(window.viewingCandidate); // Используем импортированную функцию из match.js
+      // Переустанавливаем обработчик после показа профиля кандидата
+      setTimeout(() => setupProfileBackButton(), 100);
       return;
     }
     
@@ -868,6 +891,8 @@ function showScreen(screenId) {
     loadUserData()
       .then(() => {
         updateProfileScreen();
+        // Переустанавливаем обработчик после обновления экрана
+        setupProfileBackButton();
         // Re-attach edit-button handler in case previous listener was lost
         const editBtn = document.getElementById("edit-profile-button");
         if (editBtn) {
