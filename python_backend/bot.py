@@ -706,15 +706,18 @@ def create_bot_application():
         print("  - Регистрация MessageHandler для промокодов...")
         async def promo_code_message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             """Обработчик текстовых сообщений для ввода промокода"""
-            print(f"🔵 [BOT] promo_code_message_handler ВЫЗВАН")
+            print(f"🔵 [BOT] ========== promo_code_message_handler ВЫЗВАН ==========")
+            print(f"🔵 [BOT] update.message: {update.message}")
+            print(f"🔵 [BOT] update.message.text: {update.message.text if update.message else None}")
+            print(f"🔵 [BOT] update.message.web_app_data: {update.message.web_app_data if update.message else None}")
             
             if not update.message or not update.message.text:
-                print(f"⚠️ [BOT] promo_code_message_handler: нет сообщения или текста")
+                print(f"⚠️ [BOT] promo_code_message_handler: нет сообщения или текста - ВЫХОД")
                 return
             
             # Проверяем, что это не WebApp данные
             if update.message.web_app_data:
-                print(f"⚠️ [BOT] promo_code_message_handler: это WebApp данные, пропускаем")
+                print(f"⚠️ [BOT] promo_code_message_handler: это WebApp данные, пропускаем - ВЫХОД")
                 return
             
             user_id = update.effective_user.id
@@ -724,7 +727,7 @@ def create_bot_application():
             print(f"🔵 [BOT] Все состояния: {dict(user_states)}")
             
             if state == "waiting_for_promo_code":
-                print(f"✅ [BOT] Состояние подтверждено, обрабатываем промокод...")
+                print(f"✅ [BOT] ========== СОСТОЯНИЕ ПОДТВЕРЖДЕНО, ОБРАБАТЫВАЕМ ПРОМОКОД ==========")
                 promo_code = update.message.text.strip()
                 
                 # Удаляем состояние
