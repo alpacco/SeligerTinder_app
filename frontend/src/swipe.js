@@ -1,6 +1,6 @@
 // Модуль swipe.js: ВСЯ ЛОГИКА СВАЙПОВ, анимаций, обработчиков свайпов, кнопок и спец.событий
 // Версия модуля для отладки кэша
-const SWIPE_MODULE_VERSION = '2025-01-27-invite-screen-fix-v2';
+const SWIPE_MODULE_VERSION = '2025-01-27-invite-screen-fix-v3';
 console.log('🔄 [CACHE] swipe.js загружен, версия:', SWIPE_MODULE_VERSION);
 console.log('🔄 [CACHE] swipe.js загружен, timestamp:', new Date().toISOString());
 // Экспортируемые функции:
@@ -793,10 +793,19 @@ export async function showCandidate() {
   }
   if (!window.candidates || window.candidates.length === 0 || window.currentIndex >= window.candidates.length) {
     console.log('🔄 [showCandidate] Нет кандидатов, скрываем карточку и показываем кнопку "Пригласить"');
-    // КРИТИЧНО: Скрываем карточку
+    // КРИТИЧНО: Скрываем все элементы карточки
     const cardContainer = document.querySelector('.card-container');
     if (cardContainer) {
       cardContainer.style.display = 'none';
+    }
+    // Скрываем саму карточку и skeleton
+    const singleCard = document.getElementById('singleCard');
+    if (singleCard) {
+      singleCard.style.display = 'none';
+    }
+    const skeleton = document.getElementById('swipe-skeleton');
+    if (skeleton) {
+      skeleton.style.display = 'none';
     }
     // Скрываем кнопки лайк/дизлайк и PRO-кнопки
     document.querySelectorAll(".like_d, .dislike_d, .back-cnd-btn, .superlike_d").forEach(b => b.style.display = "none");
@@ -863,6 +872,15 @@ export async function showCandidate() {
     if (cardContainer) {
       cardContainer.style.display = 'none';
     }
+    // Скрываем саму карточку и skeleton
+    const singleCard = document.getElementById('singleCard');
+    if (singleCard) {
+      singleCard.style.display = 'none';
+    }
+    const skeleton = document.getElementById('swipe-skeleton');
+    if (skeleton) {
+      skeleton.style.display = 'none';
+    }
     // Скрываем кнопки лайк/дизлайк и PRO-кнопки
     document.querySelectorAll(".like_d, .dislike_d, .back-cnd-btn, .superlike_d").forEach(b => b.style.display = "none");
     
@@ -916,6 +934,17 @@ export async function showCandidate() {
   if (cardContainer) {
     cardContainer.style.display = '';
   }
+  // Показываем саму карточку
+  const singleCard = document.getElementById('singleCard');
+  if (singleCard) {
+    singleCard.style.display = '';
+  }
+  // Скрываем skeleton, если он есть
+  const skeleton = document.getElementById('swipe-skeleton');
+  if (skeleton) {
+    skeleton.style.display = 'none';
+  }
+  // Скрываем контейнер приглашения
   const inviteContainer = document.getElementById("screen-swipe")?.querySelector('.invite-container');
   if (inviteContainer) {
     inviteContainer.style.display = 'none';
