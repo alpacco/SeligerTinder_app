@@ -175,16 +175,13 @@ showScreenImpl = showScreen;
     if (targetScreen) {
       targetScreen.classList.add('active');
       targetScreen.style.display = 'flex';
-      `);
-  } else {
-      console.error(`  ❌ Экран ${screenId} не найден!`);
-  }
+    } else {
+      console.error("  ❌ Экран " + screenId + " не найден!");
+    }
 }
 
   // Устанавливаем временную функцию в window (будет заменена позже)
-  ...");
   window.showScreen = showScreenFallback;
-  :", typeof window.showScreen);
 
   // window.currentUser и window.API_URL уже установлены выше (до DOMContentLoaded)
   // Обновляем их на случай, если что-то изменилось
@@ -201,9 +198,8 @@ window.API_URL = API_URL;
             const welcomeUserName = document.querySelector('#screen-welcome .user-name');
       if (welcomeUserName && currentUser && currentUser.name) {
         welcomeUserName.textContent = currentUser.name;
-        :", currentUser.name);
       } else {
-              }
+      }
     }
   }, 100);
 
@@ -216,7 +212,7 @@ import('./user-actions.js').then(module => {
 function fillCard(cardEl, cand) {
   let validPhotos = (cand.photos || []).filter(u => u && u.trim() !== "");
   if (validPhotos.length === 0) validPhotos = ["/img/photo.svg"];
-  cardEl.style.backgroundImage = `url('${validPhotos[0]}')`;
+  cardEl.style.backgroundImage = "url('" + validPhotos[0] + "')";
   cardEl.dataset.photos = JSON.stringify(validPhotos);
   currentPhotoIndex = 0;
   cardEl.dataset.userId = cand.id;
@@ -232,21 +228,27 @@ function fillCard(cardEl, cand) {
     badgeHtml = '<div class="badge-wrapper"><img src="/img/labels/' + badgeName + '.svg" class="badge-image"></div>';
   }
   
-  cardEl.innerHTML = `
-    <div class="gradient-card"></div>
-    <div class="user-info">
-      ${badgeHtml}
-      <div class="name-age-container">
-        <span class="user-name">${cand.name}</span>
-        ${(!currentUser.hideAge && cand.age) ? `<span class="user-age">${cand.age} лет</span>` : ""}
-      </div>
-      <p class="user-bio">${cand.bio || ""}</p>
-      <div class="paginator"></div>
-    </div>
-    <div class="card-badge badge-like">😍</div>
-    <div class="card-badge badge-nope">🚫</div>
-    <div class="card-badge badge-match"></div>
-  `;
+  // Формируем HTML для возраста
+  let ageHtml = "";
+  if (!currentUser.hideAge && cand.age) {
+    ageHtml = '<span class="user-age">' + cand.age + ' лет</span>';
+  }
+  
+  // Формируем полный HTML через конкатенацию строк
+  cardEl.innerHTML = 
+    '<div class="gradient-card"></div>' +
+    '<div class="user-info">' +
+      badgeHtml +
+      '<div class="name-age-container">' +
+        '<span class="user-name">' + (cand.name || '') + '</span>' +
+        ageHtml +
+      '</div>' +
+      '<p class="user-bio">' + (cand.bio || '') + '</p>' +
+      '<div class="paginator"></div>' +
+    '</div>' +
+    '<div class="card-badge badge-like">😍</div>' +
+    '<div class="card-badge badge-nope">🚫</div>' +
+    '<div class="card-badge badge-match"></div>';
   renderPaginator(cardEl.querySelector(".paginator"), validPhotos.length, 0);
 }
   /* ------------------- Обработчики для экранов 1–4 ------------------- */
@@ -291,15 +293,13 @@ function fillCard(cardEl, cand) {
         gender: "", // заполнится далее
         bio: ""
       };
-                console.log("  - URL:", `${API_URL}/join`);
-        
         // Отправляем Telegram initData в заголовке для валидации на сервере
         const headers = { "Content-Type": "application/json" };
         if (tg && tg.initData) {
           headers["X-Telegram-Init-Data"] = tg.initData;
         }
         
-      fetch(`${API_URL}/join`, {
+      fetch(API_URL + "/join", {
         method: "POST",
           headers: headers,
         body: JSON.stringify(registrationData)
@@ -308,31 +308,29 @@ function fillCard(cardEl, cand) {
                         return res.json();
           })
         .then(data => {
-                      if (!data.success) throw new Error(data.error || "Неизвестная ошибка");
-                      currentUser.registered = true;
-            window.currentUser = currentUser; // Обновляем глобальную переменную
-            ");
-            console.log("  - typeof showScreen:", typeof showScreen);
-            console.log("  - typeof window.showScreen:", typeof window.showScreen);
-            // Используем window.showScreen для надежности
-            if (typeof window.showScreen === 'function') {
-              window.showScreen("screen-gender");
-            } else if (typeof showScreen === 'function') {
-          showScreen("screen-gender");
-            } else {
-              console.error("❌ [MAIN.JS] showScreen не доступна!");
-              // Fallback: переключаем вручную
-              document.querySelectorAll('.screen').forEach(s => s.style.display = 'none');
-              const genderScreen = document.getElementById('screen-gender');
-              if (genderScreen) {
-                genderScreen.style.display = 'block';
-                              }
+          if (!data.success) throw new Error(data.error || "Неизвестная ошибка");
+          currentUser.registered = true;
+          window.currentUser = currentUser; // Обновляем глобальную переменную
+          
+          // Используем window.showScreen для надежности
+          if (typeof window.showScreen === 'function') {
+            window.showScreen("screen-gender");
+          } else if (typeof showScreen === 'function') {
+            showScreen("screen-gender");
+          } else {
+            console.error("❌ [MAIN.JS] showScreen не доступна!");
+            // Fallback: переключаем вручную
+            document.querySelectorAll('.screen').forEach(s => s.style.display = 'none');
+            const genderScreen = document.getElementById('screen-gender');
+            if (genderScreen) {
+              genderScreen.style.display = 'block';
             }
+          }
           // Инициализировать чат с ботом: сначала WebApp sendData, затем deep link
           if (tg && tg.sendData) {
             tg.sendData(JSON.stringify({ action: "register", userId: registrationData.userId }));
           }
-          const deepLinkUrl = `https://t.me/SeligerTinderApp_bot?start=${registrationData.userId}`;
+          const deepLinkUrl = "https://t.me/SeligerTinderApp_bot?start=" + registrationData.userId;
           if (tg && tg.openLink) {
             tg.openLink(deepLinkUrl);
           } else {
@@ -340,17 +338,14 @@ function fillCard(cardEl, cand) {
           }
         })
         .catch(err => {
-            console.error("❌ [MAIN.JS] Ошибка регистрации:", err);
+          console.error("❌ [MAIN.JS] Ошибка регистрации:", err);
           alert("Ошибка регистрации: " + err.message);
         });
     });
-          } else {
-      console.error("❌ [MAIN.JS] Кнопка join-button НЕ найдена!");
-    }
+  } else {
+    console.error("❌ [MAIN.JS] Кнопка join-button НЕ найдена!");
   }
-  
-  // Вызываем setupJoinButton сразу, так как мы уже внутри DOMContentLoaded
-  ...");
+}
   setupJoinButton();
   
   // Также пробуем установить после небольшой задержки на случай, если кнопка появится позже
@@ -640,7 +635,7 @@ if (profileEditBackBtn) {
       return;
     }
     try {
-      const url = `${API_URL}/matches?userId=${currentUser.userId}`;
+      const url = API_URL + "/matches?userId=" + currentUser.userId;
       const resp = await fetch(url);
       const json = await resp.json();
       if (!json.success || !Array.isArray(json.data)) {
@@ -667,7 +662,7 @@ if (profileEditBackBtn) {
     }
     // Определяем противоположный пол и запрашиваем кандидатов
     const opposite = currentUser.gender === "male" ? "female" : "male";
-    const url = `${API_URL}/candidates?oppositeGender=${opposite}&userId=${currentUser.userId}`;
+    const url = API_URL + "/candidates?oppositeGender=" + opposite + "&userId=" + currentUser.userId;
     try {
       const resp = await fetch(url);
       const json = await resp.json();
@@ -748,13 +743,13 @@ if (profileEditBackBtn) {
     const likeBtn = document.querySelector(".like_d");
     const dislikeBtn = document.querySelector(".dislike_d");
     if (likeBtn) {
-      likeBtn.innerHTML = `<img class="like" src="/img/like.svg" alt="like" />`;
+      likeBtn.innerHTML = '<img class="like" src="/img/like.svg" alt="like" />';
       likeBtn.onclick = null;
       likeBtn.style.backgroundColor = '';
       likeBtn.style.fontSize = '';
     }
     if (dislikeBtn) {
-      dislikeBtn.innerHTML = `<img class="dislike" src="/img/dislike.svg" alt="dislike" />`;
+      dislikeBtn.innerHTML = '<img class="dislike" src="/img/dislike.svg" alt="dislike" />';
       dislikeBtn.onclick = null;
       dislikeBtn.style.backgroundColor = '';
       dislikeBtn.style.fontSize = '';
@@ -787,11 +782,11 @@ function showScreen(screenId) {
   // 2. Показываем нужный
   const el = document.getElementById(screenId);
   if (!el) {
-    console.error(`❌ Нет элемента с id="${screenId}"`);
+    console.error("❌ Нет элемента с id=\"" + screenId + "\"");
     return;
   }
   el.style.display = "block";
-  console.log(`▶ Переход на экран: ${screenId}`);
+  console.log("▶ Переход на экран: " + screenId);
 
   // Обновляем PRO-информацию при переключении на экраны profile и matches
   if ((screenId === "screen-profile" || screenId === "screen-matches") && window.renderProInfo && window.currentUser) {
@@ -906,7 +901,7 @@ function showScreen(screenId) {
         if (bigAvatar) bigAvatar.src = currentUser.photoUrl;
         if (userId2El) {
           // Показываем только имя, возраст рядом с аватаром убран
-          userId2El.innerHTML = `<span class="user-link">${currentUser.name}</span>`;
+          userId2El.innerHTML = '<span class="user-link">' + (currentUser.name || '') + '</span>';
         }
       }
   
@@ -927,12 +922,11 @@ async function renderMatchesOld() {
 
     const data = json.data;
     if (!Array.isArray(data) || data.length === 0) {
-      matchesListEl.innerHTML = `
-        <div class="no-matches invite-wrapper">
-          <p>Нет матчей</p>
-          <button id="invite-matches" class="invite-button">Пригласить</button>
-        </div>
-      `;
+      matchesListEl.innerHTML = 
+        '<div class="no-matches invite-wrapper">' +
+          '<p>Нет матчей</p>' +
+          '<button id="invite-matches" class="invite-button">Пригласить</button>' +
+        '</div>';
       document.getElementById("invite-matches").addEventListener("click", shareInvite);
       return;
     }
@@ -948,33 +942,33 @@ async function renderMatchesOld() {
       let btnHTML = "";
       if (m.username && m.username.trim() !== "") {
         // у пользователя есть публичный username
-        btnHTML = `<button class="match-write-btn">НАПИСАТЬ</button>`;
+        btnHTML = '<button class="match-write-btn">НАПИСАТЬ</button>';
       } else {
         // нет username → волна
         if (m.pushSent) {
-          btnHTML = `<button class="match-push-btn" disabled>ВЫ ПОМАХАЛИ</button>`;
+          btnHTML = '<button class="match-push-btn" disabled>ВЫ ПОМАХАЛИ</button>';
         } else {
-          btnHTML = `<button class="match-push-btn">ПОМАХАТЬ 👋</button>`;
+          btnHTML = '<button class="match-push-btn">ПОМАХАТЬ 👋</button>';
         }
       }
 
       // Новая структура: .match-user и .match-actions в одной строке
-      div.innerHTML = `
-        <div class="match-user">
-          <img class="match-avatar" src="${avatarUrl}" alt="${m.name}" />
-          <span class="match-name">${m.name}${m.age?`, ${m.age}`:""}</span>
-        </div>
-        <div class="match-actions">
-          ${btnHTML}
-        </div>
-      `;
+      const ageText = m.age ? ', ' + m.age : '';
+      div.innerHTML = 
+        '<div class="match-user">' +
+          '<img class="match-avatar" src="' + avatarUrl + '" alt="' + (m.name || '') + '" />' +
+          '<span class="match-name">' + (m.name || '') + ageText + '</span>' +
+        '</div>' +
+        '<div class="match-actions">' +
+          btnHTML +
+        '</div>';
       // Обработчик волны / чата
       const waveBtn = div.querySelector(".match-push-btn");
       if (waveBtn) {
         waveBtn.addEventListener("click", async () => {
           if (waveBtn.disabled) return;
           try {
-            const respPush = await fetch(`${API_URL}/sendPush`, {
+            const respPush = await fetch(API_URL + "/sendPush", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
@@ -1002,7 +996,7 @@ async function renderMatchesOld() {
       const writeBtn = div.querySelector(".match-write-btn");
       if (writeBtn) {
         writeBtn.addEventListener("click", () => {
-          window.open(`https://t.me/${m.username}`, "_blank");
+          window.open("https://t.me/" + m.username, "_blank");
         });
       }
       // Кнопка подарков удалена
@@ -1339,9 +1333,8 @@ showScreenImpl = showScreen;
   // НЕ экспортируем showCandidate из main.js - используем версию из swipe.js
   // window.showCandidate должен быть установлен в swipe.js
   if (window.showCandidate) {
-    :", typeof window.showCandidate);
   } else {
-      }
+  }
 }
 
 // Вызываем initMainJS в зависимости от состояния документа

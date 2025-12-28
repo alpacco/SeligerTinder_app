@@ -674,7 +674,6 @@ export async function showCandidate() {
     const currentChatBtn = dislikeBtn.classList.contains('chat-btn');
     const currentWaveSvg = dislikeBtn.innerHTML.includes('wave.svg');
     const currentChatSvg = dislikeBtn.innerHTML.includes('chat.svg');
-        });
   }
   
   if (dislikeBtn) {
