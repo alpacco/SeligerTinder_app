@@ -1140,6 +1140,9 @@ export async function showCandidate() {
       }
     });
   }
+  } finally {
+    isShowingCandidate = false;
+  }
 }
 
 export function shareInvite() {
