@@ -812,7 +812,6 @@ async def set_menu_button_url():
         return
     
     try:
-        from telegram import MenuButtonWebApp
         print(f"🔵 [BOT] Установка menu button URL: {WEB_APP_URL}")
         
         # Устанавливаем menu button через bot API
