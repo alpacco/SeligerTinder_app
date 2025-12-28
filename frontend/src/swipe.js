@@ -2385,6 +2385,9 @@ async function showMatchBadgeIfLiked(cardEl, candidate) {
     console.log('[swipe.js] ℹ️ showMatchBadgeIfLiked: кандидат', candidateId, 'не лайкнул, плашка не показывается');
   }
   console.log('[swipe.js] 🔵 ========== showMatchBadgeIfLiked ЗАВЕРШЕНА ==========');
+  } finally {
+    isShowingMatchBadge = false;
+  }
 }
 
 // --- ДОБАВИТЬ: функция для обновления пользователя после изменений ---
