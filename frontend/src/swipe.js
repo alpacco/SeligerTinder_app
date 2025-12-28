@@ -504,10 +504,11 @@ export async function showNextCandidate() {
   }
 }
 
-export function setupSwipeControls() {
+export function setupSwipeControls(skipForwardButton = false) {
   // ВАЖНО: Кнопки лайк/дизлайк уже есть в HTML footer, не создаем их здесь!
   // Эта функция создает только PRO-кнопки (Back, SuperLike) в cards-btns внутри footer
   // И устанавливает обработчики для кнопок лайк/дизлайк
+  // skipForwardButton: если true, не обновляет кнопку "Вперед" (используется при возврате назад)
   const swipeScreen = document.getElementById("screen-swipe");
   if (!swipeScreen) return;
   
@@ -591,8 +592,11 @@ export function setupSwipeControls() {
     const likeBtn = cardsBtns.querySelector(".like_d");
     // КРИТИЧНО: Показываем кнопку "Вперед" только если действительно можно перейти вперед
     // и мы не в режиме mutual match
-    const shouldShowForward = canGoForward() && !window.inMutualMatch;
-    updateForwardButton(likeBtn, shouldShowForward);
+    // НО: не обновляем кнопку "Вперед" если skipForwardButton = true (при возврате назад)
+    if (!skipForwardButton) {
+      const shouldShowForward = canGoForward() && !window.inMutualMatch;
+      updateForwardButton(likeBtn, shouldShowForward);
+    }
   }
   
   // Super-Like for PRO users
