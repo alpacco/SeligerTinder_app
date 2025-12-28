@@ -6,7 +6,7 @@ from fastapi import APIRouter, Query, HTTPException, Body
 from typing import Dict
 from pydantic import BaseModel
 from db_utils import db_get, db_run
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 router = APIRouter()
 
@@ -161,7 +161,6 @@ async def activate_promo_code(data: ActivatePromoCodeRequest):
     # Проверяем срок действия промокода
     expires_at = promo_row.get("expires_at")
     if expires_at:
-        from datetime import datetime, timezone
         now = datetime.now(timezone.utc)
         if isinstance(expires_at, str):
             expires_at = datetime.fromisoformat(expires_at.replace("Z", "+00:00"))
