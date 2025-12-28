@@ -197,8 +197,10 @@ async def activate_promo_code(data: ActivatePromoCodeRequest):
     new_end = (base_time + timedelta(days=days)).isoformat()
     
     # Получаем текущее количество суперлайков
+    # В БД колонка называется superLikesCount (camelCase)!
     user_row = await db_get('SELECT "superLikesCount" FROM users WHERE "userId" = ?', [data.userId])
     current_super_likes = user_row.get("superLikesCount", 0) if user_row else 0
+    print(f"🔵 [activatePromoCode] Текущее количество суперлайков: {current_super_likes}")
     
     # Если суперлайков 0 или отсутствуют, выделяем 3 при активации PRO
     if current_super_likes == 0 or current_super_likes is None:
@@ -206,11 +208,13 @@ async def activate_promo_code(data: ActivatePromoCodeRequest):
             'UPDATE users SET is_pro = 1, "pro_end" = ?, "superLikesCount" = 3 WHERE "userId" = ?',
             [new_end, data.userId]
         )
+        print(f"✅ [activatePromoCode] Суперлайки начислены: user_id={data.userId}, superLikesCount set to 3")
     else:
         await db_run(
             'UPDATE users SET is_pro = 1, "pro_end" = ? WHERE "userId" = ?',
             [new_end, data.userId]
         )
+        print(f"ℹ️ [activatePromoCode] Суперлайки не изменены: user_id={data.userId}, superLikesCount kept: {current_super_likes}")
     
     # Записываем использование промокода
     await db_run(
