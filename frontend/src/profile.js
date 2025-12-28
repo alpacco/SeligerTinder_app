@@ -455,42 +455,54 @@ export function initProfileEditScreen() {
       ghostLeft.style.width = editPhotoCard ? (editPhotoCard.offsetWidth / 2) + 'px' : '48px';
     }, 0);
     carousel.appendChild(ghostLeft);
-    const photos = currentUser.photos || [];
-    const photoCount = Math.min(photos.length, 3);
-    for (let i = 0; i < photoCount; i++) {
-      let card = document.createElement('div');
-      card.className = 'edit-photo-card has-photo';
-      card.innerHTML = '';
-      const photoUrl = photos[i];
-      const finalUrl = photoUrl.startsWith('data:') ? photoUrl : `${photoUrl}?cb=${Date.now()}`;
-      card.style.backgroundImage = `url('${finalUrl}')`;
-      // Main badge
-      const mainBadge = document.createElement('div');
-      mainBadge.className = 'main-badge';
-      if (i === 0) {
-        mainBadge.innerHTML = `<img src="/img/main_on.svg" alt="Главная"> <span>Главная</span>`;
-      } else {
-        mainBadge.innerHTML = `<img src="/img/main_off.svg" alt="Сделать главной"> <span>Сделать главной</span>`;
-        mainBadge.onclick = () => {
-          if (i > 0) {
-            [photos[0], photos[i]] = [photos[i], photos[0]];
-            initProfileEditScreen();
-          }
-        };
+      // КРИТИЧНО: Используем currentUser.photos напрямую, чтобы изменения сохранялись
+      if (!currentUser.photos) {
+        currentUser.photos = [];
       }
-      card.appendChild(mainBadge);
-      // Delete button
-      const delBtn = document.createElement('div');
-      delBtn.className = 'delete-photo-btn';
-      delBtn.innerHTML = `<img src="/img/dislike.svg" alt="Удалить">`;
-      delBtn.onclick = (e) => {
-        e.stopPropagation();
-        photos.splice(i, 1);
-        initProfileEditScreen();
-      };
-      card.appendChild(delBtn);
-      carousel.appendChild(card);
-    }
+      const photos = currentUser.photos;
+      const photoCount = Math.min(photos.length, 3);
+      for (let i = 0; i < photoCount; i++) {
+        let card = document.createElement('div');
+        card.className = 'edit-photo-card has-photo';
+        card.innerHTML = '';
+        const photoUrl = photos[i];
+        const finalUrl = photoUrl.startsWith('data:') ? photoUrl : `${photoUrl}?cb=${Date.now()}`;
+        card.style.backgroundImage = `url('${finalUrl}')`;
+        // Main badge
+        const mainBadge = document.createElement('div');
+        mainBadge.className = 'main-badge';
+        if (i === 0) {
+          mainBadge.innerHTML = `<img src="/img/main_on.svg" alt="Главная"> <span>Главная</span>`;
+        } else {
+          mainBadge.innerHTML = `<img src="/img/main_off.svg" alt="Сделать главной"> <span>Сделать главной</span>`;
+          mainBadge.onclick = () => {
+            if (i > 0) {
+              // КРИТИЧНО: Изменяем currentUser.photos напрямую
+              [currentUser.photos[0], currentUser.photos[i]] = [currentUser.photos[i], currentUser.photos[0]];
+              initProfileEditScreen();
+            }
+          };
+        }
+        card.appendChild(mainBadge);
+        // Delete button
+        const delBtn = document.createElement('div');
+        delBtn.className = 'delete-photo-btn';
+        delBtn.innerHTML = `<img src="/img/dislike.svg" alt="Удалить">`;
+        delBtn.onclick = (e) => {
+          e.stopPropagation();
+          // КРИТИЧНО: Удаляем из currentUser.photos напрямую
+          currentUser.photos.splice(i, 1);
+          // Обновляем photoUrl если удалили первую фотографию
+          if (i === 0 && currentUser.photos.length > 0) {
+            currentUser.photoUrl = currentUser.photos[0];
+          } else if (currentUser.photos.length === 0) {
+            currentUser.photoUrl = '/img/logo.svg';
+          }
+          initProfileEditScreen();
+        };
+        card.appendChild(delBtn);
+        carousel.appendChild(card);
+      }
     // Add empty slots for new photos
     if (photoCount < 3) {
       for (let i = 0; i < 3 - photoCount; i++) {
