@@ -60,6 +60,11 @@ if ADMIN_TELEGRAM_IDS_STR:
         if tid.strip() and tid.strip().isdigit()
     ]
 
+# Автоматически добавляем DEV_CHAT_ID в список администраторов, если он установлен
+if DEV_CHAT_ID and str(DEV_CHAT_ID) not in ADMIN_TELEGRAM_IDS:
+    ADMIN_TELEGRAM_IDS.append(str(DEV_CHAT_ID))
+    print(f"✅ [CONFIG] DEV_CHAT_ID ({DEV_CHAT_ID}) добавлен в ADMIN_TELEGRAM_IDS")
+
 ADMIN_TOKEN = os.getenv("ADMIN_TOKEN", "")  # Для обратной совместимости
 
 # ========== НАСТРОЙКИ БЕЗОПАСНОСТИ ==========

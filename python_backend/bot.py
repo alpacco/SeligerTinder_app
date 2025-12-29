@@ -1011,7 +1011,9 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     elif data.startswith("grant_badge_"):
         # Администратор одобрил запрос на бейдж
-        if DEV_CHAT_ID and user_id != DEV_CHAT_ID:
+        # Приводим к одному типу для сравнения (оба к int)
+        if DEV_CHAT_ID and int(user_id) != int(DEV_CHAT_ID):
+            print(f"⚠️ [BOT] Попытка выдачи бейджа неавторизованным пользователем: user_id={user_id}, DEV_CHAT_ID={DEV_CHAT_ID}")
             await query.answer("❌ Только администратор может выдавать бейджи", show_alert=True)
             return
         
@@ -1026,14 +1028,21 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         badge_name = names.get(badge_letter, badge_letter)
         badge_url = f"/label/{badge_letter}.svg"
         
+        print(f"🔵 [BOT] Выдача бейджа: admin_id={user_id}, target_user_id={target_user_id}, badge={badge_letter}")
+        
         try:
             async with httpx.AsyncClient() as client:
+                # Передаем заголовок авторизации с Telegram ID администратора
+                print(f"🔵 [BOT] Вызов API /updateBadge с заголовком X-Telegram-User-Id: {user_id}")
                 response = await client.post(
                     f"{API_URL}/updateBadge",
-                    json={"userId": target_user_id, "badge": badge_url}
+                    json={"userId": target_user_id, "badge": badge_url},
+                    headers={"X-Telegram-User-Id": str(user_id)}
                 )
+                print(f"🔵 [BOT] Ответ API: status={response.status_code}")
                 response.raise_for_status()
                 result = response.json()
+                print(f"🔵 [BOT] Результат API: {result}")
                 
                 if result.get("success"):
                     await query.edit_message_text(
@@ -1045,17 +1054,31 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                             int(target_user_id),
                             f"🎉 Бейдж «{badge_name}» успешно добавлен!"
                         )
+                        print(f"✅ [BOT] Пользователь {target_user_id} уведомлен о выдаче бейджа")
                     except Exception as e:
                         print(f"⚠️ [BOT] Не удалось уведомить пользователя: {e}")
                 else:
-                    await query.answer(f"❌ Ошибка: {result.get('error')}", show_alert=True)
+                    error_msg = result.get('error', 'Неизвестная ошибка')
+                    print(f"❌ [BOT] Ошибка API: {error_msg}")
+                    await query.answer(f"❌ Ошибка: {error_msg}", show_alert=True)
+        except httpx.HTTPStatusError as e:
+            error_text = ""
+            try:
+                error_text = e.response.text
+            except:
+                pass
+            print(f"❌ [BOT] HTTP ошибка при выдаче бейджа: {e.response.status_code}, {error_text}")
+            await query.answer(f"❌ HTTP ошибка: {e.response.status_code}", show_alert=True)
         except Exception as e:
-            print(f"❌ Ошибка при выдаче бейджа: {e}")
+            print(f"❌ [BOT] Ошибка при выдаче бейджа: {e}")
+            import traceback
+            traceback.print_exc()
             await query.answer("❌ Ошибка при выдаче бейджа", show_alert=True)
     
     elif data.startswith("reject_badge_"):
         # Администратор отклонил запрос на бейдж
-        if DEV_CHAT_ID and user_id != DEV_CHAT_ID:
+        # Приводим к одному типу для сравнения (оба к int)
+        if DEV_CHAT_ID and int(user_id) != int(DEV_CHAT_ID):
             await query.answer("❌ Только администратор может отклонять запросы", show_alert=True)
             return
         
